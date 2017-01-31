@@ -44,6 +44,8 @@ struct ActionReward
 {
     ai_State action;
     float reward;
+    float x;
+    float y;
 };
 
 void createGrid(){
@@ -102,7 +104,7 @@ void createGrid(){
 float gridValue(float x, float y)
 {
     if (y>20) {
-        return 10000;
+        return 2000;
     } else if (y < 0 || x < 0 || x > 20) {
         return 0;
     }
@@ -357,7 +359,7 @@ ActionReward getBestActionAtPoint(Target target, sim_Observed_State state) {
     return action_reward;
 }
 
-ai_State choose_action(sim_Observed_State state, Target target){
+ActionReward choose_action(sim_Observed_State state, Target target){
     int index = target.index;
     float angle = wrap_angle(state.target_q[index]);
 
@@ -394,6 +396,8 @@ ai_State choose_action(sim_Observed_State state, Target target){
 
         if (action_to_check.reward > best_action.reward) {
             best_action = action_to_check;
+            best_action.x = x;
+            best_action.y = y;
         }
 
         x = x+step_x;
@@ -401,7 +405,7 @@ ai_State choose_action(sim_Observed_State state, Target target){
         time_to_turn = time_to_turn - Robot_Speed/(step_size*1000); // Multiplied by 1000 to get Milimeters from Meters
     }
 
-    return best_action.action;
+    return best_action;
 }
 
 int main()
@@ -410,6 +414,7 @@ int main()
     printValueGrid();
     sim_init_msgs(true);
 
+    ActionReward action_pos_reward;
     ai_State ai_state = ai_waiting;
 
     sim_State state;
@@ -445,7 +450,16 @@ int main()
             else if(target_inActionRange(observed_state, target.index)
                     && targetIsMoving(target.index, previous_state, observed_state))
             {                
-                ai_state = choose_action(observed_state, target);
+                action_pos_reward = choose_action(observed_state, target);
+                ai_state = action_pos_reward.action;
+
+                cmd.type = sim_CommandType_Search;
+                cmd.x = action_pos_reward.x;
+                cmd.y = action_pos_reward.y;
+                sim_send_cmd(&cmd);
+
+                while(!observed_state.drone_cmd_done);
+
                 switch (ai_state)
                 {
                     case ai_landingOnTop:

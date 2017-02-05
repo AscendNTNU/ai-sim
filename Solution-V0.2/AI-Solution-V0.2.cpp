@@ -488,9 +488,9 @@ int main()
                 target = choose_target(observed_state, previous_state);
                 target_index = target.index;
                 ai_state = ai_tracking;
-                cmd.type = sim_CommandType_Track;
-                cmd.i = target.index;
-                std::cout << "Tracking" << std::endl;
+                    cmd.type = sim_CommandType_Track;
+                    cmd.i = target.index;
+                    std::cout << "Tracking" << std::endl;
             }
 
             else if(target_inActionRange(observed_state, target.index)

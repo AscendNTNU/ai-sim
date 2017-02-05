@@ -7,6 +7,7 @@
 
 static double SPEED = 0.33;
 static double GRID[22][22];
+static double M_PI = 3.141592653589793238;
 
 struct Plank
 {
@@ -266,6 +267,51 @@ float getTimeToIntercept(double Cx, double Ax, float Aangle, double Cvel, double
     A - ground robot
     C - Drone
 */
+float getTimeToInterceptWithTurn(double x_b0, double y_b0, double th_b, double v_b, double tTilTurn, double x_d, double y_d, double, double v_d) {
+	//Math to calculate if direct
+	double a = x_b0; double b = v_b; double c = th_b; double d = y_b0; double e = x_d; double f = y_d; double g = v_d;
+	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
+	double tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
+
+	double t1 = max(ta, tb);
+	double t2 = 0;
+
+	if(t1 > tTilTurn)
+	{
+		t1 = tTilTurn;
+		double x_b1 = x_b0+tTilTurn*v_b*cos(th_b);
+		double y_b1 = y_b0+tTilTurn*v_b*sin(th_b);
+		double angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
+
+		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+M_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + tTilTurn*v_d*cos(angleDrone1); double f = y_d + tTilTurn*v_d*sin(angleDrone1); double g = v_d;
+		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
+		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
+		t2 = max(ta, tb);
+
+		double x_d1 = e;
+		double y_d1 = f;
+		
+		double x_bf = x_b1+t2*v_b*cos(th_b+M_PI);
+		double y_bf = y_b1+t2*v_b*sin(th_b+M_PI);
+
+		double angleDrone2 = atan2(y_bf-y_d1, x_bf-x_d1);
+	}
+	else
+	{
+		double x_b1 = x_b0+t1*v_b*cos(th_b);
+		double y_b1 = y_b0+t1*v_b*sin(th_b);
+		double angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
+	}
+
+	double t = t1+t2;
+	return t;
+}
+
+/*
+    A - ground robot
+    C - Drone
+	TODO: Finish this
+*/
 double getXPosIntercept(double droneX, double droneY, double flyAngle, double speed)
 {
     return 0.0;
@@ -339,7 +385,7 @@ ActionReward getBestActionAtPoint(Target target, sim_Observed_State state) {
     std::cout << "Reward on top " << rewardOnTop << std::endl;
     std::cout << "Reward wait" << rewardForWait << std::endl;
 
-    int max_reward = std::max(std::max(rewardInFront,rewardOnTop), rewardForWait);
+    int max_reward = max(max(rewardInFront,rewardOnTop), rewardForWait);
     if(max_reward == rewardForWait){
         action_reward.action = ai_waiting;
         action_reward.reward = rewardForWait;

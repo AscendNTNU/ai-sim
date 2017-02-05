@@ -28,8 +28,7 @@ function Z = calculateReward(X,Y,polynomialOrder,coeff)
     end
     if polynomialOrder > 7
         Z = Z + coeff(37).*X.^8 + coeff(38).*X.^7.*Y + coeff(39).*X.^6.*Y.^2 + ...
-            coeff(40).*X.^5.*Y.^3 + coeff(41).*X.^4.*Y.^4 + coeff(42).*X.^3.*Y.^5 + ...
-            coeff(43).*X.^2.*Y.^6 + coeff(44).*X.*Y.^7 + coeff(45).*Y.^8;
+            coeff(40).*X.^5.*Y.^3 + coeff(41)X^4*Y^4, X^3*Y^5, X^2*Y^6, X*Y^7, Y^8;
     end
 
 end

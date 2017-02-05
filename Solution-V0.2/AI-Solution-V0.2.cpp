@@ -267,7 +267,7 @@ float getTimeToIntercept(double Cx, double Ax, float Aangle, double Cvel, double
     A - ground robot
     C - Drone
 */
-float getTimeToInterceptWithTurn(double x_b0, double y_b0, double th_b, double v_b, double tTilTurn, double x_d, double y_d, double, double v_d) {
+IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_b, double v_b, double tTilTurn, double x_d, double y_d, double v_d) {
 	//Math to calculate if direct
 	double a = x_b0; double b = v_b; double c = th_b; double d = y_b0; double e = x_d; double f = y_d; double g = v_d;
 	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
@@ -275,6 +275,9 @@ float getTimeToInterceptWithTurn(double x_b0, double y_b0, double th_b, double v
 
 	double t1 = max(ta, tb);
 	double t2 = 0;
+
+	double x_bf = 0;
+	double y_bf = 0;
 
 	if(t1 > tTilTurn)
 	{
@@ -291,20 +294,23 @@ float getTimeToInterceptWithTurn(double x_b0, double y_b0, double th_b, double v
 		double x_d1 = e;
 		double y_d1 = f;
 		
-		double x_bf = x_b1+t2*v_b*cos(th_b+M_PI);
-		double y_bf = y_b1+t2*v_b*sin(th_b+M_PI);
+		x_bf = x_b1+t2*v_b*cos(th_b+M_PI);
+		y_bf = y_b1+t2*v_b*sin(th_b+M_PI);
 
 		double angleDrone2 = atan2(y_bf-y_d1, x_bf-x_d1);
 	}
 	else
 	{
-		double x_b1 = x_b0+t1*v_b*cos(th_b);
-		double y_b1 = y_b0+t1*v_b*sin(th_b);
-		double angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
+		x_bf = x_b0+t1*v_b*cos(th_b);
+		y_bf = y_b0+t1*v_b*sin(th_b);
+		double angleDrone1 = atan2(y_bf-y_d, x_bf-x_d);
 	}
-
+	IntersectionPoint intersection;
+	intersection.x = x_bf;
+	intersection.y = y_bf;
 	double t = t1+t2;
-	return t;
+	intersection.travel_time = t;
+	return intersection;
 }
 
 /*
@@ -368,6 +374,9 @@ IntersectionPoint calculateInterceptionPoint(sim_Observed_State state, Target ta
     intersection.x = state.drone_x + distance*cos(phi);
     intersection.y = state.drone_y + distance*sin(phi);
 
+	//Added to try new function
+	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], .33, 20 - (int)state.elapsed_time%20, state.drone_x, state.drone_y, 2.5);
+
     return intersection;
 }
 
@@ -410,6 +419,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
     float angle = wrap_angle(state.target_q[index]);
 
     target.intersection = calculateInterceptionPoint(state, target);
+	std::cout << "Intersection point: " << target.intersection.x << ", " << target.intersection.y << std::endl;
 
 
     float n = 10;
@@ -429,14 +439,14 @@ ActionReward choose_action(sim_Observed_State state, Target target){
 
     for (int i = 1; i <= n; i++)
     {
-        if (time_to_turn <= 0) {
-            std::cout << "Time ran out before end of plank was reached " << std::endl;
-            break;
-        }
-        if (x == target.plank.x_1 && y == target.plank.y_1) {
-            std::cout << "End of plank was reached ";
-            break;
-        }
+        //if (time_to_turn <= 0) {
+            //std::cout << "Time ran out before end of plank was reached " << std::endl;
+            //break;
+        //}
+        //if (x == target.plank.x_1 && y == target.plank.y_1) {
+            //std::cout << "End of plank was reached ";
+            //break;
+        //}
 
         action_to_check = getBestActionAtPoint(target, state);
 
@@ -486,10 +496,10 @@ int main()
 
             if(target_index == -1){
                 target = choose_target(observed_state, previous_state);
-                target_index = target.index;
-                ai_state = ai_tracking;
-                cmd.type = sim_CommandType_Track;
-                cmd.i = target.index;
+                target_index = target.index; 
+                //ai_state = ai_tracking;
+                //cmd.type = sim_CommandType_Track;
+                //cmd.i = target.index;
                 std::cout << "Tracking" << std::endl;
             }
 

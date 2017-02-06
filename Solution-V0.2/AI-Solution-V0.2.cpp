@@ -102,11 +102,11 @@ void createGrid(){
 }
 
 
-float gridValue(float x, float y)
+float gridValue(float X, float Y)
 {
-    if (y>20) {
+    if (Y>20) {
         return 2000;
-    } else if (y < 0 || x < 0 || x > 20) {
+    } else if (Y < 0 || X < 0 || X > 20) {
         return -1000;
     }
 

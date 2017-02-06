@@ -7,8 +7,8 @@ values = createGrid();
 num_points = size(values,1)*size(values, 2);
 
 % Order of polynomial to fit to grid values
-polynomialOrder = 6; % Change this to desired order (max 7)
-numberOfTerms = [3, 6, 10, 15, 21, 28, 36];
+polynomialOrder = 8; % Change this to desired order (max 7)
+numberOfTerms = [3, 6, 10, 15, 21, 28, 36, 45];
 
 row = 1;
 F = zeros(num_points,1);
@@ -25,7 +25,8 @@ for X=1:20
             X^4, X^3*Y, X^2*Y^2, X*Y^3, Y^4, ...
             X^5, X^4*Y, X^3*Y^2, X^2*Y^3, X*Y^4, Y^5, ...
             X^6, X^5*Y, X^4*Y^2, X^3*Y^3, X^2*Y^4, X*Y^5, Y^6, ...
-            X^7, X^6*Y, X^5*Y^2, X^4*Y^3, X^3*Y^4, X^2*Y^5, X*Y^6, Y^7];
+            X^7, X^6*Y, X^5*Y^2, X^4*Y^3, X^3*Y^4, X^2*Y^5, X*Y^6, Y^7,...
+            X^8, X^7*Y, X^6*Y^2, X^5*Y^3, X^4*Y^4, X^3*Y^5, X^2*Y^6, X*Y^7, Y^8];
         
         row = row + 1;
     end

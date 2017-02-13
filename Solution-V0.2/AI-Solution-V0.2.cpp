@@ -4,10 +4,11 @@
 #include "../gui.h"
 #include <stdio.h>
 #include <iostream>
+#include <algorithm>
 
 static double SPEED = 0.33;
 static double GRID[22][22];
-static double M_PI = 3.141592653589793238;
+static double MATH_PI = 3.141592653589793238;
 
 struct Plank
 {
@@ -110,9 +111,9 @@ float gridValue(float X, float Y)
         return -1000;
     }
 
-    value = (-9.995004e+02)+(9.976812e+01)*X+(-1.004701e+02)*Y
+    float value = (-9.995004e+02)+(9.976812e+01)*X+(-1.004701e+02)*Y
         +(-5.785388e+01)*pow(X,2)+(1.161562e+01)*X*Y+(5.477725e+01)*pow(Y,2)
-        +(1.260229e+01)*pow(X,3)+(1.299816e+01)*pow(X,2)*Y+(-1.438667e+01)*Xpow(Y,2)+(-1.158062e+01)*pow(Y,3)
+        +(1.260229e+01)*pow(X,3)+(1.299816e+01)*pow(X,2)*Y+(-1.438667e+01)*X*pow(Y,2)+(-1.158062e+01)*pow(Y,3)
         +(-1.404096e+00)*pow(X,4)+(-3.106303e+00)*pow(X,3)*Y+(4.263504e-01)*pow(X,2)*pow(Y,2)
         +(2.851553e+00)*X*pow(Y,3)+(1.301842e+00)*pow(Y,4)
         +(9.053408e-02)*pow(X,5)+(2.901147e-01)*pow(X,4)*Y+(1.327346e-01)*pow(X,3)*pow(Y,2)
@@ -246,7 +247,7 @@ double rotateY(double x, double y, double th) {
 double angleToIntercept(double Ax, double Ay, double Cx, double Cy, double Aangle, double Cvel) 
 {
     double Avel = Robot_Speed/1000;
-    double rotationAngle = atan2(Ay-Cy, Ax-Cx) - M_PI/2;
+    double rotationAngle = atan2(Ay-Cy, Ax-Cx) - MATH_PI/2;
     double AxTrans = Ax-Cx;
     double AyTrans = Ay-Cy;
     double AxRot = rotateX(AxTrans, AyTrans, rotationAngle);
@@ -285,7 +286,7 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 	double tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 
-	double t1 = max(ta, tb);
+	double t1 = std::max(ta, tb);
 	double t2 = 0;
 
 	double x_bf = 0;
@@ -298,16 +299,16 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 		double y_b1 = y_b0+tTilTurn*v_b*sin(th_b);
 		double angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
 
-		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+M_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + tTilTurn*v_d*cos(angleDrone1); double f = y_d + tTilTurn*v_d*sin(angleDrone1); double g = v_d;
+		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+MATH_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + tTilTurn*v_d*cos(angleDrone1); double f = y_d + tTilTurn*v_d*sin(angleDrone1); double g = v_d;
 		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-		t2 = max(ta, tb);
+		t2 = std::max(ta, tb);
 
 		double x_d1 = e;
 		double y_d1 = f;
 		
-		x_bf = x_b1+t2*v_b*cos(th_b+M_PI);
-		y_bf = y_b1+t2*v_b*sin(th_b+M_PI);
+		x_bf = x_b1+t2*v_b*cos(th_b+MATH_PI);
+		y_bf = y_b1+t2*v_b*sin(th_b+MATH_PI);
 
 		double angleDrone2 = atan2(y_bf-y_d1, x_bf-x_d1);
 	}
@@ -406,7 +407,7 @@ ActionReward getBestActionAtPoint(Target target, sim_Observed_State state) {
     std::cout << "Reward on top " << rewardOnTop << std::endl;
     std::cout << "Reward wait" << rewardForWait << std::endl;
 
-    int max_reward = max(max(rewardInFront,rewardOnTop), rewardForWait);
+    int max_reward = std::max(std::max(rewardInFront,rewardOnTop), rewardForWait);
     if(max_reward == rewardForWait){
         action_reward.action = ai_waiting;
         action_reward.reward = rewardForWait;

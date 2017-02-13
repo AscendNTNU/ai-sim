@@ -7,7 +7,6 @@
 #include <algorithm>
 
 static double SPEED = 0.33;
-static double GRID[22][22];
 static double MATH_PI = 3.141592653589793238;
 
 struct Plank
@@ -50,59 +49,6 @@ struct ActionReward
     float y;
 };
 
-void createGrid(){
-    float grid[22][22];
-    for(int x = 0; x < 22; x++) {
-        for (int y = 0; y < 22; y++) {
-            grid[x][y] = 0;
-            if (x == 21 || x == 0 || y == 0) { grid[x][y] = -1000.0; }
-            if (y == 21){
-                grid[x][y] = 2000.0;
-            }
-        }
-    }
-    //Setter indre verdier
-    for (int n = 0; n < 5; n++) {
-        //Starter i (1,1)
-        for (int x = 1; x < 21; x++){
-            for (int y = 1; y < 21; y++){
-                float snitt = (grid[x + 1][y] + grid[x - 1][y] + grid[x][y + 1] + grid[x][y - 1]) / 4;
-                grid[x][y] = snitt;
-            }
-        }
-        //Starter i (1,20)
-        for (int x = 1; x < 21; x++){
-            for (int y = 20; y > 0; y--){
-                float snitt = (grid[x + 1][y] + grid[x - 1][y] + grid[x][y + 1] + grid[x][y - 1]) / 4;
-                grid[x][y] = snitt;
-            }
-        }
-        // Starter i (20,1)
-        for (int x = 20; x > 0; x--){
-            for (int y = 1; y < 21; y++){
-                float snitt = (grid[x + 1][y] + grid[x - 1][y] + grid[x][y + 1] + grid[x][y - 1]) / 4;
-                grid[x][y] = snitt;
-            }
-        }
-        //Starter i (20,20)
-        for (int x = 20; x > 0; x--){
-            for (int y = 20; y > 0; y--){
-                float snitt = (grid[x + 1][y] + grid[x - 1][y] + grid[x][y + 1] + grid[x][y - 1]) / 4;
-                grid[x][y] = snitt;
-            }
-        }
-    }
-    for(int i=0; i < 22; i++){
-
-        for(int j=0; j < 22; j++){
-            std::cout << grid[i][j] << " ";
-            GRID[i][j] = grid[i][j]+1000;
-        }
-        std::cout << std::endl;
-    }
-}
-
-
 float gridValue(float X, float Y)
 {
     if (Y>20) {
@@ -130,17 +76,6 @@ float gridValue(float X, float Y)
         +(3.539047e-11)*X*pow(Y,7)+(1.058675e-06)*pow(Y,8);
 
     return value;
-}
-
-void printValueGrid(){
-    float grid[22][22];
-    for(int x = 0; x < 22; x++) {
-        for (int y = 0; y < 22; y++) {
-            grid[x][y] = gridValue(x,y);
-            std::cout << grid[x][y] << " ";
-        }
-        std::cout << std::endl;
-    }
 }
 
 int check_ifInArena(float x){
@@ -188,26 +123,9 @@ float getPlankValue(float (*f)(float x, float y), Plank plank, int n){
 
 float findRobotValue(float x_robot, float y_robot, float theta, int timeToTurn)
 {
-    float reward1 = 0;
-    float reward2 = 0;
-    Plank positions = createPlank(x_robot, y_robot, theta, timeToTurn);
-    // reward1 = gridValue(positions.x_1, positions.y_1);
-    // reward2 = gridValue(positions.x_2, positions.y_2);
-    reward1 = GRID[(int)positions.x_1][(int)positions.y_1];
-    reward2 = GRID[(int)positions.x_2][(int)positions.y_2];
-
-    //if(reward1 == gridValue(0,0) || reward1 == gridValue(20,20)){
-    if(reward1 == GRID[0][21] || reward1 == GRID[0][0]){
-        return 2*reward1;
-    }
-    //else if(reward2 == gridValue(0,0) || reward2 == gridValue(20,20)){
-    if(reward1 == GRID[0][21] || reward1 == GRID[0][0]){
-        return 2*reward2;
-    }
-    else{
-        return reward1-reward2;
-    }
-
+    Plank plank = createPlank(x_robot, y_robot, theta, timeToTurn);
+    float reward = getPlankValue(gridValue, plank, 5);
+    return reward;
 }
 
 bool target_inActionRange(sim_Observed_State observed_state, int target){
@@ -358,7 +276,6 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
                 angle, (int)observed_state.elapsed_time % 20);
 
             temp_value = getPlankValue(gridValue, plank, 5);
-            // temp_value = GRID[(int)observed_state.target_x[i]][(int)observed_state.target_y[i]];
 
             if(temp_value > max_value){
                 max_value = temp_value;
@@ -479,8 +396,6 @@ ActionReward choose_action(sim_Observed_State state, Target target){
 
 int main()
 {
-    createGrid(); 
-    printValueGrid();
     sim_init_msgs(true);
 
     ActionReward action_pos_reward;

@@ -7,7 +7,7 @@ values = createGrid();
 num_points = size(values,1)*size(values, 2);
 
 % Order of polynomial to fit to grid values
-polynomialOrder = 7; % Change this to desired order (max 7)
+polynomialOrder = 8; % Change this to desired order (max 7)
 numberOfTerms = [3, 6, 10, 15, 21, 28, 36, 45];
 
 row = 1;

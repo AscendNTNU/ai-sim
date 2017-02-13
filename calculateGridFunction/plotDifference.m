@@ -26,4 +26,8 @@ function plotDifference(grid,polynomialOrder,coeff)
     surf(grid-functionValue)
     xlabel('x')
     ylabel('y')
+    zlim([-1000,1000])
+    
+%     filename = sprintf('error/%d_function_grid_error.png',polynomialOrder);
+%     saveas(gcf,filename)
 end

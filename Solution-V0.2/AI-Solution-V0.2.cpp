@@ -4,10 +4,10 @@
 #include "../gui.h"
 #include <stdio.h>
 #include <iostream>
+#include <algorithm>
 
 static double SPEED = 0.33;
-static double GRID[22][22];
-static double M_PI = 3.141592653589793238;
+static double MATH_PI = 3.141592653589793238;
 
 struct Plank
 {
@@ -49,85 +49,33 @@ struct ActionReward
     float y;
 };
 
-void createGrid(){
-    float grid[22][22];
-    for(int x = 0; x < 22; x++) {
-        for (int y = 0; y < 22; y++) {
-            grid[x][y] = 0;
-            if (x == 21 || x == 0 || y == 0) { grid[x][y] = -1000.0; }
-            if (y == 21){
-                grid[x][y] = 2000.0;
-            }
-        }
-    }
-    //Setter indre verdier
-    for (int n = 0; n < 5; n++) {
-        //Starter i (1,1)
-        for (int x = 1; x < 21; x++){
-            for (int y = 1; y < 21; y++){
-                float snitt = (grid[x + 1][y] + grid[x - 1][y] + grid[x][y + 1] + grid[x][y - 1]) / 4;
-                grid[x][y] = snitt;
-            }
-        }
-        //Starter i (1,20)
-        for (int x = 1; x < 21; x++){
-            for (int y = 20; y > 0; y--){
-                float snitt = (grid[x + 1][y] + grid[x - 1][y] + grid[x][y + 1] + grid[x][y - 1]) / 4;
-                grid[x][y] = snitt;
-            }
-        }
-        // Starter i (20,1)
-        for (int x = 20; x > 0; x--){
-            for (int y = 1; y < 21; y++){
-                float snitt = (grid[x + 1][y] + grid[x - 1][y] + grid[x][y + 1] + grid[x][y - 1]) / 4;
-                grid[x][y] = snitt;
-            }
-        }
-        //Starter i (20,20)
-        for (int x = 20; x > 0; x--){
-            for (int y = 20; y > 0; y--){
-                float snitt = (grid[x + 1][y] + grid[x - 1][y] + grid[x][y + 1] + grid[x][y - 1]) / 4;
-                grid[x][y] = snitt;
-            }
-        }
-    }
-    for(int i=0; i < 22; i++){
-
-        for(int j=0; j < 22; j++){
-            std::cout << grid[i][j] << " ";
-            GRID[i][j] = grid[i][j]+1000;
-        }
-        std::cout << std::endl;
-    }
-}
-
-
-float gridValue(float x, float y)
+float gridValue(float X, float Y)
 {
-    if (y>20) {
+    if (Y>20) {
         return 2000;
-    } else if (y < 0 || x < 0 || x > 20) {
-        return 0;
+    } else if (Y < 0 || X < 0 || X > 20) {
+        return -1000;
     }
-    y = abs(20-y);
-    int x_0 = 10; //The peak's x-position
-    int y_0 = 20; //The peak's y-position
-    float y_v = 10; // The spread in y-direction
-    float x_v = 7; // The spread in x-direction
-    int amplitude = 100; // How "extreme" the values are
-    float value = amplitude*exp(-((pow(x - x_0, 2) / (2 * pow(x_v, 2))) - ((pow(y - y_0, 2)) / (2 * pow(y_v, 2)))));
-    return value;
-}
 
-void printValueGrid(){
-    float grid[22][22];
-    for(int x = 0; x < 22; x++) {
-        for (int y = 0; y < 22; y++) {
-            grid[x][y] = gridValue(x,y);
-            std::cout << grid[x][y] << " ";
-        }
-        std::cout << std::endl;
-    }
+    float value = (-9.995004e+02)+(9.976812e+01)*X+(-1.004701e+02)*Y
+        +(-5.785388e+01)*pow(X,2)+(1.161562e+01)*X*Y+(5.477725e+01)*pow(Y,2)
+        +(1.260229e+01)*pow(X,3)+(1.299816e+01)*pow(X,2)*Y+(-1.438667e+01)*X*pow(Y,2)+(-1.158062e+01)*pow(Y,3)
+        +(-1.404096e+00)*pow(X,4)+(-3.106303e+00)*pow(X,3)*Y+(4.263504e-01)*pow(X,2)*pow(Y,2)
+        +(2.851553e+00)*X*pow(Y,3)+(1.301842e+00)*pow(Y,4)
+        +(9.053408e-02)*pow(X,5)+(2.901147e-01)*pow(X,4)*Y+(1.327346e-01)*pow(X,3)*pow(Y,2)
+        +(-1.761180e-01)*pow(X,2)*pow(Y,3)+(-2.603853e-01)*X*pow(Y,4)+(-8.415694e-02)*pow(Y,5)
+        +(-3.615309e-03)*pow(X,6)+(-1.235169e-02)*pow(X,5)*Y+(-1.602868e-02)*pow(X,4)*pow(Y,2)
+        +(3.840976e-03)*pow(X,3)*pow(Y,3)+(1.239923e-02)*pow(X,2)*pow(Y,4)
+        +(1.283802e-02)*X*pow(Y,5)+(3.201336e-03)*pow(Y,6)
+        +(8.890888e-05)*pow(X,7)+(1.960570e-04)*pow(X,6)*Y+(7.353331e-04)*pow(X,5)*pow(Y,2)
+        +(-9.145182e-05)*pow(X,4)*pow(Y,3)+(8.794847e-10)*pow(X,3)*pow(Y,4)
+        +(-6.113303e-04)*pow(X,2)*pow(Y,5)+(-2.451141e-04)*X*pow(Y,6)+(-7.627948e-05)*pow(Y,7)
+        +(-1.058445e-06)*pow(X,8)+(4.059809e-11)*pow(X,7)*Y+(-1.167195e-05)*pow(X,6)*pow(Y,2)
+        +(-4.630460e-12)*pow(X,5)*pow(Y,3)+(-1.355465e-11)*pow(X,4)*pow(Y,4)
+        +(-5.731993e-12)*pow(X,3)*pow(Y,5)+(1.167198e-05)*pow(X,2)*pow(Y,6)
+        +(3.539047e-11)*X*pow(Y,7)+(1.058675e-06)*pow(Y,8);
+
+    return value;
 }
 
 int check_ifInArena(float x){
@@ -175,26 +123,9 @@ float getPlankValue(float (*f)(float x, float y), Plank plank, int n){
 
 float findRobotValue(float x_robot, float y_robot, float theta, int timeToTurn)
 {
-    float reward1 = 0;
-    float reward2 = 0;
-    Plank positions = createPlank(x_robot, y_robot, theta, timeToTurn);
-    // reward1 = gridValue(positions.x_1, positions.y_1);
-    // reward2 = gridValue(positions.x_2, positions.y_2);
-    reward1 = GRID[(int)positions.x_1][(int)positions.y_1];
-    reward2 = GRID[(int)positions.x_2][(int)positions.y_2];
-
-    //if(reward1 == gridValue(0,0) || reward1 == gridValue(20,20)){
-    if(reward1 == GRID[0][21] || reward1 == GRID[0][0]){
-        return 2*reward1;
-    }
-    //else if(reward2 == gridValue(0,0) || reward2 == gridValue(20,20)){
-    if(reward1 == GRID[0][21] || reward1 == GRID[0][0]){
-        return 2*reward2;
-    }
-    else{
-        return reward1-reward2;
-    }
-
+    Plank plank = createPlank(x_robot, y_robot, theta, timeToTurn);
+    float reward = getPlankValue(gridValue, plank, 5);
+    return reward;
 }
 
 bool target_inActionRange(sim_Observed_State observed_state, int target){
@@ -234,7 +165,7 @@ double rotateY(double x, double y, double th) {
 double angleToIntercept(double Ax, double Ay, double Cx, double Cy, double Aangle, double Cvel) 
 {
     double Avel = Robot_Speed/1000;
-    double rotationAngle = atan2(Ay-Cy, Ax-Cx) - M_PI/2;
+    double rotationAngle = atan2(Ay-Cy, Ax-Cx) - MATH_PI/2;
     double AxTrans = Ax-Cx;
     double AyTrans = Ay-Cy;
     double AxRot = rotateX(AxTrans, AyTrans, rotationAngle);
@@ -284,7 +215,7 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 	double tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 
-	double t1 = max(ta, tb);
+	double t1 = std::max(ta, tb);
 	double t2 = 0;
 
 	double x_bf = 0;
@@ -300,13 +231,13 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+M_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); double f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); double g = v_d;
 		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-		t2 = max(ta, tb);
+		t2 = std::max(ta, tb);
 
 		double x_d1 = e;
 		double y_d1 = f;
 		
-		x_bf = x_b1+t2*v_b*cos(th_b+M_PI);
-		y_bf = y_b1+t2*v_b*sin(th_b+M_PI);
+		x_bf = x_b1+t2*v_b*cos(th_b+MATH_PI);
+		y_bf = y_b1+t2*v_b*sin(th_b+MATH_PI);
 
 		double angleDrone2 = atan2(y_bf-y_d1, x_bf-x_d1);
 	}
@@ -356,7 +287,6 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
                 angle, (int)observed_state.elapsed_time % 20);
 
             temp_value = getPlankValue(gridValue, plank, 5);
-            // temp_value = GRID[(int)observed_state.target_x[i]][(int)observed_state.target_y[i]];
 
             if(temp_value > max_value){
                 max_value = temp_value;
@@ -405,7 +335,7 @@ ActionReward getBestActionAtPoint(Target target, sim_Observed_State state) {
     std::cout << "Reward on top " << rewardOnTop << std::endl;
     std::cout << "Reward wait" << rewardForWait << std::endl;
 
-    int max_reward = max(max(rewardInFront,rewardOnTop), rewardForWait);
+    int max_reward = std::max(std::max(rewardInFront,rewardOnTop), rewardForWait);
     if(max_reward == rewardForWait){
         action_reward.action = ai_waiting;
         action_reward.reward = rewardForWait;
@@ -477,8 +407,6 @@ ActionReward choose_action(sim_Observed_State state, Target target){
 
 int main()
 {
-    createGrid(); 
-    printValueGrid();
     sim_init_msgs(true);
 
     ActionReward action_pos_reward;

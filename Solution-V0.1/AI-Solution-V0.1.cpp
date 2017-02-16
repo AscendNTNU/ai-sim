@@ -78,20 +78,32 @@ void createGrid(){
 }
 
 
-float gridValue(float x, float y)
+float gridValue(float X, float Y)
 {
     if (y>20) {
-        return 10000;
+        return 2000;
     } else if (y < 0 || x < 0 || x > 20) {
-        return 0;
+        return -1000;
     }
-    y = abs(20-y);
-    int x_0 = 10; //The peak's x-position
-    int y_0 = 20; //The peak's y-position
-    float y_v = 10; // The spread in y-direction
-    float x_v = 7; // The spread in x-direction
-    int amplitude = 100; // How "extreme" the values are
-    float value = amplitude*exp(-((pow(x - x_0, 2) / (2 * pow(x_v, 2))) - ((pow(y - y_0, 2)) / (2 * pow(y_v, 2)))));
+    // y = abs(20-y);
+    // int x_0 = 10; //The peak's x-position
+    // int y_0 = 20; //The peak's y-position
+    // float y_v = 10; // The spread in y-direction
+    // float x_v = 7; // The spread in x-direction
+    // int amplitude = 100; // How "extreme" the values are
+    // float value = amplitude*exp(-((pow(x - x_0, 2) / (2 * pow(x_v, 2))) - ((pow(y - y_0, 2)) / (2 * pow(y_v, 2)))));
+    
+    value = (-1.010851e+03)+(1.049060e+02)*X+(-9.367464e+01)*Y
+        +(-3.490494e+01)*pow(X,2)+(-6.577686e-01)*X*Y+(3.708994e+01)*pow(Y,2)
+        +(4.260008e+00)*pow(X,3)+(7.404536e+00)*pow(X,2)*Y+(-5.974415e+00)*Xpow(Y,2)+(-4.592581e+00)*pow(Y,3)
+        +(-2.694636e-01)*pow(X,4)+(-7.022109e-01)*pow(X,3)*Y+(-2.259366e-01)*pow(X,2)*pow(Y,2)
+        +(8.702407e-01)*X*pow(Y,3)+(2.455109e-01)*pow(Y,4)
+        +(9.601988e-03)*pow(X,5)+(1.671931e-02)*pow(X,4)*Y+(4.861262e-02)*pow(X,3)*pow(Y,2)
+        +(-4.144003e-02)*pow(X,2)*pow(Y,3)+(-2.430631e-02)*X*pow(Y,4)+(-7.628346e-03)*pow(Y,5)
+        +(-1.524125e-04)*pow(X,6)+(1.137582e-12)*pow(X,5)*Y+(-1.157443e-03)*pow(X,4)*pow(Y,2)
+        +(-5.134761e-13)*pow(X,3)*pow(Y,3)+(1.157443e-03)*pow(X,2)*pow(Y,4)
+        +(9.950366e-13)*X*pow(Y,5)+(1.524125e-04)*pow(Y,6);
+
     return value;
 }
 

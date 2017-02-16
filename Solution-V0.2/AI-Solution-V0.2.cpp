@@ -268,6 +268,17 @@ float getTimeToIntercept(double Cx, double Ax, float Aangle, double Cvel, double
     C - Drone
 */
 IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_b, double v_b, double tTilTurn, double x_d, double y_d, double v_d) {
+	if(tTilTurn > 18) {
+		float tSinceTurn = 20-tTilTurn;
+		//no idea, but not normal, since the robot is turning
+		//th_f = th_curr - th_rotSoFar (rot/s * s) + 180 degrees
+		th_b   = th_b    - (M_PI/2)*(tSinceTurn)   + M_PI;
+
+		float th_fly = atan2(y_b0-y_d, x_b0-x_d);
+		x_d = x_d + (2-tSinceTurn)*v_d*cos(th_fly);
+		y_d = y_d + (2-tSinceTurn)*v_d*sin(th_fly);
+	}
+	
 	//Math to calculate if direct
 	double a = x_b0; double b = v_b; double c = th_b; double d = y_b0; double e = x_d; double f = y_d; double g = v_d;
 	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
@@ -279,14 +290,14 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 	double x_bf = 0;
 	double y_bf = 0;
 
-	if(t1 > tTilTurn)
+	if(t1 > (tTilTurn+2))
 	{
 		t1 = tTilTurn;
 		double x_b1 = x_b0+tTilTurn*v_b*cos(th_b);
 		double y_b1 = y_b0+tTilTurn*v_b*sin(th_b);
 		double angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
 
-		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+M_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + tTilTurn*v_d*cos(angleDrone1); double f = y_d + tTilTurn*v_d*sin(angleDrone1); double g = v_d;
+		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+M_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); double f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); double g = v_d;
 		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		t2 = max(ta, tb);
@@ -375,7 +386,7 @@ IntersectionPoint calculateInterceptionPoint(sim_Observed_State state, Target ta
     intersection.y = state.drone_y + distance*sin(phi);
 
 	//Added to try new function
-	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], .33, 20 - (int)state.elapsed_time%20, state.drone_x, state.drone_y, 2.5);
+	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], .33, 20 - (int)state.elapsed_time%20 + (int)state.elapsed_time - state.elapsed_time, state.drone_x, state.drone_y, 1);
 
     return intersection;
 }

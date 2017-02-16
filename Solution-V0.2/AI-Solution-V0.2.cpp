@@ -31,6 +31,7 @@ struct Target
     IntersectionPoint intersection;
     int index;
     float angle;
+    float currentReward;
 };
 
 enum ai_State
@@ -78,7 +79,7 @@ float gridValue(float X, float Y)
     return value;
 }
 
-int check_ifInArena(float x){
+int detectPointOutsideArena(float x){
     if(x > 21){
         return 21;
     }
@@ -90,14 +91,21 @@ int check_ifInArena(float x){
     }
 }
 
+bool isOutsideArena(float x) {
+    bool outside = true;
+    if(x > 21 || x<0){
+        outside = true;
+    }
+    return outside;
+}
+
 Plank createPlank(float x, float y, float theta, int timeToTurn)
 {
-
     Plank plank;
-    plank.x_1 = check_ifInArena(timeToTurn*SPEED*cos(theta) + x);
-    plank.y_1 = check_ifInArena(timeToTurn*SPEED*sin(theta) + y);
-    plank.x_2 = check_ifInArena((timeToTurn - 20)*SPEED*cos(theta) + x);
-    plank.y_2 = check_ifInArena((timeToTurn - 20)*SPEED*sin(theta) + y);
+    plank.x_1 = detectPointOutsideArena(timeToTurn*SPEED*cos(theta) + x);
+    plank.y_1 = detectPointOutsideArena(timeToTurn*SPEED*sin(theta) + y);
+    plank.x_2 = detectPointOutsideArena((timeToTurn - 20)*SPEED*cos(theta) + x);
+    plank.y_2 = detectPointOutsideArena((timeToTurn - 20)*SPEED*sin(theta) + y);
     
     float dx = plank.x_2 - plank.x_1;
     float dy = plank.y_2 - plank.y_1;
@@ -106,16 +114,23 @@ Plank createPlank(float x, float y, float theta, int timeToTurn)
     return plank;
 }
 
-float getPlankValue(float (*f)(float x, float y), Plank plank, int n){
+float getPlankValue(float (*f)(float x, float y), Plank plank, float angle, int n){
 
-    float step_x = (plank.x_1 - plank.x_2)/ n;  // width of each small rectangle
-    float step_y = (plank.y_1 - plank.y_2)/ n;  // width of each small rectangle
+
+    float step_tot = plank.length/n;
+    float step_x = step_tot*cos(angle);
+    float step_y = step_tot*sin(angle);
+
     float area = 0.0;  // signed area
+    float x = 0.0;
+    float y = 0.0;
 
-    std::cout << "Plank length" << plank.length << std::endl;
+    // std::cout << "Plank length" << plank.length << std::endl;
 
     for (int i = 0; i < n; i++) {
-        area += f(plank.x_1 + (i + 0.5) * step_x, plank.y_1 + (i + 0.5) * step_y) * plank.length; // sum up each small rectangle
+        x = plank.x_1 + (i + 0.5) * step_x;
+        y = plank.y_1 + (i + 0.5) * step_y;
+        area += f(x, y) * step_tot; // sum up each small rectangle
     }
     area = area/plank.length;
     return area;
@@ -124,7 +139,7 @@ float getPlankValue(float (*f)(float x, float y), Plank plank, int n){
 float findRobotValue(float x_robot, float y_robot, float theta, int timeToTurn)
 {
     Plank plank = createPlank(x_robot, y_robot, theta, timeToTurn);
-    float reward = getPlankValue(gridValue, plank, 5);
+    float reward = getPlankValue(gridValue, plank, theta, 5);
     return reward;
 }
 
@@ -199,6 +214,7 @@ float getTimeToIntercept(double Cx, double Ax, float Aangle, double Cvel, double
     C - Drone
 */
 IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_b, double v_b, double tTilTurn, double x_d, double y_d, double v_d) {
+    // std::cout << x_b0 << ", " << y_b0 << ", " << th_b << ", " << v_b << ", " << tTilTurn << ", " << x_d << ", " << y_d << ", " << v_d << std::endl;
 	//Math to calculate if direct
 	double a = x_b0; double b = v_b; double c = th_b; double d = y_b0; double e = x_d; double f = y_d; double g = v_d;
 	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
@@ -275,13 +291,14 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
             Plank plank = createPlank(observed_state.target_x[i], observed_state.target_y[i],
                 angle, (int)observed_state.elapsed_time % 20);
 
-            temp_value = getPlankValue(gridValue, plank, 5);
+            temp_value = getPlankValue(gridValue, plank, angle, 5);
 
             if(temp_value > max_value){
                 max_value = temp_value;
                 target.index = i;
                 target.plank = plank;
                 target.angle = wrap_angle(observed_state.target_q[i]);
+                target.currentReward = temp_value;
             }
         }
     }
@@ -310,16 +327,16 @@ IntersectionPoint calculateInterceptionPoint(sim_Observed_State state, Target ta
     return intersection;
 }
 
-ActionReward getBestActionAtPoint(Target target, sim_Observed_State state) {
+ActionReward getBestActionAtPoint(Target target, float x, float y , sim_Observed_State state) {
     ActionReward action_reward;
-    int rewardOnTop = findRobotValue(target.intersection.x, target.intersection.y,
-            wrap_angle(target.angle + 0.785), (int)(state.elapsed_time+target.intersection.travel_time) % 20); //0.785 radians is almost 45 degerees
+    int rewardOnTop = findRobotValue(x, y, wrap_angle(target.angle + 0.785),//0.785 radians is almost 45 degerees 
+            (int)(state.elapsed_time+target.intersection.travel_time) % 20);
 
-    int rewardInFront = findRobotValue(target.intersection.x, target.intersection.y,
-            wrap_angle(target.angle + 3.14), (int)(state.elapsed_time+target.intersection.travel_time) % 20);
+    int rewardInFront = findRobotValue(x, y, wrap_angle(target.angle + 3.14), 
+            (int)(state.elapsed_time+target.intersection.travel_time) % 20);
 
-    int rewardForWait = findRobotValue(target.intersection.x, target.intersection.y,
-            target.angle, (int)(state.elapsed_time+target.intersection.travel_time) % 20);
+    int rewardForWait = target.currentReward;
+
     std::cout << "Reward in front " << rewardInFront << std::endl;
     std::cout << "Reward on top " << rewardOnTop << std::endl;
     std::cout << "Reward wait" << rewardForWait << std::endl;
@@ -344,6 +361,15 @@ ActionReward getBestActionAtPoint(Target target, sim_Observed_State state) {
     return action_reward;
 }
 
+bool isOutsideOfPlank(float x, float y, Plank plank) {
+    if ((x > plank.x_1 && x > plank.x_2) || (x < plank.x_1 && x < plank.x_2) ||
+        (y > plank.x_1 && y > plank.x_2) || (y < plank.x_1 && y < plank.x_2)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 ActionReward choose_action(sim_Observed_State state, Target target){
     int index = target.index;
     float angle = wrap_angle(state.target_q[index]);
@@ -365,20 +391,31 @@ ActionReward choose_action(sim_Observed_State state, Target target){
     ActionReward best_action;
     best_action.reward = -1000.0;
     best_action.action = ai_waiting;
+    
     ActionReward action_to_check;
-
-    for (int i = 1; i <= n; i++)
-    {
+    bool backwards = false;
+    int i = 1;
+    while (i > 0) {
         //if (time_to_turn <= 0) {
             //std::cout << "Time ran out before end of plank was reached " << std::endl;
             //break;
         //}
-        //if (x == target.plank.x_1 && y == target.plank.y_1) {
-            //std::cout << "End of plank was reached ";
-            //break;
-        //}
-
-        action_to_check = getBestActionAtPoint(target, state);
+        std::cout << "Iteration " << i << std::endl;
+        std::cout << "Plank   X = [" << target.plank.x_1 << ", " << target.plank.x_2 << "]" << std::endl;
+        std::cout << "Plank   Y = [" << target.plank.y_1 << ", " << target.plank.y_2 << "]" << std::endl;
+        std::cout << "Current X = "<< x << std::endl;
+        std::cout << "Current Y = "<< y << std::endl;
+        if (isOutsideOfPlank(x,y, target.plank)) {
+            std::cout << "End of plank was reached " << std::endl;
+            if (backwards) {
+                return best_action;
+            } else {
+                i = n+1;
+                backwards = true;
+                target.angle += MATH_PI;
+            }
+        }
+        action_to_check = getBestActionAtPoint(target, x, y, state);
 
         if (action_to_check.reward > best_action.reward) {
             best_action = action_to_check;
@@ -386,11 +423,17 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             best_action.y = y;
         }
 
-        x = x+step_x;
-        y = y+step_y;
+        if (backwards) {
+            x = x-step_x;
+            y = y-step_y;
+            i -= 1;
+        } else {
+            x = x+step_x;
+            y = y+step_y;
+            i += 1;
+        }
         time_to_turn = time_to_turn - Robot_Speed/(step_size*1000); // Multiplied by 1000 to get Milimeters from Meters
     }
-
     return best_action;
 }
 
@@ -436,6 +479,10 @@ int main()
             {                
                 action_pos_reward = choose_action(observed_state, target);
                 ai_state = action_pos_reward.action;
+                if (ai_state == ai_waiting) {
+                    target_index = -1;
+                    break;
+                }
 
                 cmd.type = sim_CommandType_Search;
                 cmd.x = action_pos_reward.x;

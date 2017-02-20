@@ -48,6 +48,8 @@ struct ActionReward
     float reward;
     float x;
     float y;
+    int time_after_intersection;
+    int time_until_intersection;
 };
 
 float gridValue(float X, float Y)
@@ -387,6 +389,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
     target.intersection = calculateInterceptionPoint(state, target);
 	std::cout << "Intersection point: " << target.intersection.x << ", " << target.intersection.y << std::endl;
 
+    target.intersection.travel_time;
 
     float n = 10;
     float step_size = target.plank.length/n;
@@ -395,21 +398,18 @@ ActionReward choose_action(sim_Observed_State state, Target target){
 
     float x = target.intersection.x;
     float y = target.intersection.y;
-    int time_to_turn = ((int)state.elapsed_time % 20) - target.intersection.travel_time;
+    int time_after_intersection = 0;
 
     // Temporary max rewarded action
     ActionReward best_action;
     best_action.reward = -1000.0;
     best_action.action = ai_waiting;
+    best_action.time_until_intersection = target.intersection.travel_time;
     
     ActionReward action_to_check;
     bool backwards = false;
     int i = 1;
     while (i > 0) {
-        //if (time_to_turn <= 0) {
-            //std::cout << "Time ran out before end of plank was reached " << std::endl;
-            //break;
-        //}
         std::cout << "Iteration " << i << std::endl;
         std::cout << "Plank   X = [" << target.plank.x_1 << ", " << target.plank.x_2 << "]" << std::endl;
         std::cout << "Plank   Y = [" << target.plank.y_1 << ", " << target.plank.y_2 << "]" << std::endl;
@@ -431,6 +431,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             best_action = action_to_check;
             best_action.x = x;
             best_action.y = y;
+            best_action.time_after_intersection = time_after_intersection;
         }
 
         if (backwards) {
@@ -442,7 +443,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             y = y+step_y;
             i += 1;
         }
-        time_to_turn = time_to_turn - Robot_Speed/(step_size*1000); // Multiplied by 1000 to get Milimeters from Meters
+        time_after_intersection = time_after_intersection + Robot_Speed/(step_size*1000); // Multiplied by 1000 to get Milimeters from Meters
     }
     return best_action;
 }
@@ -500,6 +501,10 @@ int main()
                 sim_send_cmd(&cmd);
 
                 while(!observed_state.drone_cmd_done);
+
+                // Tell drone do do action at time
+                int time_to_act = action_pos_reward.time_until_intersection + 
+                                  action_pos_reward.time_after_intersection;
 
                 switch (ai_state)
                 {

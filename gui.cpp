@@ -317,6 +317,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     persist Color color_Obstacles      = { 0.43f, 0.76f, 0.79f, 1.00f };
     persist Color color_Drone          = { 0.87f, 0.93f, 0.84f, 0.50f };
     persist Color color_DroneGoto      = { 0.87f, 0.93f, 0.84f, 0.50f };
+    persist Color color_Planks         = { 0.85f, 0.83f, 0.37f, 0.50f };
     #define RGBA(C) C.r, C.g, C.b, C.a
 
     persist float send_timer = 0.0f;

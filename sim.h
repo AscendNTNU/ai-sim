@@ -481,7 +481,7 @@ TopTouchStart(robot_Event event,
 }
 
 static robot_State
-robot_fsm(robot_State state,
+robot_fsm(sim_Robot *robot,robot_State state,
           robot_Internal *internal,
           robot_Event event,
           robot_Action *action)
@@ -1080,7 +1080,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             ROBOTS[i].x += collision[i].resolve_delta_x * 1.02f;
             ROBOTS[i].y += collision[i].resolve_delta_y * 1.02f;
         }
-        ROBOTS[i].state = robot_fsm(ROBOTS[i].state,
+        ROBOTS[i].state = robot_fsm(&ROBOTS[i],ROBOTS[i].state,
                                     &ROBOTS[i].internal,
                                     events[i],
                                     &ROBOTS[i].action);

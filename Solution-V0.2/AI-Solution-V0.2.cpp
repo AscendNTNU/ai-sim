@@ -39,7 +39,11 @@ enum ai_State
     ai_landingOnTop,
     ai_landingInFront,
     ai_waiting,
-    ai_tracking
+    ai_tracking,
+	ai_searching,
+	ai_chooseAction,
+	ai_chooseTarget,
+	ai_start
 };
 
 struct ActionReward
@@ -162,7 +166,7 @@ bool targetIsMoving(int target, sim_Observed_State previous_state, sim_Observed_
         moving = false;
     }
     if (observed_state.target_removed[target]) {
-        moving = true;
+        moving = false;
     }
     return moving;
 }
@@ -220,7 +224,7 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 		float tSinceTurn = 20-tTilTurn;
 		//no idea, but not normal, since the robot is turning
 		//th_f = th_curr - th_rotSoFar (rot/s * s) + 180 degrees
-		th_b   = th_b    - (M_PI/2)*(tSinceTurn)   + M_PI;
+		th_b   = th_b    - (MATH_PI/2)*(tSinceTurn)   + MATH_PI;
 
 		float th_fly = atan2(y_b0-y_d, x_b0-x_d);
 		x_d = x_d + (2-tSinceTurn)*v_d*cos(th_fly);
@@ -232,7 +236,7 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 	double tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 
-	double t1 = std::max(ta, tb);
+	double t1 = max(ta, tb);
 	double t2 = 0;
 
 	double x_bf = 0;
@@ -245,10 +249,10 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 		double y_b1 = y_b0+tTilTurn*v_b*sin(th_b);
 		double angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
 
-		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+M_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); double f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); double g = v_d;
+		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+MATH_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); double f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); double g = v_d;
 		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-		t2 = std::max(ta, tb);
+		t2 = max(ta, tb);
 
 		double x_d1 = e;
 		double y_d1 = f;
@@ -347,18 +351,12 @@ ActionReward getBestActionAtPoint(Target target, float x, float y , sim_Observed
     int rewardInFront = findRobotValue(x, y, wrap_angle(target.angle + 3.14), 
             (int)(state.elapsed_time+target.intersection.travel_time) % 20);
 
-    int rewardForWait = target.currentReward;
-
+    
     std::cout << "Reward in front " << rewardInFront << std::endl;
     std::cout << "Reward on top " << rewardOnTop << std::endl;
-    std::cout << "Reward wait" << rewardForWait << std::endl;
-
-    int max_reward = std::max(std::max(rewardInFront,rewardOnTop), rewardForWait);
-    if(max_reward == rewardForWait){
-        action_reward.action = ai_waiting;
-        action_reward.reward = rewardForWait;
-    }
-    else if(max_reward == rewardInFront){
+    
+    int max_reward = max(rewardInFront,rewardOnTop);
+    if(max_reward == rewardInFront){
         action_reward.action = ai_landingInFront;
         action_reward.reward = rewardInFront;
     }
@@ -368,14 +366,13 @@ ActionReward getBestActionAtPoint(Target target, float x, float y , sim_Observed
     }
     else{
         action_reward.action = ai_waiting;
-        action_reward.reward = rewardForWait;
     }
     return action_reward;
 }
 
 bool isOutsideOfPlank(float x, float y, Plank plank) {
     if ((x > plank.x_1 && x > plank.x_2) || (x < plank.x_1 && x < plank.x_2) ||
-        (y > plank.x_1 && y > plank.x_2) || (y < plank.x_1 && y < plank.x_2)) {
+        (y > plank.y_1 && y > plank.y_2) || (y < plank.y_1 && y < plank.y_2)) {
         return true;
     } else {
         return false;
@@ -411,8 +408,8 @@ ActionReward choose_action(sim_Observed_State state, Target target){
     int i = 1;
     while (i > 0) {
         std::cout << "Iteration " << i << std::endl;
-        std::cout << "Plank   X = [" << target.plank.x_1 << ", " << target.plank.x_2 << "]" << std::endl;
-        std::cout << "Plank   Y = [" << target.plank.y_1 << ", " << target.plank.y_2 << "]" << std::endl;
+        std::cout << "New Plank   X = [" << target.plank.x_1 << ", " << target.plank.x_2 << "]" << std::endl;
+        std::cout << "New Plank   Y = [" << target.plank.y_1 << ", " << target.plank.y_2 << "]" << std::endl;
         std::cout << "Current X = "<< x << std::endl;
         std::cout << "Current Y = "<< y << std::endl;
         if (isOutsideOfPlank(x,y, target.plank)) {
@@ -453,7 +450,8 @@ int main()
     sim_init_msgs(true);
 
     ActionReward action_pos_reward;
-    ai_State ai_state = ai_waiting;
+	action_pos_reward.action = ai_waiting;
+    ai_State ai_state = ai_chooseTarget;
 
     sim_State state;
     bool running = true;
@@ -463,6 +461,7 @@ int main()
     sim_Observed_State previous_state;
     int target_index = -1;
     float last_action_time;
+	int time_to_act = 200;
 
     Target target;
 
@@ -472,60 +471,93 @@ int main()
         previous_state = observed_state;
         sim_Observed_State observed_state = sim_observe_state(state);
 
-        if (observed_state.drone_cmd_done || ai_state == ai_tracking) //&& observed_state.elapsed_time - last_action_time >= 4.0)
-        {
+		
+
+        
             last_action_time = observed_state.elapsed_time;
 
-            if(target_index == -1){
-                target = choose_target(observed_state, previous_state);
-                target_index = target.index; 
-                //ai_state = ai_tracking;
-                //cmd.type = sim_CommandType_Track;
-                //cmd.i = target.index;
-                std::cout << "Tracking" << std::endl;
-            }
+            //if(target_index == -1){
+                //target = choose_target(observed_state, previous_state);
+                //target_index = target.index; 
+                ////ai_state = ai_tracking;
+                ////cmd.type = sim_CommandType_Track;
+                ////cmd.i = target.index;
+                //std::cout << "Tracking" << std::endl;
+            //}
+//
+            //else if(target_inActionRange(observed_state, target.index)
+                    //&& targetIsMoving(target.index, previous_state, observed_state))
+            //{                
+                
 
-            else if(target_inActionRange(observed_state, target.index)
-                    && targetIsMoving(target.index, previous_state, observed_state))
-            {                
-                action_pos_reward = choose_action(observed_state, target);
-                ai_state = action_pos_reward.action;
-                if (ai_state == ai_waiting) {
-                    target_index = -1;
-                    break;
-                }
+            switch (ai_state)
+            {
+				case ai_chooseTarget:
+					target = choose_target(observed_state, previous_state);
+					target_index = target.index;
+					std::cout << "Choose Target" << std::endl;
+					ai_state = ai_chooseAction;
+				break;
+				case ai_chooseAction:
+					std::cout << "Choose Action" << std::endl;
+					action_pos_reward = choose_action(observed_state, target);
+					ai_state = ai_waiting;
+					if (action_pos_reward.action == ai_waiting) {
+						target_index = -1;
+						ai_state = ai_chooseTarget;
+						break;
+					}
 
-                cmd.type = sim_CommandType_Search;
-                cmd.x = action_pos_reward.x;
-                cmd.y = action_pos_reward.y;
-                sim_send_cmd(&cmd);
+					cmd.type = sim_CommandType_Search;
+					cmd.x = action_pos_reward.x;
+					cmd.y = action_pos_reward.y;
+					sim_send_cmd(&cmd);
 
-                while(!observed_state.drone_cmd_done);
 
-                // Tell drone do do action at time
-                int time_to_act = action_pos_reward.time_until_intersection + 
-                                  action_pos_reward.time_after_intersection;
-
-                switch (ai_state)
-                {
-                    case ai_landingOnTop:
-                        cmd.type = sim_CommandType_LandOnTopOf;
-                        cmd.i = target.index;
-                        std::cout << "Top" << std::endl;
-                        sim_send_cmd(&cmd);
-                    break;
-                    case ai_landingInFront:
-                        cmd.type = sim_CommandType_LandInFrontOf;
-                        cmd.i = target.index;
-                        std::cout << "Front" << std::endl;
-                        sim_send_cmd(&cmd);
-                    break;
-                    case ai_waiting:
-                        std::cout << "WAITING" << std::endl;
-                    break;
-                }
-            target_index = -1;
-            }
+					// Tell drone do do action at time
+					time_to_act = observed_state.elapsed_time + 
+										action_pos_reward.time_until_intersection +
+										action_pos_reward.time_after_intersection;
+					std::cout << "Elapsed Time: " << observed_state.elapsed_time << std::endl;
+					std::cout << "Time after inter: " << action_pos_reward.time_after_intersection << std::endl;
+					std::cout << "Time until inter: " << action_pos_reward.time_until_intersection << std::endl;
+				break;
+                case ai_landingOnTop:
+					std::cout << "Land On Top" << std::endl;
+                    cmd.type = sim_CommandType_LandOnTopOf;
+                    cmd.i = target.index;
+                    sim_send_cmd(&cmd);
+					ai_state = ai_chooseTarget;
+                break;
+                case ai_landingInFront:
+                    std::cout << "Land In Front" << std::endl;
+                    cmd.type = sim_CommandType_LandInFrontOf;
+                    cmd.i = target.index;
+                    sim_send_cmd(&cmd);
+					ai_state = ai_chooseTarget;
+                break;
+                case ai_waiting:
+                    if(observed_state.drone_cmd_done) {
+						ai_state = action_pos_reward.action;
+					}
+					if(ai_state == action_pos_reward.action){
+						//if robot has drifted
+						if(targetIsMoving(target.index, previous_state, observed_state) && (int)observed_state.elapsed_time %20 < 2) {
+							std::cout << "Think a robot has drifted. Choose action again" << std::endl;
+							ai_state = ai_chooseAction;
+						}
+						//if(observed_state.elapsed_time > time_to_act) {
+						//ai_state = action_pos_reward.action;
+						//}
+					}
+                break;
+				case ai_searching:
+					std::cout << "Searching" << std::endl;
+					
+						
+				break;
+                
+        //target_index = -1;
         }
     }
 

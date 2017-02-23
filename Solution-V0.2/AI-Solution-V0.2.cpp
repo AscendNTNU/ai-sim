@@ -110,8 +110,8 @@ Plank createPlank(float x, float y, float theta, int timeToTurn)
     Plank plank;
     plank.x_1 = detectPointOutsideArena(timeToTurn*SPEED*cos(theta) + x);
     plank.y_1 = detectPointOutsideArena(timeToTurn*SPEED*sin(theta) + y);
-    plank.x_2 = detectPointOutsideArena((timeToTurn - 20)*SPEED*cos(theta) + x);
-    plank.y_2 = detectPointOutsideArena((timeToTurn - 20)*SPEED*sin(theta) + y);
+    plank.x_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*cos(theta) + x);
+    plank.y_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*sin(theta) + y);
     
     float dx = plank.x_2 - plank.x_1;
     float dy = plank.y_2 - plank.y_1;
@@ -304,8 +304,10 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
 
             float angle = wrap_angle(observed_state.target_q[i]);
 
+            int timeToTurn = 20 - (int)observed_state.elapsed_time % 20;
+
             Plank plank = createPlank(observed_state.target_x[i], observed_state.target_y[i],
-                angle, (int)observed_state.elapsed_time % 20);
+                angle, timeToTurn);
 
             temp_value = getPlankValue(gridValue, plank, angle, 5);
 
@@ -386,7 +388,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
     target.intersection = calculateInterceptionPoint(state, target);
 	std::cout << "Intersection point: " << target.intersection.x << ", " << target.intersection.y << std::endl;
 
-    target.intersection.travel_time;
+    target.intersection.travel_time = 0;
 
     float n = 10;
     float step_size = target.plank.length/n;
@@ -440,7 +442,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             y = y+step_y;
             i += 1;
         }
-        time_after_intersection = time_after_intersection + Robot_Speed/(step_size*1000); // Multiplied by 1000 to get Milimeters from Meters
+        time_after_intersection = time_after_intersection + (step_size*1000)/Robot_Speed; // Multiplied by 1000 to get Milimeters from Meters
     }
     return best_action;
 }
@@ -558,6 +560,7 @@ int main()
 				break;
                 
         //target_index = -1;
+
         }
     }
 

@@ -336,7 +336,8 @@ IntersectionPoint calculateInterceptionPoint(sim_Observed_State state, Target ta
     intersection.y = state.drone_y + distance*sin(phi);
 
 	//Added to try new function
-	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], .33, 20 - (int)state.elapsed_time%20 + (int)state.elapsed_time - state.elapsed_time, state.drone_x, state.drone_y, 1);
+	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], 
+        .33, 20 - (int)state.elapsed_time%20 + (int)state.elapsed_time - state.elapsed_time, state.drone_x, state.drone_y, 1);
 
     return intersection;
 }
@@ -445,7 +446,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             y = y+step_y;
             i += 1;
         }
-        time_after_intersection = time_after_intersection + (step_size*1000)/Robot_Speed; // Multiplied by 1000 to get Milimeters from Meters
+        time_after_intersection = time_after_intersection + (step_size)/Robot_Speed;
     }
     return best_action;
 }
@@ -504,8 +505,13 @@ int main()
                 while(!observed_state.drone_cmd_done);
 
                 // Tell drone do do action at calculated time
-                int time_to_act = action_pos_reward.time_until_intersection + 
+                int time_to_act = observed_state.elapsed_time + 
+                                  action_pos_reward.time_until_intersection + 
                                   action_pos_reward.time_after_intersection;
+                std::cout << "Time to act: " << time_to_act << std::endl;
+                std::cout << "Global time: " << observed_state.elapsed_time << std::endl;
+                std::cout << "Time until intersection: " << action_pos_reward.time_until_intersection << std::endl;
+                std::cout << "Time after intersection: " << action_pos_reward.time_after_intersection << std::endl;
 
                 switch (ai_state)
                 {

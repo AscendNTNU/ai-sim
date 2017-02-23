@@ -28,7 +28,7 @@ typedef int8_t      s08;
 #include "lib/imgui/imgui_impl_sdl.cpp"
 
 // Allocate thirty minutes worth of real time history
-#define History_Max_Length ((int)(1.0f * 60.0f / Sim_Timestep))
+#define History_Max_Length ((int)(30.0f * 60.0f / Sim_Timestep))
 
 #define Assert SDL_assert
 #define Printf SDL_Log
@@ -403,6 +403,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     }
 
     sim_State draw_state = HISTORY_STATE[seek_cursor];
+    sim_Command cmd_state = HISTORY_CMD[seek_cursor];
     sim_Drone drone = draw_state.drone;
     sim_Robot *robots = draw_state.robots;
     sim_Robot *targets = draw_state.robots;

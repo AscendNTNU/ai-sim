@@ -28,11 +28,14 @@
 // 18. jan 2016: Exposing the internal state for now
 //
 //
+#include <string.h>
+
 #ifndef SIM_HEADER_INCLUDE
 #define SIM_HEADER_INCLUDE
 #define Num_Obstacles (4)  // Number of robots with pole
 #define Num_Targets   (10) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
+#define pixels_each_meter (4) //for heatmap
 
 enum sim_CommandType
 {
@@ -40,7 +43,8 @@ enum sim_CommandType
     sim_CommandType_LandOnTopOf,     // trigger one 45 deg turn of robot (i)
     sim_CommandType_LandInFrontOf,   // trigger one 180 deg turn of robot (i)
     sim_CommandType_Track,           // follow robot (i) at a constant height
-    sim_CommandType_Search           // ascend to 3 meters and go to (x, y)
+    sim_CommandType_Search,          // ascend to 3 meters and go to (x, y)
+    sim_CommandType_Debug
 };
 
 struct sim_Command
@@ -49,6 +53,8 @@ struct sim_Command
     float x;
     float y;
     int i;
+    float heatmap[pixels_each_meter*pixels_each_meter*20*20];
+    
 };
 
 struct sim_Observed_State
@@ -203,6 +209,9 @@ struct robot_Internal
 
     sim_Time last_noise;
     sim_Time last_reverse;
+    sim_Time time_since_last_reverse;
+    sim_Time time_to_next_reverse;
+    int reverse_count;
     bool initialized;
 };
 
@@ -242,7 +251,8 @@ struct sim_Robot
     float x;
     float y;
     sim_World_Angle q;
-
+    sim_World_Angle plank_angle;
+    
     // Physical parameters
     float L;  // distance between wheels (m)
     float vl; // left-wheel speed (m/s)
@@ -471,7 +481,7 @@ TopTouchStart(robot_Event event,
 }
 
 static robot_State
-robot_fsm(robot_State state,
+robot_fsm(sim_Robot *robot,robot_State state,
           robot_Internal *internal,
           robot_Event event,
           robot_Action *action)
@@ -551,6 +561,7 @@ robot_fsm(robot_State state,
 
         case Robot_TargetRun:
         {
+            robot->plank_angle = robot->q;
             if (event.is_wait_sig)
             {
                 TransitionTo(TargetWait);
@@ -563,7 +574,13 @@ robot_fsm(robot_State state,
                      internal->last_reverse >
                      Reverse_Interval)
             {
+                robot->plank_angle = robot->plank_angle - 1*PI;
+		
                 internal->last_reverse = event.elapsed_time;
+                internal->time_since_last_reverse =  event.elapsed_time - internal->last_reverse;
+                internal->time_to_next_reverse =  Reverse_Interval - internal->time_since_last_reverse;
+
+                internal->reverse_count ++;
                 TransitionTo(Reverse);
             }
             else if (event.elapsed_time - internal->last_noise > Noise_Interval)
@@ -616,6 +633,8 @@ robot_fsm(robot_State state,
         case Robot_TargetCollision:
         {
             action->was_bumped = 1;
+            internal->reverse_count ++;
+            robot->plank_angle = robot->plank_angle - PI;
             TransitionTo(Reverse);
         } break;
 
@@ -1061,7 +1080,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             ROBOTS[i].x += collision[i].resolve_delta_x * 1.02f;
             ROBOTS[i].y += collision[i].resolve_delta_y * 1.02f;
         }
-        ROBOTS[i].state = robot_fsm(ROBOTS[i].state,
+        ROBOTS[i].state = robot_fsm(&ROBOTS[i],ROBOTS[i].state,
                                     &ROBOTS[i].internal,
                                     events[i],
                                     &ROBOTS[i].action);

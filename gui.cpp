@@ -1,7 +1,8 @@
 #define SIM_IMPLEMENTATION
 #include "sim.h"
 #include "gui.h"
-
+#include <algorithm> 
+#include <vector>
 #include "lib/jo_gif.cpp"
 
 #include <stdint.h>
@@ -27,7 +28,7 @@ typedef int8_t      s08;
 #include "lib/imgui/imgui_impl_sdl.cpp"
 
 // Allocate thirty minutes worth of real time history
-#define History_Max_Length ((int)(30.0f * 60.0f / Sim_Timestep))
+#define History_Max_Length ((int)(1.0f * 60.0f / Sim_Timestep))
 
 #define Assert SDL_assert
 #define Printf SDL_Log
@@ -151,7 +152,15 @@ void fill_square(r32 x1, r32 y1, r32 x2, r32 y2)
     glVertex2f(x1n, y2n);
     glVertex2f(x1n, y1n);
 }
-
+void draw_painted_square(r32 x1, r32 y1, r32 x2, r32 y2)
+{
+    r32 x1n, y1n, x2n, y2n;
+    world_to_ndc(x1, y1, &x1n, &y1n);
+    world_to_ndc(x2, y2, &x2n, &y2n);
+    glVertex2f(x1n, y1n);
+    glVertex2f(x2n, y1n);
+    glVertex2f(x2n, y2n);
+}
 void fill_circle(r32 x, r32 y, r32 r)
 {
     r32 xn, yn;
@@ -200,7 +209,21 @@ void draw_robot(sim_Robot robot)
     draw_circle(x, y, 0.5f*l);
     draw_line(x, y, x + l*cos(q), y + l*sin(q));
 }
-
+void draw_planks(sim_Robot robot)
+{
+    r32 x = robot.x;
+    r32 y = robot.y;
+    r32 l = robot.L;
+    r32 q = robot.q;
+    r32 plank_angle = robot.plank_angle;
+    robot_Internal internal = robot.internal;
+    float plank_behind =  std::max((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
+    float plank_ahead = std::min(internal.time_to_next_reverse * Robot_Speed,(Reverse_Interval- Reverse_Length) * Robot_Speed);
+    
+    draw_line(x, y, x + plank_ahead*cos(plank_angle), y + plank_ahead*sin(plank_angle));
+    draw_line(x, y, x + plank_behind*cos(plank_angle-PI), y + plank_behind*sin(plank_angle-PI));
+    
+}
 struct FileData
 {
     int length;
@@ -244,9 +267,23 @@ bool read_history(char *filename)
     fclose(f);
     return true;
 }
-
+float shift_color(float x){
+    if(x<0.0){
+        return 0.0;
+    }else if(x>=0.0 && x < 0.25){
+        return 4.0*x;
+    }else if(x>= 0.25 && x<0.75){
+        return 1.0;
+    }else if(x>=0.75 && x < 1.0){
+        return (-4.0*(x-1.0));
+    }else{
+        return 0.0;
+    }
+}
 void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
 {
+    persist bool flag_grid     = true;
+    persist bool flag_plank = false;
     persist bool flag_DrawDroneGoto     = true;
     persist bool flag_DrawDrone         = true;
     persist bool flag_DrawVisibleRegion = true;
@@ -255,7 +292,8 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     persist bool flag_Paused            = false;
     persist bool flag_Recording         = false;
     persist bool flag_SetupRecord       = false;
-
+    persist bool flag_probability_distribution = false;
+    
     persist int record_from = 0;
     persist int record_to = 0;
     persist int record_frame_skip = 1;
@@ -279,6 +317,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     persist Color color_Obstacles      = { 0.43f, 0.76f, 0.79f, 1.00f };
     persist Color color_Drone          = { 0.87f, 0.93f, 0.84f, 0.50f };
     persist Color color_DroneGoto      = { 0.87f, 0.93f, 0.84f, 0.50f };
+    persist Color color_Planks         = { 0.85f, 0.83f, 0.37f, 0.50f };
     #define RGBA(C) C.r, C.g, C.b, C.a
 
     persist float send_timer = 0.0f;
@@ -340,10 +379,14 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
 
             if (!sim_recv_cmd(&cmd))
             {
-                cmd.type = sim_CommandType_NoCommand;
-                cmd.x = 0.0f;
-                cmd.y = 0.0f;
-                cmd.i = 0;
+                //cmd.type = sim_CommandType_NoCommand;
+                //cmd.x = 0.0f;
+                //cmd.y = 0.0f;
+                //cmd.i = 0;
+                //for(int bit = 0; bit < pixels_each_meter*pixels_each_meter*20*20; bit++ )
+                //{
+                //  cmd.heatmap[bit] = 0.0;
+                //}
             }
 
             STATE = sim_tick(STATE, cmd);
@@ -392,17 +435,48 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
             fill_square(x, y, x+1.0f, y+1.0f);
         }
     }
+    // draw heat map
+        if (flag_probability_distribution)
+        {   
+            int iterations = pixels_each_meter * 20;
+            double unit = 1.0 / float(pixels_each_meter);
+            for(int yi = 0; yi < iterations; yi++){
+                
+                    
+                    for (int xi = 0; xi < iterations; xi++)
+                    {
+                        
+                        
+                        float value =  cmd_state.heatmap[yi*iterations + xi];
+                        float blue = shift_color(value+0.5);
+                        float green = shift_color(value);
+                        float red = shift_color(value-0.5);
+                        Color fading_color = { red , green, blue, 1.00f };
+                        color4f(fading_color);
+                        r32 x = xi * unit;
+                        r32 y = yi* unit;
+                        fill_square(x ,y, x+unit, y+unit);
+                    }
+            }
+            
+            
+        }
+
+    
     glEnd();
 
     glBegin(GL_LINES);
     {
         // draw grid lines
-        color4f(color_Grid);
-        for (int i = 0; i <= 20; i++)
-        {
-            r32 x = (r32)i;
-            draw_line(x, 0.0f, x, 20.0f);
-            draw_line(0.0f, x, 20.0f, x);
+        if(flag_grid)
+            {
+            color4f(color_Grid);
+            for (int i = 0; i <= 20; i++)
+            {
+                r32 x = (r32)i;
+                draw_line(x, 0.0f, x, 20.0f);
+                draw_line(0.0f, x, 20.0f, x);
+            }
         }
 
         // draw visible region
@@ -428,7 +502,15 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                 draw_robot(targets[selected_target]);
             }
         }
-
+        // draw Planks
+        if (flag_plank)
+        { 
+            color4f(color_Planks);
+            for (int i = 0; i < Num_Targets; i++){
+                
+                draw_planks(targets[i]);
+            }
+        }
         // draw obstacles
         if (flag_DrawObstacles)
         {
@@ -494,7 +576,10 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
 
     // DRAW FLAGS
     if (ImGui::CollapsingHeader("Rendering"))
-    {
+    {   
+        ImGui::Checkbox("Probability distribution", &flag_probability_distribution);
+        ImGui::Checkbox("Grid", &flag_grid);
+        ImGui::Checkbox("Plank", &flag_plank);
         ImGui::Checkbox("Drone goto", &flag_DrawDroneGoto);
         ImGui::Checkbox("Drone", &flag_DrawDrone);
         ImGui::Checkbox("Visible region", &flag_DrawVisibleRegion);

@@ -403,6 +403,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     }
 
     sim_State draw_state = HISTORY_STATE[seek_cursor];
+    sim_Command cmd_state = HISTORY_CMD[seek_cursor];
     sim_Drone drone = draw_state.drone;
     sim_Robot *robots = draw_state.robots;
     sim_Robot *targets = draw_state.robots;

@@ -856,6 +856,11 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             // Keep current command
         } break;
 
+        case sim_CommandType_Debug:
+        {
+            // Keep current command
+        } break;
+
         case sim_CommandType_LandOnTopOf:
         {
             DRONE->xr = TARGETS[DRONE->cmd.i].x;

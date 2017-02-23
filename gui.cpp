@@ -379,16 +379,16 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
 
             if (!sim_recv_cmd(&cmd))
             {
-                //cmd.type = sim_CommandType_NoCommand;
-                //cmd.x = 0.0f;
-                //cmd.y = 0.0f;
-                //cmd.i = 0;
-                //for(int bit = 0; bit < pixels_each_meter*pixels_each_meter*20*20; bit++ )
-                //{
-                //  cmd.heatmap[bit] = 0.0;
-                //}
+                cmd.type = sim_CommandType_NoCommand;
+                cmd.x = 0.0f;
+                cmd.y = 0.0f;
+                cmd.i = 0;
+                
             }
-
+            for(int bit = 0; bit < pixels_each_meter*pixels_each_meter*20*20; bit++ )
+            {
+              cmd.heatmap[bit] = 0.0;
+            }
             STATE = sim_tick(STATE, cmd);
             add_history(cmd, STATE);
             seek_cursor = HISTORY_LENGTH-1;
@@ -707,6 +707,13 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                 case sim_CommandType_Search:
                 {
                     ImGui::Text("Search"); ImGui::NextColumn();
+                    ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
+                    ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
+                    ImGui::Text("-"); ImGui::NextColumn();
+                } break;
+                case sim_CommandType_Debug:
+                {
+                    ImGui::Text("Debug"); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();

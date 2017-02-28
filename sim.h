@@ -35,7 +35,7 @@
 #define Num_Obstacles (4)  // Number of robots with pole
 #define Num_Targets   (10) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
-#define pixels_each_meter (1) //for heatmap
+#define pixels_each_meter (4) //for heatmap
 
 enum sim_CommandType
 {
@@ -489,10 +489,6 @@ robot_fsm(sim_Robot *robot,robot_State state,
 {
     action->was_bumped = 0;
     action->was_top_touched = 0;
-    internal->time_since_last_reverse =  event.elapsed_time - internal->last_reverse;
-    internal->time_to_next_reverse =  Reverse_Interval - internal->time_since_last_reverse;
-
-
     if (!internal->initialized)
     {
         internal->begin_noise = event.elapsed_time;

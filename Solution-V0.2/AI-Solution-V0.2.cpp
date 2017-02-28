@@ -235,7 +235,7 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 	double tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 
-	double t1 = max(ta, tb);
+	double t1 = std::max(ta, tb);
 	double t2 = 0;
 
 	double x_bf = 0;
@@ -251,7 +251,7 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+MATH_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); double f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); double g = v_d;
 		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-		t2 = max(ta, tb);
+		t2 = std::max(ta, tb);
 
 		double x_d1 = e;
 		double y_d1 = f;
@@ -371,7 +371,6 @@ ActionReward getBestActionAtPoint(Target target, float x, float y , sim_Observed
 
     std::cout << "Reward 180 deg  " << rewardInFront << std::endl;
     std::cout << "Reward  45 deg  " << rewardOnTop << std::endl;
-    std::cout << "Reward current  " << rewardForWait << std::endl;
 
     int max_reward = std::max(rewardInFront,rewardOnTop);
     if(max_reward == rewardInFront){
@@ -591,16 +590,16 @@ int main()
                     if(observed_state.drone_cmd_done && observed_state.elapsed_time >= time_to_act) {
 						ai_state = action_pos_reward.action;
 					}
-					if(ai_state == action_pos_reward.action){
-						//if robot has drifted
-						if(targetIsMoving(target.index, previous_state, observed_state) && (int)observed_state.elapsed_time %20 < 2) {
-							std::cout << "Think a robot has drifted. Choose action again" << std::endl;
-							ai_state = ai_chooseAction;
-						}
+					// if(ai_state == action_pos_reward.action){
+					// 	//if robot has drifted
+					// 	if(targetIsMoving(target.index, previous_state, observed_state) && (int)observed_state.elapsed_time %20 < 2) {
+					// 		std::cout << "Think a robot has drifted. Choose action again" << std::endl;
+					// 		ai_state = ai_chooseAction;
+					// 	}
 						//if(observed_state.elapsed_time > time_to_act) {
 						//ai_state = action_pos_reward.action;
 						//}
-					}
+					// }
                 break;
 				
         //target_index = -1;

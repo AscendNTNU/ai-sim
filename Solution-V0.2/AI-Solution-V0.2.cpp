@@ -340,7 +340,8 @@ IntersectionPoint calculateInterceptionPoint(sim_Observed_State state, Target ta
     intersection.y = state.drone_y + distance*sin(phi);
 
 	//Added to try new function
-	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], .33, 20 - (int)state.elapsed_time%20 + (int)state.elapsed_time - state.elapsed_time, state.drone_x, state.drone_y, 1);
+	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], 
+        .33, 20 - (int)state.elapsed_time%20 + (int)state.elapsed_time - state.elapsed_time, state.drone_x, state.drone_y, 1);
 
     return intersection;
 }
@@ -442,7 +443,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             y = y+step_y;
             i += 1;
         }
-        time_after_intersection = time_after_intersection + (step_size*1000)/Robot_Speed; // Multiplied by 1000 to get Milimeters from Meters
+        time_after_intersection = time_after_intersection + (step_size)/Robot_Speed;
     }
     return best_action;
 }
@@ -560,7 +561,6 @@ int main()
 				break;
                 
         //target_index = -1;
-
         }
     }
 

@@ -40,7 +40,6 @@ enum ai_State
     ai_landingInFront,
     ai_waiting,
     ai_tracking,
-	ai_searching,
 	ai_chooseAction,
 	ai_chooseTarget,
 	ai_start
@@ -53,7 +52,7 @@ struct ActionReward
     float x;
     float y;
     int time_after_intersection;
-    int time_until_intersection;
+    float time_until_intersection;
 };
 
 float gridValue(float X, float Y)
@@ -271,6 +270,8 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 	IntersectionPoint intersection;
 	intersection.x = x_bf;
 	intersection.y = y_bf;
+	std::cout << "T1: " << t1 << std::endl;
+	std::cout << "T2: " << t2 << std::endl;
 	double t = t1+t2;
 	intersection.travel_time = t;
 	return intersection;
@@ -289,13 +290,17 @@ double getXPosIntercept(double droneX, double droneY, double flyAngle, double sp
 
 //Pseudo ish kode
 Target choose_target(sim_Observed_State observed_state, sim_Observed_State previous_state){
-    int max_value = 0;
+    int max_value = -200000;
     int temp_value = 0;
     int index = 0;
     Target target;
+	bool robotChosen = false;
+
+    int timeToTurn = 20 - (int)observed_state.elapsed_time % 20;
 
     for(int i = 0; i < Num_Targets; i++){
-        if(!observed_state.target_removed[i]){
+		if(!observed_state.target_removed[i]){
+			std::cout << "Target not removed" << std::endl;
             if (!targetIsMoving(i, previous_state, observed_state))
             {
                 std::cout << "Target not moving" << std::endl;
@@ -304,7 +309,6 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
 
             float angle = wrap_angle(observed_state.target_q[i]);
 
-            int timeToTurn = 20 - (int)observed_state.elapsed_time % 20;
 
             Plank plank = createPlank(observed_state.target_x[i], observed_state.target_y[i],
                 angle, timeToTurn);
@@ -317,9 +321,18 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
                 target.plank = plank;
                 target.angle = wrap_angle(observed_state.target_q[i]);
                 target.currentReward = temp_value;
+				robotChosen = true;
             }
         }
     }
+	if(!robotChosen) {
+		std::cout << "NO ROBOT CHOSEN! Defaulting to index 1." << std::endl;
+		target.index = 1;
+		target.plank = createPlank(observed_state.target_x[1], observed_state.target_y[1],
+									wrap_angle(observed_state.target_q[1]), timeToTurn);;
+		target.angle = wrap_angle(observed_state.target_q[1]);
+		target.currentReward = getPlankValue(gridValue, target.plank, target.angle, 5);
+	}
     return target;
 }
 
@@ -328,21 +341,24 @@ IntersectionPoint calculateInterceptionPoint(sim_Observed_State state, Target ta
     //calculate future x and y values to robot
     //double distance = sqrt(pow(state.drone_x - state.target_x[i], 2) + pow(state.drone_y - state.target_y[i], 2));
     //double time     = distance/
-    float drone_speed = Robot_Speed;
+    //float drone_speed = Robot_Speed;
     int i = target.index;
-    float angle = wrap_angle(state.target_q[i]);
-    double phi = angleToIntercept(state.target_x[i], state.target_y[i], state.drone_x, state.drone_y, angle, drone_speed);
-    intersection.travel_time = getTimeToIntercept(state.target_x[i], state.drone_x, state.target_q[i], drone_speed, phi);
-    
-    float distance = drone_speed*intersection.travel_time;
-
-    intersection.x = state.drone_x + distance*cos(phi);
-    intersection.y = state.drone_y + distance*sin(phi);
+    //float angle = wrap_angle(state.target_q[i]);
+    //double phi = angleToIntercept(state.target_x[i], state.target_y[i], state.drone_x, state.drone_y, angle, drone_speed);
+    //intersection.travel_time = getTimeToIntercept(state.target_x[i], state.drone_x, state.target_q[i], drone_speed, phi);
+    //
+    //float distance = drone_speed*intersection.travel_time;
+//
+    //intersection.x = state.drone_x + distance*cos(phi);
+    //intersection.y = state.drone_y + distance*sin(phi);
 
 	//Added to try new function
+	std::cout << "Before calculating intersection point" << std::endl;
+		
 	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], 
         .33, 20 - (int)state.elapsed_time%20 + (int)state.elapsed_time - state.elapsed_time, state.drone_x, state.drone_y, 1);
-
+	std::cout << "After calculating intersection point" << std::endl;
+	
     return intersection;
 }
 
@@ -384,11 +400,14 @@ bool isOutsideOfPlank(float x, float y, Plank plank) {
 
 ActionReward choose_action(sim_Observed_State state, Target target){
     int index = target.index;
+	std::cout << "Before wrap angle, index: " << target.index << std::endl;
+	
     float angle = wrap_angle(state.target_q[index]);
-
+	std::cout << "After wrap angle" << std::endl;
+	
     target.intersection = calculateInterceptionPoint(state, target);
 	std::cout << "Intersection point: " << target.intersection.x << ", " << target.intersection.y << std::endl;
-
+	float temp = target.intersection.travel_time;
     target.intersection.travel_time = 0;
 
     float n = 10;
@@ -445,6 +464,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
         }
         time_after_intersection = time_after_intersection + (step_size)/Robot_Speed;
     }
+	best_action.time_until_intersection = temp;
     return best_action;
 }
 
@@ -473,9 +493,9 @@ int main()
         sim_recv_state(&state);
         previous_state = observed_state;
         sim_Observed_State observed_state = sim_observe_state(state);
-
-		
-
+		if(observed_state.elapsed_time > 600) {
+			break;
+		}
         
             last_action_time = observed_state.elapsed_time;
 
@@ -498,18 +518,31 @@ int main()
 				case ai_chooseTarget:
 					target = choose_target(observed_state, previous_state);
 					target_index = target.index;
-					std::cout << "Choose Target" << std::endl;
+					std::cout << "Choose target" << std::endl;
 					ai_state = ai_chooseAction;
 				break;
 				case ai_chooseAction:
-					std::cout << "Choose Action" << std::endl;
+					std::cout << "In state Choose Action" << std::endl;
+						
 					action_pos_reward = choose_action(observed_state, target);
 					ai_state = ai_waiting;
-					if (action_pos_reward.action == ai_waiting) {
-						target_index = -1;
-						ai_state = ai_chooseTarget;
-						break;
+					if(action_pos_reward.action == ai_landingInFront) {
+						std::cout << "Choose Action: Land in Front" << std::endl;
 					}
+					else if(action_pos_reward.action == ai_landingOnTop) {
+						std::cout << "Choose Action: Land on top" << std::endl;
+					}
+					else if(action_pos_reward.action == ai_waiting) {
+						std::cout << "Choose Action: Waiting" << std::endl;
+					}
+					else {
+						std::cout << "Choose Action: ... erm, what?" << std::endl;
+					}
+					//if (action_pos_reward.action == ai_waiting) {
+						//target_index = -1;
+						//ai_state = ai_chooseTarget;
+						//break;
+					//}
 
 					cmd.type = sim_CommandType_Search;
 					cmd.x = action_pos_reward.x;
@@ -524,6 +557,7 @@ int main()
 					std::cout << "Elapsed Time: " << observed_state.elapsed_time << std::endl;
 					std::cout << "Time after inter: " << action_pos_reward.time_after_intersection << std::endl;
 					std::cout << "Time until inter: " << action_pos_reward.time_until_intersection << std::endl;
+					std::cout << "Time to act: " << time_to_act << std::endl;
 				break;
                 case ai_landingOnTop:
 					std::cout << "Land On Top" << std::endl;
@@ -540,7 +574,7 @@ int main()
 					ai_state = ai_chooseTarget;
                 break;
                 case ai_waiting:
-                    if(observed_state.drone_cmd_done) {
+                    if(observed_state.drone_cmd_done && observed_state.elapsed_time >= time_to_act) {
 						ai_state = action_pos_reward.action;
 					}
 					if(ai_state == action_pos_reward.action){
@@ -554,15 +588,11 @@ int main()
 						//}
 					}
                 break;
-				case ai_searching:
-					std::cout << "Searching" << std::endl;
-					
-						
-				break;
-                
+				
         //target_index = -1;
         }
     }
-
+	std::cout << "Time is up!" << std::endl;
+	//std::cout << "Time's up!" << std:endl;
     return 0;
 }

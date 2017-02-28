@@ -53,6 +53,7 @@ struct sim_Command
     float x;
     float y;
     int i;
+    int reward;
     float heatmap[pixels_each_meter*pixels_each_meter*20*20];
     
 };

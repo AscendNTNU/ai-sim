@@ -383,8 +383,10 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                 cmd.x = 0.0f;
                 cmd.y = 0.0f;
                 cmd.i = 0;
+                cmd.reward = 0;
                 
             }
+
             for(int bit = 0; bit < pixels_each_meter*pixels_each_meter*20*20; bit++ )
             {
               cmd.heatmap[bit] = 0.0;
@@ -654,13 +656,14 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
         ImGui::Separator();
 
         ImGui::Text("Last 10 non-trivial commands received:");
-        ImGui::Columns(5, "CommunicationColumns");
+        ImGui::Columns(6, "CommunicationColumns");
         ImGui::Separator();
         ImGui::Text("Time"); ImGui::NextColumn();
         ImGui::Text("type"); ImGui::NextColumn();
         ImGui::Text("x"); ImGui::NextColumn();
         ImGui::Text("y"); ImGui::NextColumn();
         ImGui::Text("i"); ImGui::NextColumn();
+        ImGui::Text("Reward"); ImGui::NextColumn();
         ImGui::Separator();
         int count = 0;
         for (int i = 0; count < 10 && i <= seek_cursor; i++)
@@ -682,6 +685,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
+                    ImGui::Text("-"); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_LandInFrontOf:
                 {
@@ -689,6 +693,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_LandOnTopOf:
                 {
@@ -696,6 +701,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Track:
                 {
@@ -703,6 +709,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Search:
                 {
@@ -710,12 +717,14 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Debug:
                 {
                     ImGui::Text("Debug"); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
+                    ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                 } break;
             }

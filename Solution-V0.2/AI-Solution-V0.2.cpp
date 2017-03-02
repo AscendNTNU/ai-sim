@@ -104,7 +104,7 @@ bool isOutsideArena(float x) {
     return outside;
 }
 
-Plank createPlank(float x, float y, float theta, int timeToTurn)
+Plank createPlank(float x, float y, float theta, float timeToTurn)
 {
     Plank plank;
     plank.x_1 = detectPointOutsideArena(timeToTurn*SPEED*cos(theta) + x);
@@ -141,7 +141,7 @@ float getPlankValue(float (*f)(float x, float y), Plank plank, float angle, int 
     return area;
 }
 
-int findRobotValue(float x_robot, float y_robot, float theta, int timeToTurn)
+int findRobotValue(float x_robot, float y_robot, float theta, float timeToTurn)
 {
     Plank plank = createPlank(x_robot, y_robot, theta, timeToTurn);
     int reward = getPlankValue(gridValue, plank, theta, 5);
@@ -218,7 +218,7 @@ float getTimeToIntercept(double Cx, double Ax, float Aangle, double Cvel, double
     A - ground robot
     C - Drone
 */
-IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_b, double v_b, double tTilTurn, double x_d, double y_d, double v_d) {
+IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_b, double v_b, float tTilTurn, double x_d, double y_d, double v_d) {
 	if(tTilTurn > 18) {
 		float tSinceTurn = 20-tTilTurn;
 		//no idea, but not normal, since the robot is turning
@@ -296,7 +296,7 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
     Target target;
 	bool robotChosen = false;
 
-    int timeToTurn = 20 - (int)observed_state.elapsed_time % 20;
+    float timeToTurn = 20 - fmod(observed_state.elapsed_time,20);
 
     for(int i = 0; i < Num_Targets; i++){
 		if(!observed_state.target_removed[i]){
@@ -355,7 +355,7 @@ IntersectionPoint calculateInterceptionPoint(sim_Observed_State state, Target ta
 	std::cout << "Before calculating intersection point" << std::endl;
 		
 	intersection = getInterceptPointWithTurn(state.target_x[i], state.target_y[i], state.target_q[i], 
-        .33, 20 - (int)state.elapsed_time%20 + (int)state.elapsed_time - state.elapsed_time, state.drone_x, state.drone_y, 1);
+        .33, 20 - fmod(state.elapsed_time,20) + state.elapsed_time - state.elapsed_time, state.drone_x, state.drone_y, 1);
 	std::cout << "After calculating intersection point" << std::endl;
 	
     return intersection;
@@ -498,7 +498,7 @@ int main()
     sim_Observed_State previous_state;
     int target_index = -1;
     float last_action_time;
-	int time_to_act = 200;
+	float time_to_act = 200.0;
 
     Target target;
 
@@ -563,12 +563,17 @@ int main()
 					cmd.y = action_pos_reward.y;
                     cmd.reward = action_pos_reward.reward;
 					sim_send_cmd(&cmd);
-
-
 					// Tell drone do do action at time
 					time_to_act = observed_state.elapsed_time + 
 										action_pos_reward.time_until_intersection +
 										action_pos_reward.time_after_intersection;
+
+                    previous_state = observed_state;
+
+                    while(!observed_state.drone_cmd_done) {
+                        observed_state = sim_observe_state(state);
+                    }
+
 				break;
                 case ai_landingOnTop:
 					std::cout << "Land On Top" << std::endl;

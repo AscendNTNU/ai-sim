@@ -28,7 +28,7 @@ typedef int8_t      s08;
 #include "lib/imgui/imgui_impl_sdl.cpp"
 
 // Allocate thirty minutes worth of real time history
-#define History_Max_Length ((int)(1.0f * 60.0f / Sim_Timestep))
+#define History_Max_Length ((int)(30.0f * 60.0f / Sim_Timestep))
 
 #define Assert SDL_assert
 #define Printf SDL_Log
@@ -217,8 +217,8 @@ void draw_planks(sim_Robot robot)
     r32 q = robot.q;
     r32 plank_angle = robot.plank_angle;
     robot_Internal internal = robot.internal;
-    float plank_behind =  std::max((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
-    float plank_ahead = std::min(internal.time_to_next_reverse * Robot_Speed,(Reverse_Interval- Reverse_Length) * Robot_Speed);
+    float plank_behind =  max((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
+    float plank_ahead = min(internal.time_to_next_reverse * Robot_Speed,(Reverse_Interval- Reverse_Length) * Robot_Speed);
     
     draw_line(x, y, x + plank_ahead*cos(plank_angle), y + plank_ahead*sin(plank_angle));
     draw_line(x, y, x + plank_behind*cos(plank_angle-PI), y + plank_behind*sin(plank_angle-PI));
@@ -405,6 +405,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     }
 
     sim_State draw_state = HISTORY_STATE[seek_cursor];
+	sim_Command cmd_state = HISTORY_CMD[seek_cursor];
     sim_Drone drone = draw_state.drone;
     sim_Robot *robots = draw_state.robots;
     sim_Robot *targets = draw_state.robots;

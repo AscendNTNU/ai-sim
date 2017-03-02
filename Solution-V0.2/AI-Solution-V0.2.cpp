@@ -235,7 +235,7 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 	double tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 
-	double t1 = std::max(ta, tb);
+	double t1 = max(ta, tb);
 	double t2 = 0;
 
 	double x_bf = 0;
@@ -251,7 +251,7 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+MATH_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); double f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); double g = v_d;
 		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-		t2 = std::max(ta, tb);
+		t2 = max(ta, tb);
 
 		double x_d1 = e;
 		double y_d1 = f;
@@ -299,6 +299,7 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
     float timeToTurn = 20 - fmod(observed_state.elapsed_time,20);
 
     for(int i = 0; i < Num_Targets; i++){
+		std::cout << "Checking target: " << i << " at (X, Y): (" << observed_state.target_x[i] << ", " << observed_state.target_y[i] << ")" << std::endl;
 		if(!observed_state.target_removed[i]){
 			std::cout << "Target not removed" << std::endl;
             if (!targetIsMoving(i, previous_state, observed_state))
@@ -332,6 +333,10 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
 		target.angle = wrap_angle(observed_state.target_q[1]);
 		target.currentReward = getPlankValue(gridValue, target.plank, target.angle, 5);
 	}
+	std::cout << "Chose Target: " << target.index << std::endl;
+	std::cout << "Target Value: " << max_value    << std::endl;
+	std::cout << "Target (X, Y): " << observed_state.target_x[target.index] << ", " << observed_state.target_y[target.index] << std::endl;
+
     return target;
 }
 
@@ -372,7 +377,7 @@ ActionReward getBestActionAtPoint(Target target, float x, float y , sim_Observed
     std::cout << "Reward 180 deg  " << rewardInFront << std::endl;
     std::cout << "Reward  45 deg  " << rewardOnTop << std::endl;
 
-    int max_reward = std::max(rewardInFront,rewardOnTop);
+    int max_reward = max(rewardInFront,rewardOnTop);
     if(max_reward == rewardInFront){
         action_reward.action = ai_landingInFront;
         action_reward.reward = rewardInFront;
@@ -443,7 +448,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
     bool backwards = false;
     int i = 1;
     while (i > 0) {
-
+		printActionIteration(i, target, x, y, state, best_action.time_until_intersection, time_after_intersection);
 
         if (isOutsideOfPlank(x,y, target.plank)) {
             std::cout << "End of plank was reached " << std::endl;
@@ -464,7 +469,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             best_action.time_after_intersection = time_after_intersection;
         }
 
-        printActionIteration(i, target, x, y, state, best_action.time_until_intersection, time_after_intersection);
+        
 
         if (backwards) {
             x = x-step_x;
@@ -552,11 +557,6 @@ int main()
 					else {
 						std::cout << "Choose Action: ... erm, what?" << std::endl;
 					}
-					//if (action_pos_reward.action == ai_waiting) {
-						//target_index = -1;
-						//ai_state = ai_chooseTarget;
-						//break;
-					//}
 
 					cmd.type = sim_CommandType_Search;
 					cmd.x = action_pos_reward.x;

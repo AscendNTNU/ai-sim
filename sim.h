@@ -35,7 +35,7 @@
 #define Num_Obstacles (4)  // Number of robots with pole
 #define Num_Targets   (10) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
-#define pixels_each_meter (4) //for heatmap
+#define pixels_each_meter (1) //for heatmap
 
 enum sim_CommandType
 {

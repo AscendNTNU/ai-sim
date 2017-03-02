@@ -299,12 +299,12 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
     float timeToTurn = 20 - fmod(observed_state.elapsed_time,20);
 
     for(int i = 0; i < Num_Targets; i++){
-		std::cout << "Checking target: " << i << " at (X, Y): (" << observed_state.target_x[i] << ", " << observed_state.target_y[i] << ")" << std::endl;
+		//std::cout << "Checking target: " << i << " at (X, Y): (" << observed_state.target_x[i] << ", " << observed_state.target_y[i] << ")" << std::endl;
 		if(!observed_state.target_removed[i]){
-			std::cout << "Target not removed" << std::endl;
+			//std::cout << "Target not removed" << std::endl;
             if (!targetIsMoving(i, previous_state, observed_state))
             {
-                std::cout << "Target not moving" << std::endl;
+                //std::cout << "Target not moving" << std::endl;
                 continue;
             }
 
@@ -401,7 +401,7 @@ bool isOutsideOfPlank(float x, float y, Plank plank) {
     }
 }
 
-void printActionIteration(int i, Target target, int x, int y, sim_Observed_State state, float time_until_intersection, float time_after_intersection) {
+void printActionIteration(int i, Target target, int x, int y, sim_Observed_State state, float time_until_intersection, float time_after_intersection, int this_reward, int prev_reward) {
     float time_to_act = state.elapsed_time + 
                       time_until_intersection + 
                       time_after_intersection;
@@ -415,6 +415,8 @@ void printActionIteration(int i, Target target, int x, int y, sim_Observed_State
     std::cout << "Global time: " << state.elapsed_time << std::endl;
     std::cout << "Time until intersection: " << time_until_intersection << std::endl;
     std::cout << "Time after intersection: " << time_after_intersection << std::endl;
+    std::cout << "This action reward: " << this_reward << std::endl;
+    std::cout << "Prev best reward:   " << prev_reward << std::endl << std::endl;
 }
 
 ActionReward choose_action(sim_Observed_State state, Target target){
@@ -448,7 +450,6 @@ ActionReward choose_action(sim_Observed_State state, Target target){
     bool backwards = false;
     int i = 1;
     while (i > 0) {
-		printActionIteration(i, target, x, y, state, best_action.time_until_intersection, time_after_intersection);
 
         if (isOutsideOfPlank(x,y, target.plank)) {
             std::cout << "End of plank was reached " << std::endl;
@@ -461,6 +462,8 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             }
         }
         action_to_check = getBestActionAtPoint(target, x, y, state);
+
+		printActionIteration(i, target, x, y, state, best_action.time_until_intersection, time_after_intersection, action_to_check.reward, best_action.reward);
 
         if (action_to_check.reward > best_action.reward) {
             best_action = action_to_check;
@@ -511,26 +514,12 @@ int main()
     {
         sim_recv_state(&state);
         previous_state = observed_state;
-        sim_Observed_State observed_state = sim_observe_state(state);
+        observed_state = sim_observe_state(state);
 		if(observed_state.elapsed_time > 600) {
 			break;
 		}
         
             last_action_time = observed_state.elapsed_time;
-
-            //if(target_index == -1){
-                //target = choose_target(observed_state, previous_state);
-                //target_index = target.index; 
-                ////ai_state = ai_tracking;
-                ////cmd.type = sim_CommandType_Track;
-                ////cmd.i = target.index;
-                //std::cout << "Tracking" << std::endl;
-            //}
-//
-            //else if(target_inActionRange(observed_state, target.index)
-                    //&& targetIsMoving(target.index, previous_state, observed_state))
-            //{                
-                
 
             switch (ai_state)
             {
@@ -545,18 +534,18 @@ int main()
 						
 					action_pos_reward = choose_action(observed_state, target);
 					ai_state = ai_waiting;
-					if(action_pos_reward.action == ai_landingInFront) {
-						std::cout << "Choose Action: Land in Front" << std::endl;
-					}
-					else if(action_pos_reward.action == ai_landingOnTop) {
-						std::cout << "Choose Action: Land on top" << std::endl;
-					}
-					else if(action_pos_reward.action == ai_waiting) {
-						std::cout << "Choose Action: Waiting" << std::endl;
-					}
-					else {
-						std::cout << "Choose Action: ... erm, what?" << std::endl;
-					}
+					// if(action_pos_reward.action == ai_landingInFront) {
+					// 	std::cout << "Choose Action: Land in Front" << std::endl;
+					// }
+					// else if(action_pos_reward.action == ai_landingOnTop) {
+					// 	std::cout << "Choose Action: Land on top" << std::endl;
+					// }
+					// else if(action_pos_reward.action == ai_waiting) {
+					// 	std::cout << "Choose Action: Waiting" << std::endl;
+					// }
+					// else {
+					// 	std::cout << "Choose Action: ... erm, what?" << std::endl;
+					// }
 
 					cmd.type = sim_CommandType_Search;
 					cmd.x = action_pos_reward.x;
@@ -567,12 +556,6 @@ int main()
 					time_to_act = observed_state.elapsed_time + 
 										action_pos_reward.time_until_intersection +
 										action_pos_reward.time_after_intersection;
-
-                    previous_state = observed_state;
-
-                    while(!observed_state.drone_cmd_done) {
-                        observed_state = sim_observe_state(state);
-                    }
 
 				break;
                 case ai_landingOnTop:

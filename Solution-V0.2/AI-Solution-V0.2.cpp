@@ -42,7 +42,10 @@ enum ai_State
     ai_tracking,
 	ai_chooseAction,
 	ai_chooseTarget,
-	ai_start
+	ai_start,
+	ai_waitForAction,
+	ai_noTargetFound,
+	ai_terminate
 };
 
 struct ActionReward
@@ -218,7 +221,7 @@ float getTimeToIntercept(double Cx, double Ax, float Aangle, double Cvel, double
     A - ground robot
     C - Drone
 */
-IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_b, double v_b, float tTilTurn, double x_d, double y_d, double v_d) {
+IntersectionPoint getInterceptPointWithTurn(float x_b0, float y_b0, float th_b, float v_b, float tTilTurn, float x_d, float y_d, float v_d) {
 	if(tTilTurn > 18) {
 		float tSinceTurn = 20-tTilTurn;
 		//no idea, but not normal, since the robot is turning
@@ -231,48 +234,48 @@ IntersectionPoint getInterceptPointWithTurn(double x_b0, double y_b0, double th_
 	}
 	
 	//Math to calculate if direct
-	double a = x_b0; double b = v_b; double c = th_b; double d = y_b0; double e = x_d; double f = y_d; double g = v_d;
-	double ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-	double tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
+	float a = x_b0; float b = v_b; float c = th_b; float d = y_b0; float e = x_d; float f = y_d; float g = v_d;
+	float ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
+	float tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 
-	double t1 = (std::max)(ta, tb);
-	double t2 = 0;
+	float t1 = (std::max)(ta, tb);
+	float t2 = 0;
 
-	double x_bf = 0;
-	double y_bf = 0;
+	float x_bf = 0;
+	float y_bf = 0;
 
 	if(t1 > (tTilTurn+2))
 	{
 		t1 = tTilTurn;
-		double x_b1 = x_b0+tTilTurn*v_b*cos(th_b);
-		double y_b1 = y_b0+tTilTurn*v_b*sin(th_b);
-		double angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
+		float x_b1 = x_b0+tTilTurn*v_b*cos(th_b);
+		float y_b1 = y_b0+tTilTurn*v_b*sin(th_b);
+		float angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
 
-		double a = x_b0 + tTilTurn*v_b*cos(th_b); double b = v_b; double c = th_b+MATH_PI; double d = y_b0 + tTilTurn*v_b*sin(th_b); double e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); double f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); double g = v_d;
+		float a = x_b0 + tTilTurn*v_b*cos(th_b); float b = v_b; float c = th_b+MATH_PI; float d = y_b0 + tTilTurn*v_b*sin(th_b); float e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); float f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); float g = v_d;
 		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		t2 = (std::max)(ta, tb);
 
-		double x_d1 = e;
-		double y_d1 = f;
+		float x_d1 = e;
+		float y_d1 = f;
 		
 		x_bf = x_b1+t2*v_b*cos(th_b+MATH_PI);
 		y_bf = y_b1+t2*v_b*sin(th_b+MATH_PI);
 
-		double angleDrone2 = atan2(y_bf-y_d1, x_bf-x_d1);
+		float angleDrone2 = atan2(y_bf-y_d1, x_bf-x_d1);
 	}
 	else
 	{
 		x_bf = x_b0+t1*v_b*cos(th_b);
 		y_bf = y_b0+t1*v_b*sin(th_b);
-		double angleDrone1 = atan2(y_bf-y_d, x_bf-x_d);
+		float angleDrone1 = atan2(y_bf-y_d, x_bf-x_d);
 	}
 	IntersectionPoint intersection;
 	intersection.x = x_bf;
 	intersection.y = y_bf;
 	std::cout << "T1: " << t1 << std::endl;
 	std::cout << "T2: " << t2 << std::endl;
-	double t = t1+t2;
+	float t = t1+t2;
 	intersection.travel_time = t;
 	return intersection;
 }
@@ -327,7 +330,7 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
     }
 	if(!robotChosen) {
 		std::cout << "NO ROBOT CHOSEN! Defaulting to index 1." << std::endl;
-		target.index = 1;
+		target.index = -1;
 		target.plank = createPlank(observed_state.target_x[1], observed_state.target_y[1],
 									wrap_angle(observed_state.target_q[1]), timeToTurn);;
 		target.angle = wrap_angle(observed_state.target_q[1]);
@@ -427,7 +430,7 @@ ActionReward choose_action(sim_Observed_State state, Target target){
     target.intersection = calculateInterceptionPoint(state, target);
 	std::cout << "Intersection point: " << target.intersection.x << ", " << target.intersection.y << std::endl;
 	float temp = target.intersection.travel_time;
-    target.intersection.travel_time = 0;
+    //target.intersection.travel_time = 0;
 
     float n = 10;
     float step_size = target.plank.length/n;
@@ -538,7 +541,29 @@ int main()
 					target = choose_target(observed_state, previous_state);
 					target_index = target.index;
 					std::cout << "Choose target" << std::endl;
-					ai_state = ai_chooseAction;
+					if(target.index == -1) {
+						ai_state = ai_noTargetFound;
+					}
+					else {
+						ai_state = ai_chooseAction;
+					}
+				break;
+				case ai_noTargetFound:
+				{
+					//for sim
+					int teller = 0;
+					for(int i = 0; i++; i < Num_Targets) {
+						if(observed_state.target_removed[i]) {
+							teller++;
+						}
+					}
+					if(teller == Num_Targets) {
+						ai_state = ai_terminate;
+					}
+					else {
+						ai_state = ai_chooseTarget;
+					}
+				}	
 				break;
 				case ai_chooseAction:
 					std::cout << "In state Choose Action" << std::endl;
@@ -568,11 +593,11 @@ int main()
 										action_pos_reward.time_until_intersection +
 										action_pos_reward.time_after_intersection;
 
-                    previous_state = observed_state;
+                    //previous_state = observed_state;
 
-                    while(!observed_state.drone_cmd_done) {
-                        observed_state = sim_observe_state(state);
-                    }
+                    //while(!observed_state.drone_cmd_done) {
+                        //observed_state = sim_observe_state(state);
+                    //}
 
 				break;
                 case ai_landingOnTop:
@@ -581,7 +606,7 @@ int main()
                     cmd.i = target.index;
                     cmd.reward = action_pos_reward.reward;
                     sim_send_cmd(&cmd);
-					ai_state = ai_chooseTarget;
+					ai_state = ai_waitForAction;
                 break;
                 case ai_landingInFront:
                     std::cout << "Land In Front" << std::endl;
@@ -589,10 +614,16 @@ int main()
                     cmd.i = target.index;
                     cmd.reward = action_pos_reward.reward;
                     sim_send_cmd(&cmd);
-					ai_state = ai_chooseTarget;
+					ai_state = ai_waitForAction;
                 break;
+				case ai_waitForAction:
+					if(observed_state.drone_cmd_done) {
+						ai_state = ai_chooseTarget;
+					}
+				break;
                 case ai_waiting:
                     if(observed_state.drone_cmd_done && observed_state.elapsed_time >= time_to_act) {
+						std::cout << "Do action" << std::endl;
 						ai_state = action_pos_reward.action;
 					}
 					// if(ai_state == action_pos_reward.action){
@@ -606,6 +637,9 @@ int main()
 						//}
 					// }
                 break;
+				case ai_terminate:
+					running = false;
+				break;
 				
         //target_index = -1;
         }

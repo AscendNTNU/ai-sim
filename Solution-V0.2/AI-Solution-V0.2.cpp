@@ -299,7 +299,7 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
     int timeToTurn = 20 - (int)observed_state.elapsed_time % 20;
 
     for(int i = 0; i < Num_Targets; i++){
-		std::cout << "Checking taget: " << i << " at (X, Y): (" << observed_state.target_x[i] << ", " << observed_state.target_y[i] << ")" << std::endl;
+		std::cout << "Checking target: " << i << " at (X, Y): (" << observed_state.target_x[i] << ", " << observed_state.target_y[i] << ")" << std::endl;
 		if(!observed_state.target_removed[i]){
 			std::cout << "Target not removed" << std::endl;
             if (!targetIsMoving(i, previous_state, observed_state))

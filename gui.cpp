@@ -217,8 +217,8 @@ void draw_planks(sim_Robot robot)
     r32 q = robot.q;
     r32 plank_angle = robot.plank_angle;
     robot_Internal internal = robot.internal;
-    float plank_behind =  max((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
-    float plank_ahead = min(internal.time_to_next_reverse * Robot_Speed,(Reverse_Interval- Reverse_Length) * Robot_Speed);
+    float plank_behind =  (std::max)((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
+    float plank_ahead = (std::min)(internal.time_to_next_reverse * Robot_Speed,(Reverse_Interval- Reverse_Length) * Robot_Speed);
     
     draw_line(x, y, x + plank_ahead*cos(plank_angle), y + plank_ahead*sin(plank_angle));
     draw_line(x, y, x + plank_behind*cos(plank_angle-PI), y + plank_behind*sin(plank_angle-PI));

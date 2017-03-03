@@ -16,6 +16,7 @@ struct Plank
     float x_2;
     float y_2;
     float length;
+	bool goingOutGreen;
 };
 
 struct IntersectionPoint
@@ -107,9 +108,63 @@ bool isOutsideArena(float x) {
     return outside;
 }
 
+bool crossesRedLine(float x1, float x2, float y1, float y2) {
+	float m = (y2-y1)/(x2-x1);
+
+	//Red line 1 - bottom line
+	float y_redLine1 = 0;
+	float x_kryssepunkt = (y_redLine1 - y1 + m*x1)/m;
+	if((y1<y_redLine1 || y2 <y_redLine1) && 0 < x_kryssepunkt && x_kryssepunkt < 20) {
+		return true;
+	}
+
+	//Red line 2 - left side
+	float x_redLine2 = 0;
+	float y_kryssepunkt = m*(x_redLine2-x1) + y1;
+	if((x1<x_redLine2 || x2 <x_redLine2) && 0 < y_kryssepunkt && y_kryssepunkt < 20) {
+		return true;
+	}
+
+	//Red line 3 - right side
+	float x_redLine3 = 20;
+	y_kryssepunkt = m*(x_redLine3-x1) + y1;
+	if((x1>x_redLine2 || x2 > x_redLine2) && 0 < y_kryssepunkt && y_kryssepunkt < 20) {
+		return true;
+	}
+
+	return false;
+}
+
+bool isOverGreenLine(float x1, float x2, float y1, float y2) {
+	float m = (y2-y1)/(x2-x1);
+	float y_greenLine = 21;
+	float x_kryssepunkt = (y_greenLine - y1 + m*x1)/m;
+
+	if(y1 > y_greenLine && 1 < x_kryssepunkt && x_kryssepunkt < 19) {
+		return true;
+	}
+	else if(y2 > y_greenLine && 1 < x_kryssepunkt && x_kryssepunkt < 19) {
+		if(crossesRedLine(x1, x2, y1, y2)) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	else {
+		return false;
+	}
+}
+
 Plank createPlank(float x, float y, float theta, float timeToTurn)
 {
     Plank plank;
+
+	float raw_x1 = timeToTurn*SPEED*cos(theta) + x;
+	float raw_y1 = timeToTurn*SPEED*sin(theta) + y;
+	float raw_x2 = (timeToTurn - 20+2.5)*SPEED*cos(theta) + x;
+	float raw_y2 = (timeToTurn - 20+2.5)*SPEED*sin(theta) + y;
+
     plank.x_1 = detectPointOutsideArena(timeToTurn*SPEED*cos(theta) + x);
     plank.y_1 = detectPointOutsideArena(timeToTurn*SPEED*sin(theta) + y);
     plank.x_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*cos(theta) + x);
@@ -118,6 +173,9 @@ Plank createPlank(float x, float y, float theta, float timeToTurn)
     float dx = plank.x_2 - plank.x_1;
     float dy = plank.y_2 - plank.y_1;
     plank.length = sqrt(dx*dx + dy*dy);
+
+
+	plank.goingOutGreen = isOverGreenLine(raw_x1, raw_x2, raw_y1, raw_y2);
 
     return plank;
 }
@@ -315,6 +373,11 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
 
             Plank plank = createPlank(observed_state.target_x[i], observed_state.target_y[i],
                 angle, timeToTurn);
+
+			if(plank.goingOutGreen) {
+				std::cout << "Target already going out of green line!" << std::endl;
+				continue;
+			}
 
             temp_value = getPlankValue(gridValue, plank, angle, 5);
 

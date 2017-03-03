@@ -17,6 +17,7 @@ struct Plank
     float y_2;
     float length;
 	bool goingOutGreen;
+	bool crossesRed;
 };
 
 struct IntersectionPoint
@@ -137,7 +138,7 @@ bool crossesRedLine(float x1, float x2, float y1, float y2) {
 
 bool isOverGreenLine(float x1, float x2, float y1, float y2) {
 	float m = (y2-y1)/(x2-x1);
-	float y_greenLine = 21;
+	float y_greenLine = 20.5;
 	float x_kryssepunkt = (y_greenLine - y1 + m*x1)/m;
 
 	if(y1 > y_greenLine && 1 < x_kryssepunkt && x_kryssepunkt < 19) {
@@ -176,6 +177,7 @@ Plank createPlank(float x, float y, float theta, float timeToTurn)
 
 
 	plank.goingOutGreen = isOverGreenLine(raw_x1, raw_x2, raw_y1, raw_y2);
+	plank.crossesRed    = crossesRedLine(raw_x1, raw_x2, raw_y1, raw_y2);
 
     return plank;
 }
@@ -206,6 +208,8 @@ int findRobotValue(float x_robot, float y_robot, float theta, float timeToTurn)
 {
     Plank plank = createPlank(x_robot, y_robot, theta, timeToTurn);
     int reward = getPlankValue(gridValue, plank, theta, 5);
+	if(plank.crossesRed) reward = -2000000;
+	if(plank.goingOutGreen) reward = 10000000;
     return reward;
 }
 
@@ -685,6 +689,10 @@ int main()
 					}
 				break;
                 case ai_waiting:
+					if(action_pos_reward.action == ai_waiting) {
+						std::cout << "Drone decided that current plank is best. Choose target again." << std::endl;
+						ai_state = ai_chooseTarget;
+					}
                     if(observed_state.drone_cmd_done && observed_state.elapsed_time >= time_to_act) {
 						std::cout << "Do action" << std::endl;
 						ai_state = action_pos_reward.action;

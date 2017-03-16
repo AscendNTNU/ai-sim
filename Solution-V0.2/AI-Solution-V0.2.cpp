@@ -110,10 +110,14 @@ bool isOutsideArena(float x) {
 Plank createPlank(float x, float y, float theta, float timeToTurn)
 {
     Plank plank;
-    plank.x_1 = detectPointOutsideArena(timeToTurn*SPEED*cos(theta) + x);
-    plank.y_1 = detectPointOutsideArena(timeToTurn*SPEED*sin(theta) + y);
-    plank.x_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*cos(theta) + x);
-    plank.y_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*sin(theta) + y);
+    plank.x_1 = timeToTurn*SPEED*cos(theta) + x;
+    plank.y_1 = timeToTurn*SPEED*sin(theta) + y;
+    plank.x_2 = (timeToTurn - 20+2.5)*SPEED*cos(theta) + x;
+    plank.y_2 = (timeToTurn - 20+2.5)*SPEED*sin(theta) + y;
+    // plank.x_1 = detectPointOutsideArena(timeToTurn*SPEED*cos(theta) + x);
+    // plank.y_1 = detectPointOutsideArena(timeToTurn*SPEED*sin(theta) + y);
+    // plank.x_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*cos(theta) + x);
+    // plank.y_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*sin(theta) + y);
     
     float dx = plank.x_2 - plank.x_1;
     float dy = plank.y_2 - plank.y_1;
@@ -277,6 +281,8 @@ IntersectionPoint getInterceptPointWithTurn(float x_b0, float y_b0, float th_b, 
 	std::cout << "T2: " << t2 << std::endl;
 	float t = t1+t2;
 	intersection.travel_time = t;
+
+    // Need to check if intersectionPoint is outside of grid
 	return intersection;
 }
 
@@ -307,8 +313,9 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
 			//std::cout << "Target not removed" << std::endl;
             if (!targetIsMoving(i, previous_state, observed_state))
             {
+                target.index = -1;
+                return target;
                 //std::cout << "Target not moving" << std::endl;
-                continue;
             }
 
             float angle = wrap_angle(observed_state.target_q[i]);

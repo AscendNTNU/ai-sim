@@ -33,7 +33,7 @@ struct Target
     IntersectionPoint intersection;
     int index;
     float angle;
-    int currentReward;
+    float currentReward;
 };
 
 enum ai_State
@@ -53,7 +53,7 @@ enum ai_State
 struct ActionReward
 {
     ai_State action;
-    int reward;
+    float reward;
     float x;
     float y;
     float time_after_intersection;
@@ -62,11 +62,11 @@ struct ActionReward
 
 float gridValue(float X, float Y)
 {
-    // if (Y>20) {
-    //     return 4000;
-    // } else if (Y < 0 || X < 0 || X > 20) {
-    //     return -1000;
-    // }
+     if (Y>20) {
+         return 2000;
+     } else if (Y < 0 || X < 0 || X > 20) {
+         return -1000;
+     }
 
     float value = (-9.995004e+02)+(9.976812e+01)*X+(-1.004701e+02)*Y
         +(-5.785388e+01)*pow(X,2)+(1.161562e+01)*X*Y+(5.477725e+01)*pow(Y,2)
@@ -203,16 +203,22 @@ float getPlankValue(float (*f)(float x, float y), Plank plank, float angle, int 
         y = plank.y_1 + (i + 0.5) * step_y;
         area += f(x, y) * step_tot; // sum up each small rectangle
     }
-    // area = area/plank.length;
+    area = area/plank.length;
     return area;
 }
 
-int findRobotValue(float x_robot, float y_robot, float theta, float timeToTurn)
+float findRobotValue(float x_robot, float y_robot, float theta, float timeToTurn)
 {
     Plank plank = createPlank(x_robot, y_robot, theta, timeToTurn);
-    int reward = getPlankValue(gridValue, plank, theta, 100);
+//<<<<<<< Updated upstream
+    float reward = getPlankValue(gridValue, plank, theta, 100);
 	// if(plank.crossesRed) reward = -2000000;
 	// if(plank.goingOutGreen) reward = 10000000;
+//=======
+//    float reward = getPlankValue(gridValue, plank, theta, 5);
+//	if(plank.crossesRed) reward = -2000000;
+//	if(plank.goingOutGreen) reward = 10000000;
+//>>>>>>> Stashed changes
     return reward;
 }
 
@@ -341,6 +347,7 @@ IntersectionPoint getInterceptPointWithTurn(float x_b0, float y_b0, float th_b, 
 	std::cout << "T1: " << t1 << std::endl;
 	std::cout << "T2: " << t2 << std::endl;
 	float t = t1+t2;
+	std::cout << "Travel Time: " << t << std::endl;
 	intersection.travel_time = t;
 
     // Need to check if intersectionPoint is outside of grid
@@ -360,8 +367,8 @@ double getXPosIntercept(double droneX, double droneY, double flyAngle, double sp
 
 //Pseudo ish kode
 Target choose_target(sim_Observed_State observed_state, sim_Observed_State previous_state){
-    int max_value = -200000;
-    int temp_value = 0;
+    float max_value = -200000;
+    float temp_value = 0;
     int index = 0;
     Target target;
 	bool robotChosen = false;
@@ -402,7 +409,7 @@ Target choose_target(sim_Observed_State observed_state, sim_Observed_State previ
         }
     }
 	if(!robotChosen) {
-		std::cout << "NO ROBOT CHOSEN! Defaulting to index 1." << std::endl;
+		std::cout << "NO ROBOT CHOSEN! Setting index to -1." << std::endl;
 		target.index = -1;
 		target.plank = createPlank(observed_state.target_x[1], observed_state.target_y[1],
 									wrap_angle(observed_state.target_q[1]), timeToTurn);;
@@ -442,18 +449,18 @@ IntersectionPoint calculateInterceptionPoint(sim_Observed_State state, Target ta
     return intersection;
 }
 
-ActionReward getBestActionAtPoint(Target target, float x, float y , sim_Observed_State state) {
+ActionReward getBestActionAtPoint(Target target, float x, float y , sim_Observed_State state, float time_after_intersection) {
     ActionReward action_reward;
-    int rewardOnTop = findRobotValue(x, y, wrap_angle(target.angle + 0.785),//0.785 radians is almost 45 degerees 
-            (int)(state.elapsed_time+target.intersection.travel_time) % 20);
+    float rewardOnTop = findRobotValue(x, y, wrap_angle(target.angle + 0.785),//0.785 radians is almost 45 degerees 
+            (int)(state.elapsed_time+target.intersection.travel_time+time_after_intersection) % 20);
 
-    int rewardInFront = findRobotValue(x, y, wrap_angle(target.angle + 3.14), 
-            (int)(state.elapsed_time+target.intersection.travel_time) % 20);
+    float rewardInFront = findRobotValue(x, y, wrap_angle(target.angle + 3.14), 
+            (int)(state.elapsed_time+target.intersection.travel_time+time_after_intersection) % 20);
 
     std::cout << "Reward 180 deg  " << rewardInFront << std::endl;
     std::cout << "Reward  45 deg  " << rewardOnTop << std::endl;
 
-    int max_reward = (std::max)(rewardInFront,rewardOnTop);
+    float max_reward = (std::max)(rewardInFront,rewardOnTop);
     if(max_reward == rewardInFront){
         action_reward.action = ai_landingInFront;
         action_reward.reward = rewardInFront;
@@ -477,7 +484,7 @@ bool isOutsideOfPlank(float x, float y, Plank plank) {
     }
 }
 
-void printActionIteration(int i, Target target, int x, int y, sim_Observed_State state, float time_until_intersection, float time_after_intersection) {
+void printActionIteration(int i, Target target, float x, float y, sim_Observed_State state, float time_until_intersection, float time_after_intersection) {
     float time_to_act = state.elapsed_time + 
                       time_until_intersection + 
                       time_after_intersection;
@@ -536,13 +543,14 @@ ActionReward choose_action(sim_Observed_State state, Target target){
                 target.angle += MATH_PI;
             }
         }
-        action_to_check = getBestActionAtPoint(target, x, y, state);
+        action_to_check = getBestActionAtPoint(target, x, y, state, time_after_intersection);
 
         if (action_to_check.reward > best_action.reward) {
             best_action = action_to_check;
             best_action.x = x;
             best_action.y = y;
             best_action.time_after_intersection = time_after_intersection;
+            best_action.time_until_intersection = target.intersection.travel_time;
         }
 
         
@@ -651,6 +659,8 @@ int main()
 					}
 					else if(action_pos_reward.action == ai_waiting) {
 						std::cout << "Choose Action: Waiting" << std::endl;
+						ai_state = ai_chooseTarget;
+						break;
 					}
 					else {
 						std::cout << "Choose Action: ... erm, what?" << std::endl;
@@ -695,11 +705,17 @@ int main()
 					}
 				break;
                 case ai_waiting:
+					if(observed_state.target_removed[target.index]) {
+						std::cout << "Target removed before we could do action. Choose target again." << std::endl;
+						ai_state = ai_chooseTarget;
+					}
 					if(action_pos_reward.action == ai_waiting) {
 						std::cout << "Drone decided that current plank is best. Choose target again." << std::endl;
 						ai_state = ai_chooseTarget;
 					}
-                    if(observed_state.drone_cmd_done && observed_state.elapsed_time >= time_to_act) {
+                    if(observed_state.drone_cmd_done && 
+							observed_state.elapsed_time >= time_to_act && 
+							targetIsMoving(target.index, previous_state, observed_state)) {
 						std::cout << "Do action" << std::endl;
 						ai_state = action_pos_reward.action;
 					}

@@ -8,6 +8,6 @@ private:
 	Robots obstacles[4];
 public:
 	Drone getDrone();
-	Robot getRobot(int target);
-	Robot getObstacle(int target);
+	Robot getRobot(int index);
+	Robot getObstacle(int index);
 };

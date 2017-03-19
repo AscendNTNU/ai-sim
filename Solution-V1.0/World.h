@@ -1,15 +1,14 @@
-#include Point
-#include <tuple>
+#include "structs.h"
 
 class World{
 private:
-	Point origin;
+	point_t origin;
 	float time;
 	float orientation;
-	int x_max;
-	int y_max;
+	bounds_t bounds;
 public:
-	float getTime();
+	point_t getOrigin();
+	float getCurrentTime();
 	float getOrientation();
-	Bounds getBounds();
+	bounds_t getBounds();
 };

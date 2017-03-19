@@ -1,18 +1,26 @@
 #include "Drone.h"
 
-point_t getPosition(){
+Drone::Drone(){
+	position = point_Zero;
+	orientation = 0
+	angle_Of_Motion = 0;
+	speed = DRONE_SPEED;
+	drone_State = drone_start;
+}
+
+point_t Drone::getPosition(){
 	return this.position;
 }
 
-drone_State_t getState(){
+drone_State_t Drone::getState(){
 	return this.state;
 }
 
-void wait(float time){
+void Drone::wait(float time){
 	//NOT IMPLEMENTED YET
 }
 
-int doAction(action_t action){
+int Drone::doAction(action_t action){
 
 	//Simulaiton implementation
 	sim_Command cmd;
@@ -22,7 +30,7 @@ int doAction(action_t action){
     sim_send_cmd(&action.cmd);
 }
 
-float getDistanceToPoint(point_t point){
+float Drone::getDistanceToPoint(point_t point){
 
 	float x_Distance = point.x - this.position.x;
 	float y_Distance = point.y - this.position.y;
@@ -31,37 +39,38 @@ float getDistanceToPoint(point_t point){
 }
 
 
-IntersectionPoint getInterceptPointWithTurn(float x_b0, float y_b0, float th_b, float v_b, float tTilTurn, float x_d, float y_d, float v_d) {
-	if(tTilTurn > 18) {
-		float tSinceTurn = 20-tTilTurn;
-		//no idea, but not normal, since the robot is turning
-		//th_f = th_curr - th_rotSoFar (rot/s * s) + 180 degrees
-		th_b   = th_b    - (MATH_PI/2)*(tSinceTurn)   + MATH_PI;
+IntersectionPoint Drone::getInterceptPointWithTurn(Robot robot) {
+	
+	Drone drone = new Drone(); 
 
-		float th_fly = atan2(y_b0-y_d, x_b0-x_d);
-		x_d = x_d + (2-tSinceTurn)*v_d*cos(th_fly);
-		y_d = y_d + (2-tSinceTurn)*v_d*sin(th_fly);
+	if(time_Until_Turn > 18) {
+		float time_Since_Turn = 20-robot.time_Until_Turn;
+		robot.angle = robot.angle - (MATH_PI/2)*(time_Since_Turn) + MATH_PI;
+
+		drone.angle_Of_Motion = atan2(robot.position.y-drone.position.y, robot.position.x-drone.position.x);
+		drone.position.x = this.position.x + (2-time_Since_Turn)*drone.speed*cos(drone.angle_of_Motion);
+		drone.position.y = this.position.y + (2-time_Since_Turn)*drone.speed*sin(drone.angle_of_Motion);
 	}
 	
 	//Math to calculate if direct
-	float a = x_b0; float b = v_b; float c = th_b; float d = y_b0; float e = x_d; float f = y_d; float g = v_d;
+	float a = robot.position.x; float b = robot.speed; float c = robot.angle; float d = robot.position.y; float e = drone.position.x; float f = drone.position.y; float g = drone.speed;
 	float ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 	float tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 
-	float t1 = (std::max)(ta, tb);
+	float t1 = (std::max)(time_a, time_b);
 	float t2 = 0;
 
 	float x_bf = 0;
 	float y_bf = 0;
 
-	if(t1 > (tTilTurn+2))
+	if(time1 > (time_UntilTurn+2))
 	{
-		t1 = tTilTurn;
-		float x_b1 = x_b0+tTilTurn*v_b*cos(th_b);
-		float y_b1 = y_b0+tTilTurn*v_b*sin(th_b);
-		float angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
+		time1 = time_Until_Turn;
+		float x_b1 = robot.position.x+robot.time_Until_Turn*robot.speed*cos(robot.angle);
+		float y_b1 = robot.position.y+robot.time_Until_Turn*robot.speed*sin(robot.angle);
+		float angleDrone1 = atan2(y_b1-drone.position.y, x_b1-drone.position.x);
 
-		float a = x_b0 + tTilTurn*v_b*cos(th_b); float b = v_b; float c = th_b+MATH_PI; float d = y_b0 + tTilTurn*v_b*sin(th_b); float e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); float f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); float g = v_d;
+		float a = x_b1; float b = v_b; float c = robot.angle+MATH_PI; float d = y_b1; float e = drone.position.x + (robot.time_Until_Turn+2)*drone.speed*cos(angleDrone1); float f = drone.position.y + (robot.time_Until_Turn+2)*drone.speed*sin(angleDrone1); float g = drone.speed;
 		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
 		t2 = (std::max)(ta, tb);
@@ -69,77 +78,16 @@ IntersectionPoint getInterceptPointWithTurn(float x_b0, float y_b0, float th_b, 
 		float x_d1 = e;
 		float y_d1 = f;
 		
-		x_bf = x_b1+t2*v_b*cos(th_b+MATH_PI);
-		y_bf = y_b1+t2*v_b*sin(th_b+MATH_PI);
+		x_bf = x_b1+t2*robot.speed*cos(robot.angle+MATH_PI);
+		y_bf = y_b1+t2*robot.speed*sin(robot.angle+MATH_PI);
 
 		float angleDrone2 = atan2(y_bf-y_d1, x_bf-x_d1);
 	}
 	else
 	{
-		x_bf = x_b0+t1*v_b*cos(th_b);
-		y_bf = y_b0+t1*v_b*sin(th_b);
-		float angleDrone1 = atan2(y_bf-y_d, x_bf-x_d);
-	}
-	IntersectionPoint intersection;
-	intersection.x = x_bf;
-	intersection.y = y_bf;
-	std::cout << "T1: " << t1 << std::endl;
-	std::cout << "T2: " << t2 << std::endl;
-	float t = t1+t2;
-	intersection.travel_time = t;
-
-    // Need to check if intersectionPoint is outside of grid
-	return intersection;
-
-
-point_t getIntersectionPoint(Robot robot){
-	if(robot.time_Until_Turn > robot.DRIVE_TIME){		//If robot 
-		float tSinceTurn = 20-tTilTurn;
-		//no idea, but not normal, since the robot is turning
-		//th_f = th_curr - th_rotSoFar (rot/s * s) + 180 degrees
-		th_b   = th_b    - (MATH_PI/2)*(tSinceTurn)   + MATH_PI;
-
-		float th_fly = atan2(y_b0-y_d, x_b0-x_d);
-		x_d = x_d + (2-tSinceTurn)*v_d*cos(th_fly);
-		y_d = y_d + (2-tSinceTurn)*v_d*sin(th_fly);
-	}
-	
-	//Math to calculate if direct
-	float a = x_b0; float b = v_b; float c = th_b; float d = y_b0; float e = x_d; float f = y_d; float g = v_d;
-	float ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-	float tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-
-	float t1 = (std::max)(ta, tb);
-	float t2 = 0;
-
-	float x_bf = 0;
-	float y_bf = 0;
-
-	if(t1 > (tTilTurn+2))
-	{
-		t1 = tTilTurn;
-		float x_b1 = x_b0+tTilTurn*v_b*cos(th_b);
-		float y_b1 = y_b0+tTilTurn*v_b*sin(th_b);
-		float angleDrone1 = atan2(y_b1-y_d, x_b1-x_d);
-
-		float a = x_b0 + tTilTurn*v_b*cos(th_b); float b = v_b; float c = th_b+MATH_PI; float d = y_b0 + tTilTurn*v_b*sin(th_b); float e = x_d + (tTilTurn+2)*v_d*cos(angleDrone1); float f = y_d + (tTilTurn+2)*v_d*sin(angleDrone1); float g = v_d;
-		ta =(-sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-		tb = (sqrt(pow(b,2)*pow(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c),2) - 4*(-pow(a,2) + 2*a*e - pow(d,2) + 2*d*f - pow(e,2) - pow(f,2))*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2))) - b*(-2*a*cos(c) - 2*d*sin(c) + 2*e*cos(c) + 2*f*sin(c)))/(2*(-pow(b,2)*pow(sin(c),2) - pow(b,2)*pow(cos(c),2) + pow(g,2)));
-		t2 = (std::max)(ta, tb);
-
-		float x_d1 = e;
-		float y_d1 = f;
-		
-		x_bf = x_b1+t2*v_b*cos(th_b+MATH_PI);
-		y_bf = y_b1+t2*v_b*sin(th_b+MATH_PI);
-
-		float angleDrone2 = atan2(y_bf-y_d1, x_bf-x_d1);
-	}
-	else
-	{
-		x_bf = x_b0+t1*v_b*cos(th_b);
-		y_bf = y_b0+t1*v_b*sin(th_b);
-		float angleDrone1 = atan2(y_bf-y_d, x_bf-x_d);
+		x_bf = robot.position.x+t1*robot.speed*cos(robot.angle);
+		y_bf = robot.position.y+t1*robot.speed*sin(robot.angle);
+		float angleDrone1 = atan2(y_bf-drone.position.y, x_bf-drone.position.x);
 	}
 	IntersectionPoint intersection;
 	intersection.x = x_bf;

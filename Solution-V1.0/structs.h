@@ -1,9 +1,16 @@
+static const DRONE_SPEED = 1;
+static const ROBOT_SPEED = 0.33;
+static const MATH_PI = 3.141592653589793238;
+
+
 struct point_t{
 	float x;
 	float y;
 	float z;
 	int travel_Time;
 };
+
+point_Zero = {x = 0.0, y = 0.0, z = 0.0, travel_Time = 0.0};
 
 struct action_t{
 	action_Type type;
@@ -27,18 +34,18 @@ struct Plank
 	bool will_Exit_Red;
 };
 
-enum ai_State_t
+enum drone_State_t
 {
-    ai_landingOnTop,
-    ai_landingInFront,
-    ai_waiting,
-    ai_tracking,
-	ai_chooseAction,
-	ai_chooseTarget,
-	ai_start,
-	ai_waitForAction,
-	ai_noTargetFound,
-	ai_terminate
+    drone_landingOnTop,
+    drone_landingInFront,
+    drone_waiting,
+    drone_tracking,
+	drone_chooseAction,
+	drone_chooseTarget,
+	drone_start,
+	drone_waitForAction,
+	drone_noTargetFound,
+	drone_terminate
 };
 
 enum action_Type_t

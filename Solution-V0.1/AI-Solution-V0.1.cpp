@@ -78,20 +78,32 @@ void createGrid(){
 }
 
 
-float gridValue(float x, float y)
+float gridValue(float X, float Y)
 {
-    if (y>20) {
-        return 10000;
-    } else if (y < 0 || x < 0 || x > 20) {
-        return 0;
+    if (Y>20) {
+        return 2000;
+    } else if (Y < 0 || X < 0 || X > 20) {
+        return -1000;
     }
-    y = abs(20-y);
-    int x_0 = 10; //The peak's x-position
-    int y_0 = 20; //The peak's y-position
-    float y_v = 10; // The spread in y-direction
-    float x_v = 7; // The spread in x-direction
-    int amplitude = 100; // How "extreme" the values are
-    float value = amplitude*exp(-((pow(x - x_0, 2) / (2 * pow(x_v, 2))) - ((pow(y - y_0, 2)) / (2 * pow(y_v, 2)))));
+
+    float value = (-9.995004e+02)+(9.976812e+01)*X+(-1.004701e+02)*Y
+        +(-5.785388e+01)*pow(X,2)+(1.161562e+01)*X*Y+(5.477725e+01)*pow(Y,2)
+        +(1.260229e+01)*pow(X,3)+(1.299816e+01)*pow(X,2)*Y+(-1.438667e+01)*X*pow(Y,2)+(-1.158062e+01)*pow(Y,3)
+        +(-1.404096e+00)*pow(X,4)+(-3.106303e+00)*pow(X,3)*Y+(4.263504e-01)*pow(X,2)*pow(Y,2)
+        +(2.851553e+00)*X*pow(Y,3)+(1.301842e+00)*pow(Y,4)
+        +(9.053408e-02)*pow(X,5)+(2.901147e-01)*pow(X,4)*Y+(1.327346e-01)*pow(X,3)*pow(Y,2)
+        +(-1.761180e-01)*pow(X,2)*pow(Y,3)+(-2.603853e-01)*X*pow(Y,4)+(-8.415694e-02)*pow(Y,5)
+        +(-3.615309e-03)*pow(X,6)+(-1.235169e-02)*pow(X,5)*Y+(-1.602868e-02)*pow(X,4)*pow(Y,2)
+        +(3.840976e-03)*pow(X,3)*pow(Y,3)+(1.239923e-02)*pow(X,2)*pow(Y,4)
+        +(1.283802e-02)*X*pow(Y,5)+(3.201336e-03)*pow(Y,6)
+        +(8.890888e-05)*pow(X,7)+(1.960570e-04)*pow(X,6)*Y+(7.353331e-04)*pow(X,5)*pow(Y,2)
+        +(-9.145182e-05)*pow(X,4)*pow(Y,3)+(8.794847e-10)*pow(X,3)*pow(Y,4)
+        +(-6.113303e-04)*pow(X,2)*pow(Y,5)+(-2.451141e-04)*X*pow(Y,6)+(-7.627948e-05)*pow(Y,7)
+        +(-1.058445e-06)*pow(X,8)+(4.059809e-11)*pow(X,7)*Y+(-1.167195e-05)*pow(X,6)*pow(Y,2)
+        +(-4.630460e-12)*pow(X,5)*pow(Y,3)+(-1.355465e-11)*pow(X,4)*pow(Y,4)
+        +(-5.731993e-12)*pow(X,3)*pow(Y,5)+(1.167198e-05)*pow(X,2)*pow(Y,6)
+        +(3.539047e-11)*X*pow(Y,7)+(1.058675e-06)*pow(Y,8);
+
     return value;
 }
 
@@ -124,12 +136,12 @@ Plank createPlank(float x, float y, float theta, int timeToTurn)
     Plank plank;
     plank.x_1 = check_ifInArena(timeToTurn*SPEED*cos(theta) + x);
     plank.y_1 = check_ifInArena(timeToTurn*SPEED*sin(theta) + y);
-    plank.x_2 = check_ifInArena((timeToTurn - 20)*SPEED*cos(theta) + plank.x_1);
-    plank.y_2 = check_ifInArena((timeToTurn - 20)*SPEED*sin(theta) + plank.y_1);
+    plank.x_2 = check_ifInArena((timeToTurn - 20)*SPEED*cos(theta) + x);
+    plank.y_2 = check_ifInArena((timeToTurn - 20)*SPEED*sin(theta) + y);
     return plank;
 }
 
-float findNumericIntegral(float (*f)(float x, float y), float a_x, float a_y, float b_x, float b_y, int n){
+float getPlankValue(float (*f)(float x, float y), float a_x, float a_y, float b_x, float b_y, int n){
     float step_x = (a_x - b_x)/ n;  // width of each small rectangle
     float step_y = (a_y - b_y)/ n;  // width of each small rectangle
     float area = 0.0;  // signed area
@@ -137,10 +149,12 @@ float findNumericIntegral(float (*f)(float x, float y), float a_x, float a_y, fl
     float dx = b_x - a_x;
     float dy = b_y - a_y;
     float dist = sqrt(dx*dx + dy*dy);
+    std::cout << "Plank length" << dist << std::endl;
 
     for (int i = 0; i < n; i++) {
         area += f(a_x + (i + 0.5) * step_x, a_y + (i + 0.5) * step_y) * dist; // sum up each small rectangle
     }
+    area = area/dist;
     return area;
 }
 
@@ -149,21 +163,21 @@ float findRobotValue(float x_robot, float y_robot, float theta, int timeToTurn)
     float reward1 = 0;
     float reward2 = 0;
     Plank positions = createPlank(x_robot, y_robot, theta, timeToTurn);
-    // reward1 = gridValue(positions.x_1, positions.y_1);
-    // reward2 = gridValue(positions.x_2, positions.y_2);
-    reward1 = GRID[(int)positions.x_1][(int)positions.y_1];
-    reward2 = GRID[(int)positions.x_2][(int)positions.y_2];
+    reward1 = gridValue(positions.x_1, positions.y_1);
+    reward2 = gridValue(positions.x_2, positions.y_2);
+    // reward1 = GRID[(int)positions.x_1][(int)positions.y_1];
+    // reward2 = GRID[(int)positions.x_2][(int)positions.y_2];
 
-    //if(reward1 == gridValue(0,0) || reward1 == gridValue(20,20)){
-    if(reward1 == GRID[0][21] || reward1 == GRID[0][0]){
+    if(reward1 == gridValue(0,0) || reward1 == gridValue(20,20)){
+    // if(reward1 == GRID[0][21] || reward1 == GRID[0][0]){
         return 2*reward1;
     }
-    //else if(reward2 == gridValue(0,0) || reward2 == gridValue(20,20)){
-    if(reward1 == GRID[0][21] || reward1 == GRID[0][0]){
+    else if(reward2 == gridValue(0,0) || reward2 == gridValue(20,20)){
+    // if(reward1 == GRID[0][21] || reward1 == GRID[0][0]){
         return 2*reward2;
     }
     else{
-        return reward1-reward2;
+        return abs(reward1-reward2);
     }
 
 }
@@ -215,8 +229,8 @@ int choose_target(sim_Observed_State observed_state, sim_Observed_State previous
                 continue;
             }
             Plank positions = createPlank(observed_state.target_x[i], observed_state.target_y[i],
-            wrap_angle(observed_state.target_q[i] + 0.785), (int)observed_state.elapsed_time % 20);
-            temp_value = findNumericIntegral(gridValue, positions.x_1, positions.y_1, positions.x_2, positions.y_2, 5);
+            wrap_angle(observed_state.target_q[i]), (int)observed_state.elapsed_time % 20);
+            temp_value = getPlankValue(gridValue, positions.x_1, positions.y_1, positions.x_2, positions.y_2, 5);
             // temp_value = GRID[(int)observed_state.target_x[i]][(int)observed_state.target_y[i]];
 
             if(temp_value > max_value){
@@ -239,7 +253,7 @@ ai_State choose_action(sim_Observed_State state, int i){
             state.target_q[i], (int)state.elapsed_time % 20);
     std::cout << "Reward in front " << rewardInFront << std::endl;
     std::cout << "Reward on top " << rewardOnTop << std::endl;
-    std::cout << "Reward wait" << rewardOnTop << std::endl;
+    std::cout << "Reward wait" << rewardForWait << std::endl;
 
     int max_reward = std::max(std::max(rewardInFront,rewardOnTop), rewardForWait);
     if(max_reward == rewardForWait){

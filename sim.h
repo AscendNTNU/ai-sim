@@ -32,10 +32,12 @@
 
 #ifndef SIM_HEADER_INCLUDE
 #define SIM_HEADER_INCLUDE
-#define Num_Obstacles (0)  // Number of robots with pole
+#define Num_Obstacles (4)  // Number of robots with pole
 #define Num_Targets   (10) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
-#define pixels_each_meter (4) //for heatmap
+
+
+#define pixels_each_meter (1) //for heatmap
 
 enum sim_CommandType
 {
@@ -44,6 +46,7 @@ enum sim_CommandType
     sim_CommandType_LandInFrontOf,   // trigger one 180 deg turn of robot (i)
     sim_CommandType_Track,           // follow robot (i) at a constant height
     sim_CommandType_Search,          // ascend to 3 meters and go to (x, y)
+
     sim_CommandType_Land,
     sim_CommandType_Debug
 };
@@ -56,8 +59,9 @@ struct sim_Command
     int i;
     float heatmap[pixels_each_meter*pixels_each_meter*20*20];
     
-    
-    
+
+    int reward;
+
 };
 
 struct sim_Observed_State
@@ -875,9 +879,15 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             // Keep current command
         } break;
 
+        case sim_CommandType_Debug:
+        {
+            // Keep current command
+        } break;
+
         case sim_CommandType_LandOnTopOf:
         {
             if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
+
             {
                 DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
             }

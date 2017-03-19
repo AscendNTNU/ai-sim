@@ -198,6 +198,7 @@ void draw_robot(sim_Robot robot)
     draw_circle(x, y, 0.5f*l);
     draw_line(x, y, x + l*cos(q), y + l*sin(q));
 }
+
 void draw_drone(float radius,float x,float y){
     glBegin(GL_LINES);
     float propel_radius = radius /3.0;
@@ -253,8 +254,10 @@ void draw_planks(sim_Robot robot)
     r32 q = robot.q;
     r32 plank_angle = robot.plank_angle;
     robot_Internal internal = robot.internal;
+
     float plank_behind =  std::max((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
     float plank_ahead = std::min(internal.time_to_next_reverse * Robot_Speed,(Reverse_Interval- Reverse_Length) * Robot_Speed);
+
     
     draw_line(x, y, x + plank_ahead*cos(plank_angle), y + plank_ahead*sin(plank_angle));
     draw_line(x, y, x + plank_behind*cos(plank_angle-PI), y + plank_behind*sin(plank_angle-PI));
@@ -303,6 +306,7 @@ bool read_history(char *filename)
     fclose(f);
     return true;
 }
+
 float heat_blue_color(float x){
     if(x<0.0){
         return 1.0;
@@ -315,6 +319,7 @@ float heat_blue_color(float x){
     }
 }
 float heat_green_color(float x){
+
     if(x<0.0){
         return 0.0;
     }else if(x>=0.0 && x < 0.25){
@@ -327,6 +332,7 @@ float heat_green_color(float x){
         return 0.0;
     }
 }
+
 float heat_red_color(float x){
     if(x<0.5){
         return 0.0;
@@ -340,9 +346,10 @@ float transform_heat_color(float x){
     return 0.1205*log(4000.0*x+1.0);
 }
 
+
 void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
 {
-    persist bool flag_grid     = false;
+    persist bool flag_grid     = true;
     persist bool flag_plank = false;
     persist bool flag_DrawDroneGoto     = true;
     persist bool flag_DrawDrone         = true;
@@ -352,8 +359,8 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     persist bool flag_Paused            = false;
     persist bool flag_Recording         = false;
     persist bool flag_SetupRecord       = false;
-    persist bool flag_probability_distribution = true;
-    
+    persist bool flag_probability_distribution = false;
+
     persist int record_from = 0;
     persist int record_to = 0;
     persist int record_frame_skip = 1;
@@ -445,13 +452,20 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                 cmd.x = 0.0f;
                 cmd.y = 0.0f;
                 cmd.i = 0;
+
                 for(int v = 0; v <20*20*pixels_each_meter*pixels_each_meter; v++){
                      cmd.heatmap[v] = HISTORY_CMD[HISTORY_LENGTH-1].heatmap[v];
                 }
                 
+
+                cmd.reward = 0;
                 
             }
 
+            for(int bit = 0; bit < pixels_each_meter*pixels_each_meter*20*20; bit++ )
+            {
+              cmd.heatmap[bit] = 0.0;
+            }
             STATE = sim_tick(STATE, cmd);
             add_history(cmd, STATE);
             seek_cursor = HISTORY_LENGTH-1;
@@ -466,9 +480,11 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     }
 
     sim_State draw_state = HISTORY_STATE[seek_cursor];
-    
+
     sim_Command cmd_state = HISTORY_CMD[seek_cursor];
+
     sim_Drone drone = draw_state.drone;
+    //sim_Command cmd_state = HISTORY_CMD[seek_cursor];
     sim_Robot *robots = draw_state.robots;
     sim_Robot *targets = draw_state.robots;
     sim_Robot *obstacles = draw_state.robots + Num_Targets;
@@ -513,10 +529,12 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                         
                         
                         float value =  cmd_state.heatmap[yi*iterations + xi];
+
                         value = transform_heat_color(value);
                         float blue = heat_blue_color(value);
                         float green = heat_green_color(value);
                         float red = heat_red_color(value);
+
                         Color fading_color = { red , green, blue, 1.00f };
                         color4f(fading_color);
                         r32 x = xi * unit;
@@ -737,13 +755,14 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
         ImGui::Separator();
 
         ImGui::Text("Last 10 non-trivial commands received:");
-        ImGui::Columns(5, "CommunicationColumns");
+        ImGui::Columns(6, "CommunicationColumns");
         ImGui::Separator();
         ImGui::Text("Time"); ImGui::NextColumn();
         ImGui::Text("type"); ImGui::NextColumn();
         ImGui::Text("x"); ImGui::NextColumn();
         ImGui::Text("y"); ImGui::NextColumn();
         ImGui::Text("i"); ImGui::NextColumn();
+        ImGui::Text("Reward"); ImGui::NextColumn();
         ImGui::Separator();
         int count = 0;
         for (int i = 0; count < 10 && i <= seek_cursor; i++)
@@ -765,6 +784,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
+                    ImGui::Text("-"); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_LandInFrontOf:
                 {
@@ -772,6 +792,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_LandOnTopOf:
                 {
@@ -779,6 +800,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Track:
                 {
@@ -786,12 +808,22 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Search:
                 {
                     ImGui::Text("Search"); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
+                    ImGui::Text("-"); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
+                } break;
+                case sim_CommandType_Debug:
+                {
+                    ImGui::Text("Debug"); ImGui::NextColumn();
+                    ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
+                    ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
+                    ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                 } break;
             }

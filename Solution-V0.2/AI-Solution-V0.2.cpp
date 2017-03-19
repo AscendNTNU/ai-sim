@@ -62,11 +62,11 @@ struct ActionReward
 
 float gridValue(float X, float Y)
 {
-    if (Y>20) {
-        return 2000;
-    } else if (Y < 0 || X < 0 || X > 20) {
-        return -1000;
-    }
+    // if (Y>20) {
+    //     return 4000;
+    // } else if (Y < 0 || X < 0 || X > 20) {
+    //     return -1000;
+    // }
 
     float value = (-9.995004e+02)+(9.976812e+01)*X+(-1.004701e+02)*Y
         +(-5.785388e+01)*pow(X,2)+(1.161562e+01)*X*Y+(5.477725e+01)*pow(Y,2)
@@ -89,7 +89,7 @@ float gridValue(float X, float Y)
     return value;
 }
 
-int detectPointOutsideArena(float x){
+int movePointInsideArena(float x){
     if(x > 21){
         return 21;
     }
@@ -110,73 +110,77 @@ bool isOutsideArena(float x) {
 }
 
 bool crossesRedLine(float x1, float x2, float y1, float y2) {
-	float m = (y2-y1)/(x2-x1);
+	// float m = (y2-y1)/(x2-x1);
 
-	//Red line 1 - bottom line
-	float y_redLine1 = 0;
-	float x_kryssepunkt = (y_redLine1 - y1 + m*x1)/m;
-	if((y1<y_redLine1 || y2 <y_redLine1) && 0 < x_kryssepunkt && x_kryssepunkt < 20) {
-		return true;
-	}
+	// //Red line 1 - bottom line
+	// float y_redLine1 = 0;
+	// float x_kryssepunkt = (y_redLine1 - y1 + m*x1)/m;
+	// if((y1<y_redLine1 || y2 <y_redLine1) && 0 < x_kryssepunkt && x_kryssepunkt < 20) {
+	// 	return true;
+	// }
 
-	//Red line 2 - left side
-	float x_redLine2 = 0;
-	float y_kryssepunkt = m*(x_redLine2-x1) + y1;
-	if((x1<x_redLine2 || x2 <x_redLine2) && 0 < y_kryssepunkt && y_kryssepunkt < 20) {
-		return true;
-	}
+	// //Red line 2 - left side
+	// float x_redLine2 = 0;
+	// float y_kryssepunkt = m*(x_redLine2-x1) + y1;
+	// if((x1<x_redLine2 || x2 <x_redLine2) && 0 < y_kryssepunkt && y_kryssepunkt < 20) {
+	// 	return true;
+	// }
 
-	//Red line 3 - right side
-	float x_redLine3 = 20;
-	y_kryssepunkt = m*(x_redLine3-x1) + y1;
-	if((x1>x_redLine2 || x2 > x_redLine2) && 0 < y_kryssepunkt && y_kryssepunkt < 20) {
-		return true;
-	}
+	// //Red line 3 - right side
+	// float x_redLine3 = 20;
+	// y_kryssepunkt = m*(x_redLine3-x1) + y1;
+	// if((x1>x_redLine2 || x2 > x_redLine2) && 0 < y_kryssepunkt && y_kryssepunkt < 20) {
+	// 	return true;
+	// }
 
+    if (x1 < 0 || x1 > 20 || x2 < 0 || x2 > 20 || y1 < 0 || y2 < 0) {
+        return true;
+    }
 	return false;
 }
 
 bool isOverGreenLine(float x1, float x2, float y1, float y2) {
-	float m = (y2-y1)/(x2-x1);
-	float y_greenLine = 20.5;
-	float x_kryssepunkt = (y_greenLine - y1 + m*x1)/m;
+	// float m = (y2-y1)/(x2-x1);
+	// float y_greenLine = 20.5;
+	// float x_kryssepunkt = (y_greenLine - y1 + m*x1)/m;
 
-	if(y1 > y_greenLine && 1 < x_kryssepunkt && x_kryssepunkt < 19) {
-		return true;
-	}
-	else if(y2 > y_greenLine && 1 < x_kryssepunkt && x_kryssepunkt < 19) {
-		if(crossesRedLine(x1, x2, y1, y2)) {
-			return false;
-		}
-		else {
-			return true;
-		}
-	}
-	else {
-		return false;
-	}
+	// if(y1 > y_greenLine && 1 < x_kryssepunkt && x_kryssepunkt < 19) {
+	// 	return true;
+	// }
+	// else if(y2 > y_greenLine && 1 < x_kryssepunkt && x_kryssepunkt < 19) {
+	// 	if(crossesRedLine(x1, x2, y1, y2)) {
+	// 		return false;
+	// 	}
+	// 	else {
+	// 		return true;
+	// 	}
+	// }
+	// else {
+	// 	return false;
+	// }
+
+    if (y1 > 20 || y2 > 20) {
+        return true;
+    }
+    return false;
 }
 
 Plank createPlank(float x, float y, float theta, float timeToTurn)
 {
     Plank plank;
-	float raw_x1 = timeToTurn*SPEED*cos(theta) + x;
-	float raw_y1 = timeToTurn*SPEED*sin(theta) + y;
-	float raw_x2 = (timeToTurn - 20+2.5)*SPEED*cos(theta) + x;
-	float raw_y2 = (timeToTurn - 20+2.5)*SPEED*sin(theta) + y;
 
-    plank.x_1 = detectPointOutsideArena(timeToTurn*SPEED*cos(theta) + x);
-    plank.y_1 = detectPointOutsideArena(timeToTurn*SPEED*sin(theta) + y);
-    plank.x_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*cos(theta) + x);
-    plank.y_2 = detectPointOutsideArena((timeToTurn - 20+2.5)*SPEED*sin(theta) + y);
+    plank.x_1 = timeToTurn*SPEED*cos(theta) + x;
+    plank.y_1 = timeToTurn*SPEED*sin(theta) + y;
+    plank.x_2 = (timeToTurn - 20+2.5)*SPEED*cos(theta) + x;
+    plank.y_2 = (timeToTurn - 20+2.5)*SPEED*sin(theta) + y;
     
     float dx = plank.x_2 - plank.x_1;
     float dy = plank.y_2 - plank.y_1;
     plank.length = sqrt(dx*dx + dy*dy);
 
 
-	plank.goingOutGreen = isOverGreenLine(raw_x1, raw_x2, raw_y1, raw_y2);
-	plank.crossesRed    = crossesRedLine(raw_x1, raw_x2, raw_y1, raw_y2);
+	plank.goingOutGreen = isOverGreenLine(plank.x_1, plank.x_2, plank.y_1, plank.y_2);
+	plank.crossesRed    = crossesRedLine(plank.x_1, plank.x_2, plank.y_1, plank.y_2);
 
     return plank;
 }
@@ -199,16 +203,16 @@ float getPlankValue(float (*f)(float x, float y), Plank plank, float angle, int 
         y = plank.y_1 + (i + 0.5) * step_y;
         area += f(x, y) * step_tot; // sum up each small rectangle
     }
-    area = area/plank.length;
+    // area = area/plank.length;
     return area;
 }
 
 int findRobotValue(float x_robot, float y_robot, float theta, float timeToTurn)
 {
     Plank plank = createPlank(x_robot, y_robot, theta, timeToTurn);
-    int reward = getPlankValue(gridValue, plank, theta, 5);
-	if(plank.crossesRed) reward = -2000000;
-	if(plank.goingOutGreen) reward = 10000000;
+    int reward = getPlankValue(gridValue, plank, theta, 100);
+	// if(plank.crossesRed) reward = -2000000;
+	// if(plank.goingOutGreen) reward = 10000000;
     return reward;
 }
 
@@ -713,6 +717,8 @@ int main()
 				case ai_terminate:
 					running = false;
 				break;
+                default:
+                break;
 				
         //target_index = -1;
         }

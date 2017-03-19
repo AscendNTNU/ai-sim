@@ -865,7 +865,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             float dx = DRONE->xr - DRONE->x;
             float dy = DRONE->yr - DRONE->y;
             float len = sqrtf(dx*dx + dy*dy);
-            if (len < Sim_Drone_Target_Proximity)
+            if (len < Sim_Drone_Target_Proximity && TARGETS[DRONE->cmd.i].state != Robot_Reverse)
             {
                 if (!DRONE->landing)
                 {

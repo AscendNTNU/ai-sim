@@ -28,11 +28,14 @@
 // 18. jan 2016: Exposing the internal state for now
 //
 //
+#include <string.h>
+
 #ifndef SIM_HEADER_INCLUDE
 #define SIM_HEADER_INCLUDE
 #define Num_Obstacles (0)  // Number of robots with pole
 #define Num_Targets   (10) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
+#define pixels_each_meter (4) //for heatmap
 
 enum sim_CommandType
 {
@@ -40,7 +43,9 @@ enum sim_CommandType
     sim_CommandType_LandOnTopOf,     // trigger one 45 deg turn of robot (i)
     sim_CommandType_LandInFrontOf,   // trigger one 180 deg turn of robot (i)
     sim_CommandType_Track,           // follow robot (i) at a constant height
-    sim_CommandType_Search           // ascend to 3 meters and go to (x, y)
+    sim_CommandType_Search,          // ascend to 3 meters and go to (x, y)
+    sim_CommandType_Land,
+    sim_CommandType_Debug
 };
 
 struct sim_Command
@@ -49,6 +54,10 @@ struct sim_Command
     float x;
     float y;
     int i;
+    float heatmap[pixels_each_meter*pixels_each_meter*20*20];
+    
+    
+    
 };
 
 struct sim_Observed_State
@@ -101,7 +110,7 @@ void               sim_write_snapshot(char*, sim_Observed_State);
 //                        Tweakable simulation parameters
 // ***********************************************************************
 
-#define Sim_Timestep (1.0f / 60.0f)       // Simulation timestep
+#define Sim_Timestep (1.0f / 5.0f)       // Simulation timestep
 
 // Note:
 // Increasing Sim_Timestep will decrease the accuracy of the simulation,
@@ -122,10 +131,17 @@ void               sim_write_snapshot(char*, sim_Observed_State);
                                           // near a point in the world before
                                           // it is considered to have reached
                                           // it.
+#define Sim_Drone_Radius (0.9f)           // How large the drone is
 
 #define Sim_LandOnTopOf_Time (2.0f)       // How many seconds it should take
                                           // to complete a LandOnTopOf command
                                           // after the drone gets close enough.
+#define Sim_Landing_Time (2.0f)           //How long time it should take to land
+
+#define Sim_Take_Off_Time (2.0f)           //How long time it should take to take off
+
+
+#define Sim_Average_Flying_Heigth (3.0f)   //The height the drone is flying at when not on ground
 
 #define Sim_LandInFrontOf_Time (2.0f)     // How many seconds it should take
                                           // to complete a LandInFrontOf command
@@ -141,6 +157,9 @@ void               sim_write_snapshot(char*, sim_Observed_State);
 
 #define Sim_Obstacle_Init_Radius (5.0f)   // Initial obstacle spawn radius
 
+#define Sim_Robot_Height (0.2f)         // The height of the ground robot
+
+#define Sim_View_Angle (1.15)          //View angle to camera in radians
 
 
 
@@ -203,6 +222,9 @@ struct robot_Internal
 
     sim_Time last_noise;
     sim_Time last_reverse;
+    sim_Time time_since_last_reverse;
+    sim_Time time_to_next_reverse;
+    int reverse_count;
     bool initialized;
 };
 
@@ -242,7 +264,8 @@ struct sim_Robot
     float x;
     float y;
     sim_World_Angle q;
-
+    sim_World_Angle plank_angle;
+    
     // Physical parameters
     float L;  // distance between wheels (m)
     float vl; // left-wheel speed (m/s)
@@ -265,8 +288,9 @@ struct sim_Drone
     float v_max;
     sim_Command cmd;
     bool cmd_done;
-
+    bool on_ground;
     bool landing;
+    bool ascending;
     float land_timer;
 };
 
@@ -471,13 +495,17 @@ TopTouchStart(robot_Event event,
 }
 
 static robot_State
-robot_fsm(robot_State state,
+robot_fsm(sim_Robot *robot,robot_State state,
           robot_Internal *internal,
           robot_Event event,
           robot_Action *action)
 {
     action->was_bumped = 0;
     action->was_top_touched = 0;
+    internal->time_since_last_reverse =  event.elapsed_time - internal->last_reverse;
+    internal->time_to_next_reverse =  Reverse_Interval - internal->time_since_last_reverse;
+
+
     if (!internal->initialized)
     {
         internal->begin_noise = event.elapsed_time;
@@ -551,6 +579,7 @@ robot_fsm(robot_State state,
 
         case Robot_TargetRun:
         {
+            robot->plank_angle = robot->q;
             if (event.is_wait_sig)
             {
                 TransitionTo(TargetWait);
@@ -563,7 +592,13 @@ robot_fsm(robot_State state,
                      internal->last_reverse >
                      Reverse_Interval)
             {
+                robot->plank_angle = robot->plank_angle - 1*PI;
+		
                 internal->last_reverse = event.elapsed_time;
+                internal->time_since_last_reverse =  event.elapsed_time - internal->last_reverse;
+                internal->time_to_next_reverse =  Reverse_Interval - internal->time_since_last_reverse;
+
+                internal->reverse_count ++;
                 TransitionTo(Reverse);
             }
             else if (event.elapsed_time - internal->last_noise > Noise_Interval)
@@ -616,6 +651,8 @@ robot_fsm(robot_State state,
         case Robot_TargetCollision:
         {
             action->was_bumped = 1;
+            internal->reverse_count ++;
+            robot->plank_angle = robot->plank_angle - PI;
             TransitionTo(Reverse);
         } break;
 
@@ -679,11 +716,7 @@ compute_drone_view_radius(float height_above_ground)
     // Interpolates between 0.5 meters and
     // 3 meters view radius when height goes
     // from 0 to 2.5 meters.
-    float h0 = 0.0f;
-    float h1 = 3.0f;
-    float alpha = (height_above_ground - h0) / (h1 - h0);
-    float view_radius = 0.5f + 2.0f * alpha;
-    return view_radius;
+    return tan(Sim_View_Angle)*height_above_ground;
 }
 
 sim_State sim_init(unsigned int seed)
@@ -714,8 +747,8 @@ sim_State sim_init(unsigned int seed)
         if (INTERNAL->xor128_w == 0) INTERNAL->xor128_w++;
     }
 
-    DRONE->x = 10.0f;
-    DRONE->y = 10.0f;
+    DRONE->x = 0.0f;
+    DRONE->y = 0.0f;
     DRONE->z = 3.0f; // TODO: Dynamics for z when landing
     DRONE->xr = 10.0f;
     DRONE->yr = 10.0f;
@@ -725,6 +758,7 @@ sim_State sim_init(unsigned int seed)
     DRONE->cmd.y = 0.0f;
     DRONE->cmd.i = 0;
     DRONE->landing = false;
+    DRONE->on_ground = false;
     DRONE->cmd_done = true;
     DRONE->land_timer = 0.0f;
 
@@ -826,6 +860,14 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
         DRONE->cmd = new_cmd;
     }
 
+    //manage on ground or not
+    if(DRONE->z < Sim_Robot_Height )
+    {
+        DRONE->on_ground = true;
+    }else{
+        DRONE->on_ground = false;
+    }
+
     switch (DRONE->cmd.type)
     {
         case sim_CommandType_NoCommand:
@@ -835,124 +877,204 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
 
         case sim_CommandType_LandOnTopOf:
         {
-            DRONE->xr = TARGETS[DRONE->cmd.i].x;
-            DRONE->yr = TARGETS[DRONE->cmd.i].y;
-            float dx = DRONE->xr - DRONE->x;
-            float dy = DRONE->yr - DRONE->y;
-            float len = sqrtf(dx*dx + dy*dy);
-            if (len < Sim_Drone_Target_Proximity)
+            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
             {
-                if (!DRONE->landing)
-                {
-                    DRONE->landing = true;
-                    DRONE->land_timer = Sim_LandOnTopOf_Time;
-                }
+                DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
             }
             else
             {
-                float v = DRONE->v_max / len;
-                float vx = v * dx;
-                float vy = v * dy;
-                DRONE->x += vx * Sim_Timestep;
-                DRONE->y += vy * Sim_Timestep;
-            }
-            if (DRONE->landing)
-            {
-                DRONE->land_timer -= Sim_Timestep;
-                if (DRONE->land_timer < 0.0f)
+                DRONE->xr = TARGETS[DRONE->cmd.i].x;
+                DRONE->yr = TARGETS[DRONE->cmd.i].y;
+                float dx = DRONE->xr - DRONE->x;
+                float dy = DRONE->yr - DRONE->y;
+                float len = sqrtf(dx*dx + dy*dy);
+                if (len < Sim_Drone_Target_Proximity)
                 {
-                    events[DRONE->cmd.i].is_top_touch = true;
-                    DRONE->land_timer = 0.0f;
-                    DRONE->landing = false;
-                    DRONE->cmd_done = true;
-                    DRONE->cmd.type = sim_CommandType_NoCommand;
+                    if (!DRONE->landing)
+                    {
+                        DRONE->landing = true;
+                        DRONE->land_timer = Sim_LandOnTopOf_Time;
+                    }
                 }
+                else
+                {
+                    float v = DRONE->v_max / len;
+                    float vx = v * dx;
+                    float vy = v * dy;
+                    DRONE->x += vx * Sim_Timestep;
+                    DRONE->y += vy * Sim_Timestep;
+                }
+                if (DRONE->landing)
+                {
+                    DRONE->land_timer -= Sim_Timestep;
+                    if (DRONE->land_timer < 0.0f)
+                    {
+                        events[DRONE->cmd.i].is_top_touch = true;
+                        DRONE->land_timer = 0.0f;
+                        DRONE->landing = false;
+                        DRONE->cmd_done = true;
+                        DRONE->cmd.type = sim_CommandType_NoCommand;
+                    }
+                }
+                // if (TARGETS[DRONE->cmd.i].action.was_top_touched)
+                // {
+                //     DRONE->land_timer = 0.0f;
+                //     DRONE->landing = false;
+                //     DRONE->cmd_done = true;
+                //     DRONE->cmd.type = sim_CommandType_NoCommand;
+                // }
             }
-            // if (TARGETS[DRONE->cmd.i].action.was_top_touched)
-            // {
-            //     DRONE->land_timer = 0.0f;
-            //     DRONE->landing = false;
-            //     DRONE->cmd_done = true;
-            //     DRONE->cmd.type = sim_CommandType_NoCommand;
-            // }
+
+
         } break;
 
         case sim_CommandType_LandInFrontOf:
         {
-            DRONE->xr = TARGETS[DRONE->cmd.i].x;
-            DRONE->yr = TARGETS[DRONE->cmd.i].y;
-            float dx = DRONE->xr - DRONE->x;
-            float dy = DRONE->yr - DRONE->y;
-            float len = sqrtf(dx*dx + dy*dy);
-            if (len < Sim_Drone_Target_Proximity)
+            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
             {
-                if (!DRONE->landing)
-                {
-                    DRONE->landing = true;
-                    DRONE->land_timer = Sim_LandInFrontOf_Time;
-                }
+                DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
             }
             else
             {
+                DRONE->xr = TARGETS[DRONE->cmd.i].x;
+                DRONE->yr = TARGETS[DRONE->cmd.i].y;
+                float dx = DRONE->xr - DRONE->x;
+                float dy = DRONE->yr - DRONE->y;
+                float len = sqrtf(dx*dx + dy*dy);
+                if (len < Sim_Drone_Target_Proximity)
+                {
+                    if (!DRONE->landing)
+                    {
+                        DRONE->landing = true;
+                        DRONE->land_timer = Sim_LandInFrontOf_Time;
+                    }
+                }
+                else
+                {
+                    float v = DRONE->v_max / len;
+                    float vx = v * dx;
+                    float vy = v * dy;
+                    DRONE->x += vx * Sim_Timestep;
+                    DRONE->y += vy * Sim_Timestep;
+                }
+                if (DRONE->landing)
+                {
+                    DRONE->land_timer -= Sim_Timestep;
+                    if (DRONE->land_timer < 0.0f)
+                    {
+                        events[DRONE->cmd.i].is_bumper = true;
+                        DRONE->landing = false;
+                        DRONE->cmd_done = true;
+                        DRONE->cmd.type = sim_CommandType_NoCommand;
+                    }
+                }
+                // if (TARGETS[DRONE->cmd.i].action.was_bumped)
+                // {
+                //     DRONE->landing = false;
+                //     DRONE->cmd_done = true;
+                //     DRONE->cmd.type = sim_CommandType_NoCommand;
+                // }
+          }
+        } break;
+
+        case sim_CommandType_Track:
+        {
+            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
+            {
+                DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
+            }
+            else{
+                DRONE->xr = TARGETS[DRONE->cmd.i].x;
+                DRONE->yr = TARGETS[DRONE->cmd.i].y;
+                float dx = DRONE->xr - DRONE->x;
+                float dy = DRONE->yr - DRONE->y;
+                float len = sqrtf(dx*dx + dy*dy);
                 float v = DRONE->v_max / len;
                 float vx = v * dx;
                 float vy = v * dy;
                 DRONE->x += vx * Sim_Timestep;
                 DRONE->y += vy * Sim_Timestep;
             }
-            if (DRONE->landing)
-            {
-                DRONE->land_timer -= Sim_Timestep;
-                if (DRONE->land_timer < 0.0f)
-                {
-                    events[DRONE->cmd.i].is_bumper = true;
-                    DRONE->landing = false;
-                    DRONE->cmd_done = true;
-                    DRONE->cmd.type = sim_CommandType_NoCommand;
-                }
-            }
-            // if (TARGETS[DRONE->cmd.i].action.was_bumped)
-            // {
-            //     DRONE->landing = false;
-            //     DRONE->cmd_done = true;
-            //     DRONE->cmd.type = sim_CommandType_NoCommand;
-            // }
-        } break;
 
-        case sim_CommandType_Track:
-        {
-            DRONE->xr = TARGETS[DRONE->cmd.i].x;
-            DRONE->yr = TARGETS[DRONE->cmd.i].y;
-            float dx = DRONE->xr - DRONE->x;
-            float dy = DRONE->yr - DRONE->y;
-            float len = sqrtf(dx*dx + dy*dy);
-            float v = DRONE->v_max / len;
-            float vx = v * dx;
-            float vy = v * dy;
-            DRONE->x += vx * Sim_Timestep;
-            DRONE->y += vy * Sim_Timestep;
         } break;
 
         case sim_CommandType_Search:
+        {
+            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
+            {
+                DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
+            }
+            else{
+                DRONE->xr = DRONE->cmd.x;
+                DRONE->yr = DRONE->cmd.y;
+                float dx = DRONE->xr - DRONE->x;
+                float dy = DRONE->yr - DRONE->y;
+                float len = sqrtf(dx*dx + dy*dy);
+                if (len < Sim_Drone_Goto_Proximity)
+                {
+                    DRONE->cmd.type = sim_CommandType_NoCommand;
+                    DRONE->cmd_done = true;
+                }
+                else
+                {
+                    float v = DRONE->v_max / len;
+                    float vx = v * dx;
+                    float vy = v * dy;
+                    DRONE->x += vx * Sim_Timestep;
+                    DRONE->y += vy * Sim_Timestep;
+                }
+            }
+
+        } break;
+        case sim_CommandType_Land:
         {
             DRONE->xr = DRONE->cmd.x;
             DRONE->yr = DRONE->cmd.y;
             float dx = DRONE->xr - DRONE->x;
             float dy = DRONE->yr - DRONE->y;
             float len = sqrtf(dx*dx + dy*dy);
-            if (len < Sim_Drone_Goto_Proximity)
-            {
-                DRONE->cmd.type = sim_CommandType_NoCommand;
-                DRONE->cmd_done = true;
+
+            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing && len >  Sim_Drone_Target_Proximity){
+                    DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
             }
             else
             {
-                float v = DRONE->v_max / len;
-                float vx = v * dx;
-                float vy = v * dy;
-                DRONE->x += vx * Sim_Timestep;
-                DRONE->y += vy * Sim_Timestep;
+                if (len <= Sim_Drone_Target_Proximity)
+                {
+                    if (!DRONE->landing)
+                    {
+                        DRONE->landing = true;
+                    }
+                }
+                else
+                {
+                    float v = DRONE->v_max / len;
+                    float vx = v * dx;
+                    float vy = v * dy;
+                    DRONE->x += vx * Sim_Timestep;
+                    DRONE->y += vy * Sim_Timestep;
+                }
+
+
+                if (DRONE->z <= 0.0f)
+                {
+
+                    DRONE->landing = false;
+                    DRONE->cmd_done = true;
+                    DRONE->cmd.type = sim_CommandType_NoCommand;
+
+                }
+                if (DRONE->landing)
+                {
+                    DRONE->z -= (Sim_Average_Flying_Heigth/Sim_Landing_Time)*Sim_Timestep;
+
+                }
             }
+
+
+
+
+
         } break;
     }
 
@@ -991,6 +1113,9 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
                 events[i].is_run_sig = 1;
             } break;
         }
+
+
+
 
         // Check for collisions and compute the average resolve
         // delta vector. The resolve delta will be used to move
@@ -1031,6 +1156,45 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
                 }
             }
         }
+
+        // Check for collisions between Robot and DRONE
+        // Compute the average resolve
+        // delta vector. The resolve delta will be used to move
+        // the robot away so it no longer collides.
+       if (DRONE->on_ground){
+            float x1 = ROBOTS[i].x;
+            float y1 = ROBOTS[i].y;
+            float r1 = ROBOTS[i].L * 0.5f;
+            float x2 = DRONE->x;
+            float y2 = DRONE->y;
+            float r2 = Sim_Drone_Radius;
+            float dx = x1 - x2;
+            float dy = y1 - y2;
+            float L = vector_length(dx, dy);
+            float intersection = r2 + r1 - L;
+            if (intersection > 0.0f)
+            {
+                collision[i].hits++;
+                collision[i].resolve_delta_x += (dx / L) * intersection;
+                collision[i].resolve_delta_y += (dy / L) * intersection;
+
+                // The robot only reacts (in a fsm sense) if the collision
+                // triggers the bumper sensor in front of the robot. (We
+                // still resolve physical collisions anyway, though).
+                // TODO: Determine the angular region that the bumper
+                // sensor covers (I have assumed 180 degrees).
+                bool on_bumper = (dx * ROBOTS[i].forward_x +
+                                  dy * ROBOTS[i].forward_y) <= 0.0f;
+                if (on_bumper)
+                    collision[i].bumper_hits++;
+            }
+        }
+
+
+
+
+
+
         if (collision[i].hits > 0)
         {
             collision[i].resolve_delta_x /= (float)collision[i].hits;
@@ -1061,7 +1225,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             ROBOTS[i].x += collision[i].resolve_delta_x * 1.02f;
             ROBOTS[i].y += collision[i].resolve_delta_y * 1.02f;
         }
-        ROBOTS[i].state = robot_fsm(ROBOTS[i].state,
+        ROBOTS[i].state = robot_fsm(&ROBOTS[i],ROBOTS[i].state,
                                     &ROBOTS[i].internal,
                                     events[i],
                                     &ROBOTS[i].action);

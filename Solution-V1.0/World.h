@@ -1,5 +1,6 @@
 #include "structs.h"
 #include "AI.h"
+#include "Sim.h"
 
 class World{
 private:

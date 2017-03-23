@@ -4,13 +4,15 @@
 #include "../sim.h"
 #include "../gui.h"
 
-class Input{
+class Sim{
 private:
 	sim_State state;
+	sim_Command cmd;
     sim_Observed_State observed_state;
     sim_Observed_State previous_state;
 
 public:
 	bool initializeSim();
 	bool getNewObservation();
+	bool sendCommand();
 };

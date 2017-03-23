@@ -4,7 +4,7 @@
 #include "../sim.h"
 #include "../gui.h"
 
-class Sim{
+class SimIn{
 private:
 	sim_State state;
 	sim_Command cmd;

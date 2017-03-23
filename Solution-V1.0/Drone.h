@@ -9,14 +9,18 @@ private:
 	float angle_Of_Motion;
 	float speed;
 
-	// drone_State_t drone_State;
+	point_t prev_Position;
+	float prev_Orientation;
+
+	drone_State_t drone_State;
 
 public:
 	point_t getPosition();
 	drone_State_t getState();
 
-	void wait(float time);
+	bool update(point_t new_Position, point_t new_Orientation);
 
+	void wait(float time);
 	int doAction(action_t action);
 	// float getDistanceToPoint(point_t point);
 	// float getTravelTimeToPoint(point_t point);

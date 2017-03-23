@@ -406,8 +406,6 @@ ActionReward choose_action(sim_Observed_State state, Target target){
             best_action.time_until_intersection = target.intersection.travel_time;
         }
 
-        
-
         if (backwards) {
             x = x-step_x;
             y = y-step_y;

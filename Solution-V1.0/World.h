@@ -1,4 +1,5 @@
 #include "structs.h"
+#include "AI.h"
 
 class World{
 private:
@@ -6,9 +7,14 @@ private:
 	float time;
 	float orientation;
 	bounds_t bounds;
+	AI ai;
+	Input input;
+
 public:
+	World();
 	point_t getOrigin();
 	float getCurrentTime();
 	float getOrientation();
 	bounds_t getBounds();
+	bool startTimer();
 };

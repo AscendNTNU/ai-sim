@@ -1,3 +1,5 @@
+#include "structs.h"
+
 class Plank{
 private:
     point_t endpoint_1; //First enpoint robot meets
@@ -8,6 +10,12 @@ private:
     float grid_Value;
 public:
 	float getReward();
-	bool will_Exit_Green();
-	bool will_Exit_Red();
+	float getAngle();
+	float getLength();
+
+	float getReward();
+	bool willExitGreen();
+	bool willExitRed();
+	float calculateReward();
+
 };

@@ -18,7 +18,6 @@ public:
 	void wait(float time);
 
 	int doAction(action_t action);
-
 	// float getDistanceToPoint(point_t point);
 	// float getTravelTimeToPoint(point_t point);
 	point_t getIntersectionPoint(Robot robot);

@@ -3,46 +3,35 @@
 AI::AI(){
 
 }
-Robot AI::chooseTarget(State observed_State, State previous_State){
+Robot AI::chooseTarget(State current_State, State previous_State, int num_Robots){
     float max_value = -200000;
     float temp_value = 0;
     int index = 0;
-    Target target;
 	bool robotChosen = false;
 
-    float timeToTurn = 20 - fmod(observed_state.elapsed_time,20);
+    float timeToTurn = 20 - fmod(current_State.time,20);
 
-    for(int i = 0; i < Num_Targets; i++){
-		std::cout << "Checking target: " << i << " at (X, Y): (" << observed_state.target_x[i] << ", " << observed_state.target_y[i] << ")" << std::endl;
-		if(!observed_state.target_removed[i]){
-			std::cout << "Target not removed" << std::endl;
-            if (!targetIsMoving(i, previous_State, observed_state))
-            {
-                target.index = -1;
-                return target;
-                //std::cout << "Target not moving" << std::endl;
-            }
+    for(int i = 0; i < this.current_State.getNumRobots(); i++){
+        Robot* robot = *observed_State.robots[i];
+        if (!robot->isMoving()) {
+            // Robot is turning. Do we have correct angle
+            // Do we have correct angle?
+        }
 
-            float angle = wrap_angle(observed_state.target_q[i]);
+		if(robot.plank.willExitGreen()) {
+            // Ignore it
+			continue;
+		}
 
-            Plank plank = createPlank(observed_state.target_x[i], observed_state.target_y[i],
-                angle, timeToTurn);
+        temp_value = getPlankValue(gridValue, plank, angle, 5);
 
-			if(plank.goingOutGreen) {
-				std::cout << "Target already going out of green line!" << std::endl;
-				continue;
-			}
-
-            temp_value = getPlankValue(gridValue, plank, angle, 5);
-
-            if(temp_value > max_value){
-                max_value = temp_value;
-                target.index = i;
-                target.plank = plank;
-                target.angle = wrap_angle(observed_state.target_q[i]);
-                target.currentReward = temp_value;
-				robotChosen = true;
-            }
+        if(temp_value > max_value){
+            max_value = temp_value;
+            target.index = i;
+            target.plank = plank;
+            target.angle = wrap_angle(observed_state.target_q[i]);
+            target.currentReward = temp_value;
+			robotChosen = true;
         }
     }
 	if(!robotChosen) {

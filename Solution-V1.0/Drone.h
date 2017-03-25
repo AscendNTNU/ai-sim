@@ -15,9 +15,12 @@ private:
 	drone_State_t drone_State;
 
 public:
+
+	//get
 	point_t getPosition();
 	drone_State_t getState();
 
+	//update
 	bool update(point_t new_Position, point_t new_Orientation);
 
 	void wait(float time);

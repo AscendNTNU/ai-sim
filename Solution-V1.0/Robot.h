@@ -8,7 +8,7 @@ private:
 	float orientation;
 	float robot_Timer;
 	float speed;
-	Plank curren_Plank;
+	Plank current_Plank;
 public:
 	point_t getPosition();
 	float getOrientation();

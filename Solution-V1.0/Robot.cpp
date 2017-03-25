@@ -1,5 +1,13 @@
 #include "World.h"
 
+Robot::Robot(){
+	this.position = point_Zero;
+	this.orientation = 0;
+	robot_Timer = 0;
+	speed = 0.33;
+	current_Plank = new Plank(this);
+}
+
 point_t Robot::getPosition(){
 	return this.position;
 }

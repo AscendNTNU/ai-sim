@@ -17,7 +17,7 @@ struct action_t{
 	Robot target;
 	point_t waypoints[10];
 	float reward;
-	int when_To_Act;
+	float when_To_Act;
 }
 
 struct bounds_t{

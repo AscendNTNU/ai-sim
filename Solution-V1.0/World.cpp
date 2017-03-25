@@ -1,5 +1,7 @@
 #include "World.h"
 
+
+//Constructors
 World::World(){
 	this.origin = point_Zero;
 	this.time = 0;
@@ -9,6 +11,8 @@ World::World(){
 	Input input = new Input();
 }
 
+
+//Get
 point_t World::getOrigin(){
 	return this.origin;
 }
@@ -23,13 +27,14 @@ bounds_t World::getBounds(){
 }
 
 
-
+//Initialize
 bool World::startTimer(){
 
 	input.initializeSim();
 	return true;
 }
 
+//Update world
 bool World::update_world(){
 	
 	//Simulation updater
@@ -52,5 +57,5 @@ bool World::update_world(){
 		point_t robot_Position = {sin.obstacle_x[i], sim.obstacle_y[i], 0}
 		ai.robot[i].update(robot_Position, sim.obstacle_q[i])
 	}
-
+	return true;
 }

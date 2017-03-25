@@ -12,10 +12,19 @@ private:
 	Input input;
 
 public:
+
+	//Constructors
 	World();
+
+	//Get
 	point_t getOrigin();
 	float getCurrentTime();
 	float getOrientation();
 	bounds_t getBounds();
+
+	//Initialize
 	bool startTimer();
+
+	//Update
+	bool update_world();
 };

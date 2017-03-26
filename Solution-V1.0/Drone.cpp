@@ -16,12 +16,13 @@ drone_State_t Drone::getState(){
 	return this.state;
 }
 
-bool Drone::update(point_t new_Position, point_t new_Orientation){
+bool Drone::update(observation_t){
+	
+	point_t new_Position = {observation.drone_x, observation.drone_y, 1}
 	this.prev_Position = this.position;
-	this.prev_Orientation = this.orientation;
 
 	this.position = new_Position;
-	this.orientation = new_Orientation;
+	this.command_Done = observation.drone_cmd_done;
 }
 
 

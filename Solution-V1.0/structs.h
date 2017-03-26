@@ -25,7 +25,7 @@ struct bounds_t{
 	int y_Max;
 }
 
-struct Plank
+struct plank_t
 {
     point_t first;
     point_t last;
@@ -56,4 +56,20 @@ enum action_Type_t
     sim_CommandType_LandAtPoint,	 // land at a given point
     sim_CommandType_Track,           // follow robot (i) at a constant height
     sim_CommandType_Search           // ascend to 3 meters and go to (x, y)
+};
+
+struct observation_t
+{
+    float elapsed_time;
+    float drone_x;
+    float drone_y;
+    bool  drone_cmd_done;
+
+    float target_x[Num_Targets];
+    float target_y[Num_Targets];
+    float target_q[Num_Targets];
+
+    float obstacle_x[Num_Obstacles];
+    float obstacle_y[Num_Obstacles];
+    float obstacle_q[Num_Obstacles];
 };

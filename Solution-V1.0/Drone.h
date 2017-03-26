@@ -1,4 +1,4 @@
-#include <cmath>
+	#include <cmath>
 #include "structs.h"
 
 
@@ -8,6 +8,8 @@ private:
 	float orientation;
 	float angle_Of_Motion;
 	float speed;
+
+	bool command_Done;
 
 	point_t prev_Position;
 	float prev_Orientation;
@@ -21,8 +23,10 @@ public:
 	drone_State_t getState();
 
 	//update
-	bool update(point_t new_Position, point_t new_Orientation);
+	bool update(observation_t observation);
 
+
+	//actions
 	void wait(float time);
 	int doAction(action_t action);
 	// float getDistanceToPoint(point_t point);

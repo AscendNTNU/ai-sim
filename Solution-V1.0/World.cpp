@@ -37,13 +37,31 @@ bool World::startTimer(){
 //Update world
 bool World::update_world(){
 	
+	observation_t = observation;
+
 	//Simulation updater
 	sim.getNewObservation();
 	this.time = input.time;
 
-	//Update drone
-	point_t drone_Position = {sim.drone_x, sim.drone_y, 1}
-	ai.drone.update(drone_position, sim.drone_cmd_done);
+	observation.elapsed_time = sim.elapsed_time;
+
+	observation.drone_x = sim.drone_x;
+	observation.drone_y = sim.drone_y;
+
+	observation.drone_cmd_done = sim.drone_cmd_done;
+
+	for(int i = 0; i < 10; i++){
+		observation.target_x[i] = sim.target_x[i];
+		observation.target_y[i] = sim.target_y[i];
+	}
+	for(int i = 0; i < 4; i++){
+		observation.obstacle_x[i] = sim.obstacle_x[i];
+		observation.obstacle_y[i] = sim.obstacle_y[i];
+	}
+
+	this.state.update(observation);
+
+
 
 
 	//Update robots
@@ -54,8 +72,10 @@ bool World::update_world(){
 
 	//Update obstacles
 	for(int i = 0; i < 4; i++){
-		point_t robot_Position = {sin.obstacle_x[i], sim.obstacle_y[i], 0}
+		point_t robot_Position = {sim.obstacle_x[i], sim.obstacle_y[i], 0}
 		ai.robot[i].update(robot_Position, sim.obstacle_q[i])
 	}
+
+
 	return true;
 }

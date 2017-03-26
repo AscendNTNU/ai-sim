@@ -33,17 +33,11 @@ bool Robot::isMoving(){
 	}
 }
 
-void Robot::update(point_t new_Position, float new_Orientation,
-					float new_Speed, float new_Timer){
+void Robot::update(point_t new_Position, float new_Orientation){
 	this.old_Position = this.position;
 	this.old_Orientation = this.orientation;
-	this.old_Timer = this.timer;
-	this.old_Speed = this.speed;
-	this.old_Plank = this.Plank;
 
-	this.position = this.new_Position;
-	this.orientation = this.new_Orientation;
-	this.timer = this.new_Timer;
-	this.speed = this.new_Speed
-	this.Plank = this.new_Plank;
+	this.position.x = x;
+	this.position.y = y;
+	this.orientation = q;
 }

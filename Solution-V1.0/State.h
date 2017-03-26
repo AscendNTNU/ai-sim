@@ -12,4 +12,6 @@ public:
 	Drone getDrone();
 	Robot getRobot(int index);
 	Robot getObstacle(int index);
+
+	bool updateState(obstacle_t obstacle);
 };

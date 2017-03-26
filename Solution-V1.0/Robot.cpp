@@ -41,3 +41,12 @@ void Robot::update(point_t new_Position, float new_Orientation){
 	this.position.y = y;
 	this.orientation = q;
 }
+
+void Robot::setPositionOrientation(point_t position, float q){
+	this.position = position;
+	this.orientation = q;
+}
+
+void Robot::addToTimer(float time){
+	this.robot_Timer += time;
+}

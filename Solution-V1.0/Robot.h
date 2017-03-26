@@ -24,6 +24,10 @@ public:
 	float getSpeed();
 	float getPlank();
 
+	//set
+	void setPositionOrientation(point_t positionw, float q);
+	void addToTimer(float time);
+	
 	void update(float x,float y,float q);
 	
 	bool isMoving();

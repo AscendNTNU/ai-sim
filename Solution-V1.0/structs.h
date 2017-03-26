@@ -1,5 +1,7 @@
 #pragma once
 
+#include<queue>
+
 static const int DRONE_SPEED = 1;
 static const float ROBOT_SPEED = 0.33;
 static const float MATH_PI = 3.141592653589793238;
@@ -75,4 +77,10 @@ struct action_t{
     point_t waypoints[10];
     float reward;
     float when_To_Act;
+};
+
+
+struct tree_action_t{
+    std::queue<action_t> actions;
+    float reward;
 };

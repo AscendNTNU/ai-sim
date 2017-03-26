@@ -1,5 +1,8 @@
+#pragma once
+
 #include <cmath>
 #include "structs.h"
+#include "Plank.h"
 
 
 class Robot{
@@ -24,4 +27,4 @@ public:
 	void update(float x,float y,float q);
 	
 	bool isMoving();
-}
+};

@@ -5,8 +5,8 @@
 class State{
 private:
 	Drone drone;
-	Robots robots[10];
-	Robots obstacles[4];
+	Robot robots[10];
+	Robot obstacles[4];
 public:
 	State();
 	
@@ -14,5 +14,5 @@ public:
 	Robot getRobot(int index);
 	Robot getObstacle(int index);
 
-	bool updateState(obstacle_t obstacle);
+	bool updateState(observation_t observation);
 };

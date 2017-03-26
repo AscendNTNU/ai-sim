@@ -1,6 +1,7 @@
 #pragma once
 
-#include "World.h"
+#include "AI.h"
+
 
 AI::AI(){
     this.state* = new State();

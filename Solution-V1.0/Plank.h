@@ -13,7 +13,6 @@ public:
 	float getAngle();
 	float getLength();
 
-	float getReward();
 	bool willExitGreen();
 	bool willExitRed();
 	float calculateReward();

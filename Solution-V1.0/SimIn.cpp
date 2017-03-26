@@ -1,3 +1,4 @@
+#pragma once
 #include "SimIn.h"
 
 bool SimIn::initializeSim(){

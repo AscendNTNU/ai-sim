@@ -1,3 +1,4 @@
+#pragma once
 #include "structs.h"
 #define SIM_IMPLEMENTATION
 #define SIM_CLIENT_CODE

@@ -1,3 +1,4 @@
+#pragma once
 #include "World.h"
 
 
@@ -6,7 +7,7 @@ World::World(){
 	this.origin = point_Zero;
 	this.time = 0;
 	float orientation = 0;
-	bounds = {x_Max = 20, y_Max = 20; 
+	bounds = {x_Max = 20, y_Max = 20}; 
 	AI ai = new AI();
 	Input input = new Input();
 }
@@ -60,22 +61,6 @@ bool World::update_world(){
 	}
 
 	this.state.update(observation);
-
-
-
-
-	//Update robots
-	for(int i = 0; i < 10; i++){
-		point_t robot_Position = {sim.target_x[i], sim.target_y[i], 0}
-		ai.robot[i].update(robot_Position, sim.target_q[i])
-	}
-
-	//Update obstacles
-	for(int i = 0; i < 4; i++){
-		point_t robot_Position = {sim.obstacle_x[i], sim.obstacle_y[i], 0}
-		ai.robot[i].update(robot_Position, sim.obstacle_q[i])
-	}
-
 
 	return true;
 }

@@ -1,3 +1,4 @@
+#pragma once
 #include "Robot.h"
 #include "Drone.h"
 

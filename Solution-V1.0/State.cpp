@@ -1,14 +1,15 @@
+#pragma once
 #include "State.h"
 
 State::State(){
-	this.drone = new Drone();
+	this.drone* = new Drone();
 	
 	for(int i = 0, i<10; i++){
-		this.robot[i] = new Robot();
+		this.robot[i]* = new Robot();
 	}
 	
 	for(int i = 0, i<4; i++){
-		this.obstacles[i] = new Robot();
+		this.obstacles[i]* = new Robot();
 	}
 }
 

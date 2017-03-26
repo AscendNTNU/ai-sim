@@ -1,3 +1,5 @@
+#pragma once
+
 #include "structs.h"
 #include "AI.h"
 #include "SimIn.h"
@@ -9,7 +11,7 @@ private:
 	float orientation;
 	bounds_t bounds;
 	AI ai;
-	Input input;
+	SimIn input;
 
 public:
 

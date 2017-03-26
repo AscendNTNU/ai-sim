@@ -1,7 +1,9 @@
+#pragma once
+
 #include "World.h"
 
 AI::AI(){
-
+    this.state* = new State();
 }
 Robot AI::chooseTarget(State current_State, State previous_State, int num_Robots){
     float max_value = -200000;
@@ -53,4 +55,8 @@ Action AI::chooseAction(State observed_State, Robot target){
 }
 void AI::executeAction(State observed_State, Action action){
 
+}
+
+bool AI::update(observation_t observation){
+    this.state.update(observation);
 }

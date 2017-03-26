@@ -7,14 +7,13 @@ private:
     float length;
     float reward;
     float angle;
-    float grid_Value;
 public:
 	float getReward();
 	float getAngle();
 	float getLength();
-
+	float getReward();
+	
 	bool willExitGreen();
 	bool willExitRed();
 	float calculateReward();
-
 };

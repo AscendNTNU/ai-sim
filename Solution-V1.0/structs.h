@@ -77,6 +77,7 @@ struct action_t{
     point_t waypoints[10];
     float reward;
     float when_To_Act;
+    point_t whereToAct;
 };
 
 

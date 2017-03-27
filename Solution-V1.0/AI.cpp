@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AI.h"
+#include "Plank.h"
 
 
 AI::AI(){
@@ -38,18 +39,14 @@ Robot AI::chooseTarget(int num_Robots){
 	}
     return target
 }
-Action AI::chooseAction(){
+Action AI::chooseAction(Robot target){
     point_t interception = this.state.drone->stategetInterceptPoint(target);
-    float temp = target.interseption.travel_time;
-    //target.interseption.travel_time = 0;
-    point_t step_point;
-    step_point.x = interseption.x;
-    step_point.y = interseption.y;
+    point_t step_Point = {.x = interseption.x, .y = interseption.y};
     float time_after_interseption = 0;
 
     float n = 10;
-    float step_size = target->plank.getLength()/n;
-    float angle = target->plank->getAngle()
+    float step_size = target.plank->getLength()/n;
+    float angle = target.plank->getAngle();
     float step_x = step_size*cos(angle);
     float step_y = step_size*sin(angle);
 
@@ -64,7 +61,7 @@ Action AI::chooseAction(){
     bool backwards = false;
     int i = 1;
     while (i > 0) {
-        if (target->plank->isOutsideOfPlank(step_point)) {
+        if (target.plank->isOutsideOfPlank(step_Point)) {
             // End of plank was reached
             if (backwards) {
                 return best_Action;
@@ -74,53 +71,53 @@ Action AI::chooseAction(){
                 angle += MATH_PI;
             }
         }
-        step_Action = getBestActionAtPoint(target, step_point, time_after_interseption);
+        step_Action = getBestActionAtPosition(target, step_Point, time_after_interseption);
 
         if (step_Action.reward > best_Action.reward) {
             best_Action = step_Action;
-            best_Action.x = x;
-            best_Action.y = y;
-            best_Action.time_after_interseption = time_after_interseption;
-            best_Action.time_until_intersection = target.interseption.travel_time;
+            best_Action.when_To_Act = time_after_interseption + interseption.travel_Time;
         }
-
-        
 
         if (backwards) {
-            x = x-step_x;
-            y = y-step_y;
+            step_Point = {.x = x-step_x, .y = y-step_y;}
             i -= 1;
         } else {
-            x = x+step_x;
-            y = y+step_y;
+            step_Point = {.x = x+step_x, .y = y+step_y;}
             i += 1;
         }
-        time_after_interseption = time_after_interseption + (step_size)/Robot_Speed;
+        time_after_interseption = time_after_interseption + (step_size)/target->getSpeed();
 
     }
-    best_Action.time_until_intersection = temp;
     return best_Action;
 }
 
-action_t AI::getBestAction(point_t point, float time_after_interseption) {
+action_t AI::getBestActionAtPosition(Robot target, point_t position, float time_after_interseption) {
+    int num_Iterations = 5; // Number of iterations when summing along a plank
     action_t action;
+    action.where_To_Act = position;
+    float time_Until_Turn = fmod(state.getTimeStamp() + position.travel_time + time_after_interseption, 20);
 
-    Plank plankOnTop = createPlank(x, y, wrap_angle(target.angle + 0.785),//0.785 radians is almost 45 degerees 
-            (int)(state.elapsed_time+target.interseption.travel_time+time_after_interseption) % 20);
-    Plank plankInFront = createPlank(x, y, wrap_angle(target.angle + 3.14), 
-            (int)(state.elapsed_time+target.interseption.travel_time+time_after_interseption) % 20);
+    Plank plank_On_Top = new Plank(position, fmod(target->getAngle() + (MATH_PI/4), 2*MATH_PI), time_Until_Turn, num_Iterations);
+    Plank plank_In_Front = new Plank(position, fmod(target->getAngle() + MATH_PI, 2*MATH_PI) time_Until_Turn, num_Iterations);
 
-    float max_reward = (std::max)(plankOnTop.getReward(),plankInFront.getReward());
-    if(max_reward == plankInFront.getReward()){
-        action.action_Type_t = ai_landingInFront;
-        action.reward = plankInFront.getReward();
-    }
-    else if(max_reward == plankOnTop.getReward()){
+    return actionWithMaxReward(plank_On_Top.getReward(), plank_In_Front.getReward(), action);
+}
+
+action_t AI::actionWithMaxReward(float reward_On_Top, float reward_In_Front, action_t action){
+    if(reward_On_Top > reward_In_Front){
         action.action_Type_t = ai_landingOnTop;
-        action.reward = plankOnTop.getReward();
-    }
-    else{
+        action.reward = reward_On_Top;
+    } else if (reward_On_Top < reward_In_Front){
+        action.action_Type_t = ai_landingInFront;
+        action.reward = reward_In_Front;
+    } else if (reward_On_Top == reward_In_Front){
+        // Return in front because it is easier?
+        action.action_Type_t = ai_landingInFront;
+        action.reward = reward_In_Front;
+    } else {
+        // Will it ever get here?
         action.action_Type_t = ai_waiting;
+        action.reward = 0;
     }
     return action;
 }

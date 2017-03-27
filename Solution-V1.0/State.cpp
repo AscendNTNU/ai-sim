@@ -2,7 +2,7 @@
 #include "State.h"
 
 State::State(){
-	this.drone* = new Drone();
+	this.drone = new Drone();
 	
 	for(int i = 0, i<10; i++){
 		this.robot[i]* = new Robot();
@@ -11,6 +11,7 @@ State::State(){
 	for(int i = 0, i<4; i++){
 		this.obstacles[i]* = new Robot();
 	}
+	this.time_Stamp = world.getCurrentTime();
 }
 
 Drone State::getDrone(){

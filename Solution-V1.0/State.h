@@ -4,15 +4,17 @@
 
 class State{
 private:
+	float time_Stamp;
 public:
 	Robot robots[10];
 	Robot obstacles[4];
 	State();
-	Drone drone;
+	Drone* drone;
 	
 	Drone getDrone();
 	Robot getRobot(int index);
 	Robot getObstacle(int index);
+	float getTimeStamp();
 
 	bool updateState(observation_t observation);
 };

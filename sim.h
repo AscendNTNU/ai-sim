@@ -29,15 +29,18 @@
 //
 //
 #include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #ifndef SIM_HEADER_INCLUDE
 #define SIM_HEADER_INCLUDE
-#define Num_Obstacles (4)  // Number of robots with pole
+#define Num_Obstacles (0)  // Number of robots with pole
 #define Num_Targets   (10) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
+#define Num_max_text_length (256) // Maximum number of bytes for each target text
 
 
-#define pixels_each_meter (1) //for heatmap
+#define pixels_each_meter (4) //for heatmap
 
 enum sim_CommandType
 {
@@ -56,9 +59,9 @@ struct sim_Command
     sim_CommandType type;
     float x;
     float y;
-    int i;
+    int i; //if sim_CommandType_Land is used, should only be applied for debug purposes
     float heatmap[pixels_each_meter*pixels_each_meter*20*20];
-    
+    char text[Num_max_text_length*Num_Targets+Num_max_text_length];
 
     int reward;
 
@@ -69,6 +72,7 @@ struct sim_Observed_State
     float elapsed_time;
     float drone_x;
     float drone_y;
+    float drone_z;
     bool  drone_cmd_done;
 
     bool  target_in_view[Num_Targets];
@@ -145,7 +149,7 @@ void               sim_write_snapshot(char*, sim_Observed_State);
 #define Sim_Take_Off_Time (2.0f)           //How long time it should take to take off
 
 
-#define Sim_Average_Flying_Heigth (3.0f)   //The height the drone is flying at when not on ground
+#define Sim_Average_Flying_Heigth (1.5f)   //The height the drone is flying at when not on ground
 
 #define Sim_LandInFrontOf_Time (2.0f)     // How many seconds it should take
                                           // to complete a LandInFrontOf command
@@ -371,6 +375,39 @@ static int
 random_0_64()
 {
     return _xor128() % 65;
+}
+
+//used for returning a text which can be used for debug. The first string is the text which
+//goes into the text field of the drone.
+//The next is the groundrobot texts starting with 0 at the first position, and looping up to Num_Targets
+static void
+get_char_text(char cmd_text[Num_max_text_length+Num_max_text_length*Num_Targets], const char*  drone_text,  char const * ground_robots[],int size=Num_Targets)
+{
+
+    for(int i = 0; i < Num_max_text_length*Num_Targets+Num_max_text_length; i++){
+        cmd_text[i] = '$';
+    }
+    for(int i = 0; i < strlen(drone_text); i++){
+        cmd_text[i] = drone_text[i];
+    }
+
+    for (int i = 0; i < size; i++) {
+        char str[strlen(ground_robots[i])];
+        strncpy(str,ground_robots[i],strlen(ground_robots[i]));
+
+        int k = 0;
+        str[strlen(str)] = '$';
+
+        for (int bit = i*Num_max_text_length+Num_max_text_length; bit < i*Num_max_text_length+Num_max_text_length*2; bit++){
+             if(k>=strlen(str)){
+                break;
+             }
+             cmd_text[bit] = str[k];
+             k++;
+
+        }
+     }
+
 }
 
 // ***********************************************************************
@@ -753,7 +790,7 @@ sim_State sim_init(unsigned int seed)
 
     DRONE->x = 0.0f;
     DRONE->y = 0.0f;
-    DRONE->z = 3.0f; // TODO: Dynamics for z when landing
+    DRONE->z = Sim_Average_Flying_Heigth; // TODO: Dynamics for z when landing
     DRONE->xr = 10.0f;
     DRONE->yr = 10.0f;
     DRONE->v_max = 1.0f;
@@ -1257,6 +1294,7 @@ sim_Observed_State sim_observe_state(sim_State state)
     result.elapsed_time = state.elapsed_time;
     result.drone_x = state.drone.x;
     result.drone_y = state.drone.y;
+    result.drone_z = state.drone.z;
     result.drone_cmd_done = state.drone.cmd_done;
     sim_Robot *targets = state.robots;
     sim_Robot *obstacles = state.robots + Num_Targets;

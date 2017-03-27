@@ -21,6 +21,8 @@ typedef int8_t      s08;
 #include "SDL_opengl.h"
 #include "SDL_assert.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #include "lib/imgui/imgui_draw.cpp"
 #include "lib/imgui/imgui.cpp"
@@ -347,20 +349,49 @@ float transform_heat_color(float x){
 }
 
 
-void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
+// Draw a formatted text string at window coordinate (x,y) measured from top-left
+// Usage: DrawString(200, 300, "Hello world %.2f %d", 3.1415926f, 42);
+void DrawString(int unique_id, float x, float y, float height, float width, const char* fmt, ...)
 {
-    persist bool flag_grid     = true;
+    float anchor_point_x = width/2;
+    float anchor_point_y = height/2;
+    y = 20.0-y; //reverse for correct plot
+    y = y-10; //move to origo
+    x = x - 10; // move to origo
+    y = y*height/24; //scale
+    x = x*height/24; //scale
+    x = x+anchor_point_x ;//translate
+    y = y+anchor_point_y; //translate
+    //x = x+width/2; //center
+    char name[1024];
+    sprintf(name, "draw_string_%d", unique_id);
+    va_list args;
+    va_start(args, fmt);
+
+    ImGui::SetNextWindowPos(ImVec2(x, y));
+    ImGui::Begin(name, 0, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::TextV(fmt, args);
+    ImGui::End();
+    va_end(args);
+}
+
+void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
+{
+    persist bool flag_grid     = false;
     persist bool flag_plank = false;
-    persist bool flag_DrawDroneGoto     = true;
+    persist bool flag_DrawDroneGoto     = false;
     persist bool flag_DrawDrone         = true;
-    persist bool flag_DrawVisibleRegion = true;
+    persist bool flag_DrawVisibleRegion = false;
     persist bool flag_DrawTargets       = true;
     persist bool flag_DrawObstacles     = true;
     persist bool flag_Paused            = false;
     persist bool flag_Recording         = false;
     persist bool flag_SetupRecord       = false;
     persist bool flag_probability_distribution = false;
-
+    persist bool flag_custom_drone_text = false;
+    persist bool flag_custom_target_text = false;
+    persist bool flag_view_target_text = false;
+    persist bool flag_view_drone_text = false;
     persist int record_from = 0;
     persist int record_to = 0;
     persist int record_frame_skip = 1;
@@ -449,23 +480,55 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
             if (!sim_recv_cmd(&cmd))
             {
                 cmd.type = sim_CommandType_NoCommand;
-                cmd.x = 0.0f;
-                cmd.y = 0.0f;
-                cmd.i = 0;
+                cmd.x = -1.0;
+                cmd.y = -1.0;
+                cmd.i = -1;
+
 
                 for(int v = 0; v <20*20*pixels_each_meter*pixels_each_meter; v++){
                      cmd.heatmap[v] = HISTORY_CMD[HISTORY_LENGTH-1].heatmap[v];
                 }
+                for(int v = 0; v <100*Num_Targets; v++){
+                     cmd.text[v] = HISTORY_CMD[HISTORY_LENGTH-1].text[v];
+                }
                 
 
-                cmd.reward = 0;
+                cmd.reward = -1.0;
                 
             }
+          /** if(cmd.type = sim_CommandType_NoCommand){
+               cmd.x = -1.0;
+               cmd.y = -1.0;
+               cmd.i = -1;
+           }
+           else if(cmd.type = sim_CommandType_Track){
+               cmd.x = -1.0;
+               cmd.y = -1.0;
+           }
+           else if(cmd.type = sim_CommandType_Search){
+               cmd.i = -1.0;
+           }
+           else if(cmd.type = sim_CommandType_LandOnTopOf){
+               cmd.x = -1.0;
+               cmd.y = -1.0;
+           }
+           else if(cmd.type = sim_CommandType_LandInFrontOf){
+               cmd.x = -1.0;
+               cmd.y = -1.0;
+           }
+           else if(cmd.type = sim_CommandType_Land){
+               cmd.i = -1.0;
+           }**/
 
-            for(int bit = 0; bit < pixels_each_meter*pixels_each_meter*20*20; bit++ )
-            {
-              cmd.heatmap[bit] = 0.0;
-            }
+
+            //for(int bit = 0; bit < pixels_each_meter*pixels_each_meter*20*20; bit++ )
+            //{
+            //  cmd.heatmap[bit] = 0.0;
+            //}
+            //for(int bit = 0; bit < 256*Num_Targets; bit++ )
+            //{
+            //  cmd.text[bit] = ;
+            //}
             STATE = sim_tick(STATE, cmd);
             add_history(cmd, STATE);
             seek_cursor = HISTORY_LENGTH-1;
@@ -646,7 +709,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
     if (flag_DrawDrone)
     {
         //draw shadow of drone
-        Color color_Shadow = { 0.00f, 0.00f, 0.00f, 0.05 + 0.5*pow((1.0  - drone.z / Sim_Average_Flying_Heigth),2.0) };
+        Color color_Shadow = { 0.00f, 0.00f, 0.00f, 0.05 + 0.5*pow((1.0  - drone.z / 3.0),2.0) };
         color4f(color_Shadow);
         draw_drone(Sim_Drone_Radius + drone.z/5.0,drone.x, drone.y);
 
@@ -676,10 +739,17 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
 
     ImGui_ImplSdl_NewFrame(mode.window);
 
+
+
+
     // DRAW FLAGS
     if (ImGui::CollapsingHeader("Rendering"))
     {   
         ImGui::Checkbox("Probability distribution", &flag_probability_distribution);
+        ImGui::Checkbox("View target text", &flag_view_target_text);
+        ImGui::Checkbox("View drone text", &flag_view_drone_text);
+        ImGui::Checkbox("Custom drone text", &flag_custom_drone_text);
+        ImGui::Checkbox("Custom target text", &flag_custom_target_text);
         ImGui::Checkbox("Grid", &flag_grid);
         ImGui::Checkbox("Plank", &flag_plank);
         ImGui::Checkbox("Drone goto", &flag_DrawDroneGoto);
@@ -791,6 +861,14 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
                     ImGui::Text("Land 180"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
+                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
+                } break;
+                case sim_CommandType_Land:
+                {
+                    ImGui::Text("Land at"); ImGui::NextColumn();
+                    ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
+                    ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
                 } break;
@@ -1025,6 +1103,140 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
         ImGui::EndPopup();
     } // END LOAD SIMULATION
 
+
+    //GET LAST COMMAND
+
+
+    sim_Command cmd_i ;
+    int found_cmd_at_i = 0;
+    int found_done_at_i = 0;
+
+    //search after last command
+    for(int i = seek_cursor; i>= 0; i-- ){
+        cmd_i = HISTORY_CMD[i];
+        if(cmd_i.type != sim_CommandType_NoCommand){
+                found_cmd_at_i = i;
+                break;
+            }
+
+    }
+    //search after last cmd_done
+    for(int i = seek_cursor; i>= 0; i-- ){
+        sim_State state_i = HISTORY_STATE[i];
+        if(state_i.drone.cmd_done){
+                found_done_at_i = i;
+                break;
+            }
+
+    }
+    if(found_done_at_i>=found_cmd_at_i){
+        cmd_i.type = sim_CommandType_NoCommand;
+        cmd_i.i = -1;
+        cmd_i.x = -1;
+        cmd_i.y = -1;
+    }
+    char cmd_text[128];
+    switch (cmd_i.type)
+    {
+        case sim_CommandType_NoCommand:
+        {
+        snprintf(cmd_text, sizeof cmd_text, "%s","NoCommand");
+
+        } break;
+        case sim_CommandType_LandInFrontOf:
+        {
+            snprintf(cmd_text, sizeof cmd_text, "%s","LandInFrontOf");
+        } break;
+        case sim_CommandType_LandOnTopOf:
+        {
+           snprintf(cmd_text, sizeof cmd_text, "%s","LandOnTopOf");
+        } break;
+        case sim_CommandType_Track:
+        {
+            snprintf(cmd_text, sizeof cmd_text, "%s","Track");
+        } break;
+        case sim_CommandType_Search:
+        {
+            snprintf(cmd_text, sizeof cmd_text, "%s","Search");
+        } break;
+        case sim_CommandType_Land:
+        {
+           snprintf(cmd_text, sizeof cmd_text, "%s","Land");
+        } break;
+    }
+    //DRAW TEXT
+
+
+    //Draw target texts
+    if (flag_view_target_text){
+        if(flag_custom_target_text){
+
+            for (int i = 0; i < Num_Targets; i++){
+                char some_text[Num_max_text_length];
+                some_text[0] = 'i';
+                some_text[1] = ':';
+                some_text[2] = '0'+i;
+                some_text[3] = ' ';
+                int k = 4;
+                for(int j = i*Num_max_text_length+Num_max_text_length; j < i*Num_max_text_length+Num_max_text_length*2; j++){
+                    if(cmd_i.text[j] == '$'){
+                        some_text[k] = '\0';
+                        break;
+                    }
+                    some_text[k] = cmd_i.text[j];
+                    k++;
+                }
+                DrawString(i,targets[i].x, targets[i].y,mode.height,mode.width, some_text);
+
+            }
+
+
+
+        }else{
+            for (int i = 0; i < Num_Targets; i++){
+                char str[1024];
+                if(cmd_i.i == i && (cmd_i.type == sim_CommandType_LandInFrontOf || cmd_i.type == sim_CommandType_LandOnTopOf || cmd_i.type == sim_CommandType_Track || cmd_i.type == sim_CommandType_Land )){
+                    snprintf(str, sizeof str, "%s%d%s%s", "i:", i, " ", cmd_text);
+
+                    DrawString(i,targets[i].x, targets[i].y,mode.height,mode.width, str);
+
+                }else{
+                    snprintf(str, sizeof str, "%s%d", "i:", i);
+                    DrawString(i,targets[i].x, targets[i].y,mode.height,mode.width, str);
+                }
+            }
+        }
+
+
+
+    }
+    //Draw drone text
+    if (flag_view_drone_text){
+        if(flag_custom_drone_text){
+            char some_text[Num_max_text_length];
+            for(int i = 0; i < Num_max_text_length; i++){
+                if(cmd_i.text[i] == '$'){
+                    some_text[i] = '\0';
+                    break;
+                }
+                some_text[i] = cmd_i.text[i];
+            }
+            DrawString(999,drone.x, drone.y,mode.height,mode.width, some_text);
+        }else{
+            char more_info[1024];
+            if(cmd_i.type == sim_CommandType_NoCommand){
+                snprintf(more_info, sizeof more_info, "%s", "NoCommand");
+
+            }else{
+                snprintf(more_info, sizeof more_info, "%s%s%.1f%s%.1f%s%d", cmd_text," at x:",cmd_i.x," y:",cmd_i.y," i:",cmd_i.i);
+            }
+            DrawString(999,drone.x, drone.y,mode.height,mode.width, more_info);
+        }
+
+
+
+
+    }
     ImGui::Render();
 } // END gui_tick
 
@@ -1094,7 +1306,7 @@ int main(int argc, char *argv[])
     u64 last_frame_t = initial_tick;
     r32 elapsed_time = 0.0f;
     r32 delta_time = 1.0f / 10.0f;
-    
+    int k = 0;
     while (running)
     {
         SDL_Event event;
@@ -1125,7 +1337,8 @@ int main(int argc, char *argv[])
                 } break;
             }
         }
-        gui_tick(mode, elapsed_time, delta_time);
+        k++;
+        gui_tick(mode, elapsed_time, delta_time,k);
         SDL_GL_SwapWindow(mode.window);
 
         delta_time = time_since(last_frame_t);

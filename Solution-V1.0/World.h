@@ -11,7 +11,7 @@ private:
 	bounds_t bounds;
 
 public:
-
+	AI ai;
 	//Constructors
 	World(float orientation);
 

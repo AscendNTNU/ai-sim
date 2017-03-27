@@ -8,12 +8,7 @@ private:
 public:
 	Robot robots[10];
 	Robot obstacles[4];
-<<<<<<< HEAD
-	State();
-	Drone* drone;
-=======
 	Drone drone;
->>>>>>> b1e3c6bdd496622a74fae285e3179f4d6868a806
 	
 	State();
 

@@ -1,18 +1,11 @@
 #pragma once
 
 #include <queue>
-<<<<<<< HEAD
-#include "Wolrd.h"
-=======
->>>>>>> b1e3c6bdd496622a74fae285e3179f4d6868a806
 static const int DRONE_SPEED = 1;
 static const float ROBOT_SPEED = 0.33;
 static const float MATH_PI = 3.141592653589793238;
 
-<<<<<<< HEAD
 World* world = new World(0.0);
-=======
->>>>>>> b1e3c6bdd496622a74fae285e3179f4d6868a806
 
 struct point_t{
 	float x;

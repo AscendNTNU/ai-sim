@@ -7,9 +7,10 @@ private:
 public:
 	Robot robots[10];
 	Robot obstacles[4];
-	State();
 	Drone drone;
 	
+	State();
+
 	Drone getDrone();
 	Robot getRobot(int index);
 	Robot getObstacle(int index);

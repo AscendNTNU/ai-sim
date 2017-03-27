@@ -1,7 +1,7 @@
 p1 : main.o World.o SimIn.o AI.o State.o Robot.o Drone.o Plank.o structs.o
 	g++ -Wall main.o World.o SimIn.o AI.o State.o Robot.o Drone.o Plank.o structs.o -o p1
 
-World.o : World.h World.cpp AI.cpp AI.h State.cpp State.h Robot.cpp Robot.h Drone.cpp Drone.h Plank.cpp Plank.h structs.h
+World.o : World.h World.cpp structs.h
 	g++ -Wall -c World.cpp
 
 AI.o : AI.cpp AI.h State.cpp State.h Robot.cpp Robot.h Drone.cpp Drone.h Plank.cpp Plank.h structs.h
@@ -16,7 +16,10 @@ Robot.o : Robot.cpp Robot.h Plank.cpp Plank.h structs.h
 Plank.o : Plank.cpp Plank.h structs.h
 	g++ -Wall -c Plank.cpp
 
-Drone.o : Drone.cpp Drone.h structs.h
+Drone.o : Drone.cpp Drone.h Robot.cpp Robot.h structs.h
 	g++ -Wall -c Drone.cpp
 
-\rm *.o *~ p1
+SimIn.o : SimIn.cpp SimIn.h
+	g++ -Wall -c SimIn.cpp SimIn.h
+clean:
+	\rm *.o *~ p1

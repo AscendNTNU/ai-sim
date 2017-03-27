@@ -1,6 +1,6 @@
-	#include <cmath>
+#include <cmath>
 #include "structs.h"
-
+#include "Robot.h"
 
 class Drone{
 private:

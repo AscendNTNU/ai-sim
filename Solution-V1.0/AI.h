@@ -4,7 +4,6 @@
 #include "State.h"
 
 class AI{
-private:
 public:
     AI();
     State state;

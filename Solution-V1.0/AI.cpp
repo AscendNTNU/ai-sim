@@ -5,8 +5,6 @@
 
 AI::AI(){
     this.state* = new State();
-    this.previous_State = NULL;
-    this.target = NULL;
 }
 Robot AI::chooseTarget(int num_Robots){
     float max_reward = -200000;
@@ -17,7 +15,7 @@ Robot AI::chooseTarget(int num_Robots){
     float timeToTurn = 20 - fmod(state.time,20);
 
     for(int i = 0; i < this.state.getNumRobots(); i++){
-        Robot* robot = *state.robots[i];
+        Robot* robot = *this.state.robots[i];
         if (!robot->isMoving()) {
             // Robot is turning. Do we have correct angle?
         }
@@ -38,16 +36,15 @@ Robot AI::chooseTarget(int num_Robots){
 	if(!robotChosen) {
 		// Found no target! What to do?
 	}
-    this.target = target;
     return target
 }
 Action AI::chooseAction(){
     point_t interception = this.state.drone->stategetInterceptPoint(target);
-    float temp = target.intersection.travel_time;
-    //target.intersection.travel_time = 0;
+    float temp = target.interseption.travel_time;
+    //target.interseption.travel_time = 0;
     point_t step_point;
-    step_point.x = intersection.x;
-    step_point.y = intersection.y;
+    step_point.x = interseption.x;
+    step_point.y = interseption.y;
     float time_after_interseption = 0;
 
     float n = 10;
@@ -84,7 +81,7 @@ Action AI::chooseAction(){
             best_Action.x = x;
             best_Action.y = y;
             best_Action.time_after_interseption = time_after_interseption;
-            best_Action.time_until_intersection = target.intersection.travel_time;
+            best_Action.time_until_intersection = target.interseption.travel_time;
         }
 
         
@@ -109,9 +106,9 @@ action_t AI::getBestAction(point_t point, float time_after_interseption) {
     action_t action;
 
     Plank plankOnTop = createPlank(x, y, wrap_angle(target.angle + 0.785),//0.785 radians is almost 45 degerees 
-            (int)(state.elapsed_time+target.intersection.travel_time+time_after_interseption) % 20);
+            (int)(state.elapsed_time+target.interseption.travel_time+time_after_interseption) % 20);
     Plank plankInFront = createPlank(x, y, wrap_angle(target.angle + 3.14), 
-            (int)(state.elapsed_time+target.intersection.travel_time+time_after_interseption) % 20);
+            (int)(state.elapsed_time+target.interseption.travel_time+time_after_interseption) % 20);
 
     float max_reward = (std::max)(plankOnTop.getReward(),plankInFront.getReward());
     if(max_reward == plankInFront.getReward()){
@@ -128,11 +125,6 @@ action_t AI::getBestAction(point_t point, float time_after_interseption) {
     return action;
 }
 
-void AI::executeAction(State state, Action action){
-
-}
-
 bool AI::update(observation_t observation){
-    this.previous_State = state;
     this.state.update(observation);
 }

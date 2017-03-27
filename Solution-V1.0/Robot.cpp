@@ -37,9 +37,8 @@ void Robot::update(point_t new_Position, float new_Orientation){
 	this.old_Position = this.position;
 	this.old_Orientation = this.orientation;
 
-	this.position.x = x;
-	this.position.y = y;
-	this.orientation = q;
+	this.position.position = new_Position;
+	this.orientation = new_Orientation;
 }
 
 void Robot::setPositionOrientation(point_t position, float q){

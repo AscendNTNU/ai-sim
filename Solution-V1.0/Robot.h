@@ -4,11 +4,12 @@
 #include "structs.h"
 #include "Plank.h"
 
-
 class Robot{
 private:
 	point_t position;
 	float orientation;
+	point_t old_Position;
+	float old_Orientation;
 	float robot_Timer;
 	float speed;
 	Plank current_Plank;

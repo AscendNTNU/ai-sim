@@ -4,11 +4,11 @@
 
 class State{
 private:
-	Drone drone;
+public:
 	Robot robots[10];
 	Robot obstacles[4];
-public:
 	State();
+	Drone drone;
 	
 	Drone getDrone();
 	Robot getRobot(int index);

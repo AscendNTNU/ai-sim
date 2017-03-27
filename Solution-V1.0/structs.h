@@ -74,7 +74,6 @@ struct observation_t
 
 struct action_t{
     action_Type_t type;
-    // Robot target;
     point_t waypoints[10];
     float reward;
     float when_To_Act;

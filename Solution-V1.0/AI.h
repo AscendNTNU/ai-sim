@@ -6,10 +6,12 @@
 class AI{
 private:
     State state;
+    State previous_State;
+    Robot target;
 public:
     AI();
-    Robot chooseTarget(State current_State, State previous_State, int num_Robots);
-    Action chooseAction(State observed_State, Robot target);
-    void executeAction(State observed_State, Action action);
+    Robot chooseTarget(int num_Robots);
+    Action chooseAction();
+    void executeAction();
     bool update(observation_t observation);
 };

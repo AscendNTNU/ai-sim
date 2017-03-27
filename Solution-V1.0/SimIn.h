@@ -16,4 +16,5 @@ public:
 	bool initializeSim();
 	bool getNewObservation();
 	bool sendCommand();
+	bool update_world();
 };

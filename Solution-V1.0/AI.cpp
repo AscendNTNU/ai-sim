@@ -5,17 +5,19 @@
 
 AI::AI(){
     this.state* = new State();
+    this.previous_State = NULL;
+    this.target = NULL;
 }
-Robot AI::chooseTarget(State current_State, State previous_State, int num_Robots){
+Robot AI::chooseTarget(int num_Robots){
     float max_reward = -200000;
     float reward = 0;
 	bool robotChosen = false;
     Robot* target = NULL;
 
-    float timeToTurn = 20 - fmod(current_State.time,20);
+    float timeToTurn = 20 - fmod(state.time,20);
 
-    for(int i = 0; i < this.current_State.getNumRobots(); i++){
-        Robot* robot = *observed_State.robots[i];
+    for(int i = 0; i < this.state.getNumRobots(); i++){
+        Robot* robot = *state.robots[i];
         if (!robot->isMoving()) {
             // Robot is turning. Do we have correct angle?
         }
@@ -39,8 +41,8 @@ Robot AI::chooseTarget(State current_State, State previous_State, int num_Robots
     this.target = target;
     return target
 }
-Action AI::chooseAction(State observed_State, Robot target){
-    point_t interception = calculateInterceptionPoint(state, target);
+Action AI::chooseAction(){
+    point_t interception = this.state.drone->stategetInterceptPoint(target);
     float temp = target.intersection.travel_time;
     //target.intersection.travel_time = 0;
     point_t step_point;
@@ -126,7 +128,7 @@ action_t AI::getBestAction(point_t point, float time_after_interseption) {
     return action;
 }
 
-void AI::executeAction(State observed_State, Action action){
+void AI::executeAction(State state, Action action){
 
 }
 

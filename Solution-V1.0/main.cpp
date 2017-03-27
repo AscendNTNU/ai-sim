@@ -1,5 +1,6 @@
 #include "World.h"
 
 int main(){
-	World* world = new World();
+	float compass_orientation = 0.0;
+	World* world = new World(compass_orientation);
 }

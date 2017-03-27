@@ -1,31 +1,25 @@
 #pragma once
 
 #include "structs.h"
-#include "AI.h"
-#include "SimIn.h"
+#include <time.h>
 
 class World{
 private:
 	point_t origin;
-	float time;
+	time_t start_Time;
 	float orientation;
 	bounds_t bounds;
 
 public:
 
 	//Constructors
-	World();
+	World(float orientation);
 
 	//Get
 	point_t getOrigin();
-	float getCurrentTime();
+	double getCurrentTime();
 	float getOrientation();
 	bounds_t getBounds();
-	float gridValue(float X, float Y);
-
-	//Initialize
+	float getGridValue(float X, float Y);
 	bool startTimer();
-
-	//Update
-	bool update_world();
 };

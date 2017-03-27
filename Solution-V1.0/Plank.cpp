@@ -68,7 +68,7 @@ float Plank::calculateReward(int n){
     for (int i = 0; i < n; i++) {
         x = plank.x_1 + (i + 0.5) * step_x;
         y = plank.y_1 + (i + 0.5) * step_y;
-        area += gridValue(x, y) * step_tot; // sum up each small rectangle
+        area += world.getGridValue(x, y) * step_tot; // sum up each small rectangle
     }
     // area = area/plank.length;
     return area;

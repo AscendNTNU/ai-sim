@@ -4,10 +4,10 @@
 
 //Constructors
 World::World(float orientation){
-	this.origin = point_Zero;
-	this.time = 0;
-	this.orientation = orientation;
-	bounds = {x_Max = 20, y_Max = 20}; 
+	this->origin = point_Zero;
+	this->time = 0;
+	this->orientation = orientation;
+	bounds_t = {.x_Max = 20, .y_Max = 20}; 
 }
 
 //Get

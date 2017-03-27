@@ -27,7 +27,7 @@ bool SimIn::sendCommand(action_t action){
 }
 
 //Update world
-bool SimIn::update_world(){
+observation_t SimIn::update_world(){
 	
 	observation_t observation;
 

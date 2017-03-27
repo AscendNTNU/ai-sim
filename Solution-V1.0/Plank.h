@@ -1,4 +1,9 @@
+#pragma once
+
 #include "structs.h"
+#include "World.h"
+
+extern World world;
 
 class Plank{
 private:

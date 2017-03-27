@@ -10,8 +10,6 @@ private:
 	float time;
 	float orientation;
 	bounds_t bounds;
-	AI ai;
-	SimIn input;
 
 public:
 
@@ -23,6 +21,7 @@ public:
 	float getCurrentTime();
 	float getOrientation();
 	bounds_t getBounds();
+	float gridValue(float X, float Y);
 
 	//Initialize
 	bool startTimer();

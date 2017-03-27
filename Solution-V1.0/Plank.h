@@ -8,10 +8,11 @@ private:
     float reward;
     float angle;
 public:
+	Plank Plank(float x, float y, float angle, float time_Until_Turn, int num_Iterations);
+	Plank Plank(Robot robot, int num_Iterations);
 	float getReward();
 	float getAngle();
 	float getLength();
-	float getReward();
 	
 	bool willExitGreen();
 	bool willExitRed();

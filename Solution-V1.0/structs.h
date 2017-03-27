@@ -1,11 +1,12 @@
 #pragma once
 
 #include<queue>
-
+#include "Wolrd.h"
 static const int DRONE_SPEED = 1;
 static const float ROBOT_SPEED = 0.33;
 static const float MATH_PI = 3.141592653589793238;
 
+World* world = new World();
 
 struct point_t{
 	float x;
@@ -77,7 +78,7 @@ struct action_t{
     point_t waypoints[10];
     float reward;
     float when_To_Act;
-    point_t whereToAct;
+    point_t where_To_Act;
 };
 
 

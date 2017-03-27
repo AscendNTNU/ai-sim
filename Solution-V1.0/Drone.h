@@ -1,5 +1,6 @@
-	#include <cmath>
+#include <cmath>
 #include "structs.h"
+#include "Robot.h"
 
 
 class Drone{
@@ -17,7 +18,7 @@ private:
 	drone_State_t drone_State;
 
 public:
-
+	Drone();
 	//get
 	point_t getPosition();
 	drone_State_t getState();

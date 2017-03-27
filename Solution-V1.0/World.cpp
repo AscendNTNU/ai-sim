@@ -10,7 +10,6 @@ World::World(float orientation){
 	bounds = {x_Max = 20, y_Max = 20}; 
 }
 
-
 //Get
 point_t World::getOrigin(){
 	return this.origin;
@@ -26,14 +25,7 @@ bounds_t World::getBounds(){
 	return this.bounds_t;
 }
 
-
-//Initialize
-bool World::startTimer(){
-	this.start_Time = time(0);
-	return true;
-}
-
-float World::gridValue(float X, float Y){
+float World::getGridValue(float X, float Y){
     float value = (-9.995004e+02)+(9.976812e+01)*X+(-1.004701e+02)*Y
         +(-5.785388e+01)*pow(X,2)+(1.161562e+01)*X*Y+(5.477725e+01)*pow(Y,2)
         +(1.260229e+01)*pow(X,3)+(1.299816e+01)*pow(X,2)*Y+(-1.438667e+01)*X*pow(Y,2)+(-1.158062e+01)*pow(Y,3)
@@ -53,4 +45,10 @@ float World::gridValue(float X, float Y){
         +(3.539047e-11)*X*pow(Y,7)+(1.058675e-06)*pow(Y,8);
 
     return value;
+}
+
+//Set
+bool World::startTimer(){
+	this.start_Time = time(0);
+	return true;
 }

@@ -18,7 +18,7 @@ tree_action_t DFS(Robot robot,tree_action_t currentLevel, int n){
 	
 	point_t temp_Position = robot.position;
 
-	float start_Orientation = robot.orientation;
+	float orientation = robot.orientation;
 
 	int i = 0;
 	
@@ -37,6 +37,7 @@ tree_action_t DFS(Robot robot,tree_action_t currentLevel, int n){
 
 
 		//Try action land on top.
+        Plank temp_Plank = Plank(temp_Position, orientation, float time_Until_Turn, n);
         temp.reward = findRobotValue(robot);
 		temp = currentLevel;
 		robot.setPositionOrientation(robot.getPosition(), robot.getOrientation()+0.785);

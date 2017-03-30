@@ -30,16 +30,16 @@ struct plank_t
 
 enum drone_State_t
 {
-    drone_landingOnTop,
-    drone_landingInFront,
-    drone_waiting,
-    drone_tracking,
-	drone_chooseAction,
-	drone_chooseTarget,
-	drone_start,
-	drone_waitForAction,
-	drone_noTargetFound,
-	drone_terminate
+    landing_On_Top,
+    landing_In_Front,
+    waiting,
+    tracking,
+	choosing_Action,
+	choosing_Target,
+	starting,
+	waiting_For_Action,
+	no_Target_Found,
+	terminate
 };
 
 enum action_Type_t

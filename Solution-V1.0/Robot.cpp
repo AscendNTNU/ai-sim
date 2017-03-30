@@ -6,7 +6,7 @@ Robot::Robot(){
 	this.orientation = 0;
 	this.time_After_Turn = fmod(world.getCurrentTime(), 20); // Seconds after beginning of turn. When 20 it will start to turn again
 	this.speed = 0.33;
-	this.current_Plank = new Plank(this);
+	this.current_Plank = new Plank();
 }
 
 point_t Robot::getPosition(){

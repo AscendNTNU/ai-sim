@@ -91,28 +91,28 @@ action_t getBestActionAtPosition(Robot target, point_t position, float time_afte
     int num_Iterations = 5; // Number of iterations when summing along a plank
     action_t action;
     action.where_To_Act = position;
-    float time_Until_Turn = fmod(state.getTimeStamp() + position.travel_time + time_after_interseption, 20);
+    float time_After_Turn = fmod(state.getTimeStamp() + position.travel_time + time_after_interseption, 20);
 
-    Plank plank_On_Top = new Plank(position, fmod(target->getAngle() + (MATH_PI/4), 2*MATH_PI), time_Until_Turn, num_Iterations);
-    Plank plank_In_Front = new Plank(position, fmod(target->getAngle() + MATH_PI, 2*MATH_PI) time_Until_Turn, num_Iterations);
+    Plank plank_On_Top = new Plank(position, fmod(target->getAngle() + (MATH_PI/4), 2*MATH_PI), time_After_Turn, num_Iterations);
+    Plank plank_In_Front = new Plank(position, fmod(target->getAngle() + MATH_PI, 2*MATH_PI) time_After_Turn, num_Iterations);
 
     return actionWithMaxReward(plank_On_Top.getReward(), plank_In_Front.getReward(), action);
 }
 
 action_t actionWithMaxReward(float reward_On_Top, float reward_In_Front, action_t action){
     if(reward_On_Top > reward_In_Front){
-        action.type = ai_landingOnTop;
+        action.type = land_On_Top_Of;
         action.reward = reward_On_Top;
     } else if (reward_On_Top < reward_In_Front){
-        action.type = ai_landingInFront;
+        action.type = land_In_Front_Of;
         action.reward = reward_In_Front;
     } else if (reward_On_Top == reward_In_Front){
         // Return in front because it is easier?
-        action.type = ai_landingInFront;
+        action.type = land_In_Front_Of;
         action.reward = reward_In_Front;
     } else {
         // Will it ever get here?
-        action.type = ai_waiting;
+        action.type = no_Command;
         action.reward = 0;
     }
     return action;

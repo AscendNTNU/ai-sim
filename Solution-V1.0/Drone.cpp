@@ -5,7 +5,7 @@ Drone::Drone(){
 	orientation = 0
 	angle_Of_Motion = 0;
 	speed = DRONE_SPEED;
-	drone_State = drone_start;
+	drone_State = starting;
 }
 
 point_t Drone::getPosition(){

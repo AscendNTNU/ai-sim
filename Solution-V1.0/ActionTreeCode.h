@@ -3,7 +3,6 @@
 
 //functions
 //isOutsideOfPlank
-//
 
 tree_action_t DFS(Robot robot,tree_action_t currentLevel, int n){
 	
@@ -29,15 +28,17 @@ tree_action_t DFS(Robot robot,tree_action_t currentLevel, int n){
             } else {
                 i = n+1;
                 backwards = true;
-                target.angle += MATH_PI;
+                angle += MATH_PI;
             }
 		}
 
+        // Hvordan regner vi ut intersection point for hver runde?
+        // Fra hvilken droneposisjon?
 		robot.addToTimer(target.intersection.travel_time+time_after_intersection);
 
 
 		//Try action land on top.
-        Plank temp_Plank = Plank(temp_Position, orientation, float time_Until_Turn, n);
+        Plank temp_Plank = new Plank(temp_Position, orientation, time_After_Turn, n);
         temp.reward = findRobotValue(robot);
 		temp = currentLevel;
 		robot.setPositionOrientation(robot.getPosition(), robot.getOrientation()+0.785);

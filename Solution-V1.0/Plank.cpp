@@ -1,21 +1,16 @@
 #include "Plank.h"
 
-Plank::Plank(point_t position, float angle, float time_Until_Turn, int num_Iterations){
+Plank::Plank(){
 	this->endpoint_1 = point_Zero;
 	this->endpoint_2 = point_Zero;
+    this->angle = 0;
+    this->length = 0;
+    this->reward = -200000;
+}
 
-    this->angle = angle;
-	this->endpoint_1.position.x = time_Until_Turn*SPEED*cos(angle) + position.x;
-    this->endpoint_1.position.y = time_Until_Turn*SPEED*sin(angle) + position.y;
-    this->endpoint_2.position.x = (time_Until_Turn - 20+2.5)*SPEED*cos(angle) + position.x;
-    this->endpoint_2.position.y = (time_Until_Turn - 20+2.5)*SPEED*sin(angle) + position.y;
-    
-    float dx = this->endpoint_2.x - this->endpoint_1.x;
-    float dy = this->endpoint_2.y - this->endpoint_1.y;
-
-    this->length = sqrt(dx*dx + dy*dy);
-
-    this->reward = calculateReward(num_Iterations);
+Plank::Plank(point_t position, float angle, float time_After_Turn, int num_Iterations){
+	Plank();
+	this.updatePlank(position, angle, time_After_Turn, num_Iterations)
 }
 
 float Plank::getReward(){
@@ -50,4 +45,21 @@ float Plank::calculateReward(int n){
     }
     // area = area/plank.length;
     return area;
+}
+void Plank::updatePlank(point_t position, float angle, float time_After_Turn, int num_Iterations){
+	this->endpoint_1 = point_Zero;
+	this->endpoint_2 = point_Zero;
+	
+    this->angle = angle;
+	this->endpoint_1.position.x = (20-time_After_Turn)*SPEED*cos(angle) + position.x;
+    this->endpoint_1.position.y = (20-time_After_Turn)*SPEED*sin(angle) + position.y;
+    this->endpoint_2.position.x = (time_After_Turn)*SPEED*cos(angle) + position.x; // Adding 2.5 because of turn time
+    this->endpoint_2.position.y = (time_After_Turn)*SPEED*sin(angle) + position.y;
+    
+    float dx = this->endpoint_2.x - this->endpoint_1.x;
+    float dy = this->endpoint_2.y - this->endpoint_1.y;
+    
+    this->length = sqrt(dx*dx + dy*dy);
+
+    this->reward = calculateReward(num_Iterations);
 }

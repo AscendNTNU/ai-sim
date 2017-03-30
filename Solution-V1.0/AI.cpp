@@ -75,10 +75,10 @@ action_t AI::chooseAction(Robot target){
         }
 
         if (backwards) {
-            step_Point = {.x = x-step_x, .y = y-step_y;}
+            step_Point = {.x = x-step_x, .y = y-step_y};
             i -= 1;
         } else {
-            step_Point = {.x = x+step_x, .y = y+step_y;}
+            step_Point = {.x = x+step_x, .y = y+step_y};
             i += 1;
         }
         time_after_interseption = time_after_interseption + (step_size)/target->getSpeed();
@@ -101,18 +101,18 @@ action_t getBestActionAtPosition(Robot target, point_t position, float time_afte
 
 action_t actionWithMaxReward(float reward_On_Top, float reward_In_Front, action_t action){
     if(reward_On_Top > reward_In_Front){
-        action.action_Type_t = ai_landingOnTop;
+        action.type = ai_landingOnTop;
         action.reward = reward_On_Top;
     } else if (reward_On_Top < reward_In_Front){
-        action.action_Type_t = ai_landingInFront;
+        action.type = ai_landingInFront;
         action.reward = reward_In_Front;
     } else if (reward_On_Top == reward_In_Front){
         // Return in front because it is easier?
-        action.action_Type_t = ai_landingInFront;
+        action.type = ai_landingInFront;
         action.reward = reward_In_Front;
     } else {
         // Will it ever get here?
-        action.action_Type_t = ai_waiting;
+        action.type = ai_waiting;
         action.reward = 0;
     }
     return action;

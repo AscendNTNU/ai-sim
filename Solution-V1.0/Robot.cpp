@@ -3,9 +3,9 @@
 Robot::Robot(){
 	this.position = point_Zero;
 	this.orientation = 0;
-	robot_Timer = 0;
-	speed = 0.33;
-	current_Plank = new Plank(this);
+	this.time_After_Turn = fmod(world.getCurrentTime(), 20); // Seconds after beginning of turn. When 20 it will start to turn again
+	this.speed = 0.33;
+	this.current_Plank = new Plank(this);
 }
 
 point_t Robot::getPosition(){
@@ -14,7 +14,7 @@ point_t Robot::getPosition(){
 float Robot::getOrientation(){
 	return this.orientation;
 }
-float Robot::getTimer(){
+float Robot::getTimeAfterTurn(){
 	return this.rimer
 }
 float Robot::getRobotSpeed(){
@@ -47,5 +47,5 @@ void Robot::setPositionOrientation(point_t position, float q){
 }
 
 void Robot::addToTimer(float time){
-	this.robot_Timer += time;
+	this.time_After_Turn += time;
 }

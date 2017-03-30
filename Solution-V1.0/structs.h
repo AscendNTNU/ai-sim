@@ -5,16 +5,14 @@ static const int DRONE_SPEED = 1;
 static const float ROBOT_SPEED = 0.33;
 static const float MATH_PI = 3.141592653589793238;
 
-World* world = new World(0.0);
-
 struct point_t{
 	float x;
 	float y;
 	float z;
-	int travel_Time;
+	float travel_Time;
 };
 
-point_t point_Zero = {.x = 0.0, .y = 0.0, .z = 0.0, .travel_Time = 0.0};
+static point_t point_Zero = {.x = 0.0, .y = 0.0, .z = 0.0, .travel_Time = 0.0};
 
 struct bounds_t{
 	int x_Max;

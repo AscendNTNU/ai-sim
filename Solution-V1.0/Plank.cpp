@@ -1,14 +1,14 @@
 #include "Plank.h"
 
-Plank::Plank(float x, float y, float angle, float time_Until_Turn, int num_Iterations){
+Plank::Plank(point_t position, float angle, float time_Until_Turn, int num_Iterations){
 	this.endpoint_1 = point_Zero;
 	this.endpoint_2 = point_Zero;
 
     this.angle = angle;
-	this.endpoint_1.x = time_Until_Turn*SPEED*cos(angle) + x;
-    this.endpoint_1.y = time_Until_Turn*SPEED*sin(angle) + y;
-    this.endpoint_2.x = (time_Until_Turn - 20+2.5)*SPEED*cos(angle) + x;
-    this.endpoint_2.y = (time_Until_Turn - 20+2.5)*SPEED*sin(angle) + y;
+	this.endpoint_1.x = time_Until_Turn*SPEED*cos(angle) + position.x;
+    this.endpoint_1.y = time_Until_Turn*SPEED*sin(angle) + position.y;
+    this.endpoint_2.x = (time_Until_Turn - 20+2.5)*SPEED*cos(angle) + position.x;
+    this.endpoint_2.y = (time_Until_Turn - 20+2.5)*SPEED*sin(angle) + position.y;
     
     float dx = this.endpoint_2.x - this.endpoint_1.x;
     float dy = this.endpoint_2.y - this.endpoint_1.y;

@@ -14,7 +14,7 @@ struct point_t{
 	int travel_Time;
 };
 
-point_t point_Zero = {.x = 0.0, .y = 0.0, .z = 0.0, .travel_Time = 0.0};
+static point_t point_Zero = {.x = 0.0, .y = 0.0, .z = 0.0, .travel_Time = 0.0};
 
 struct bounds_t{
 	int x_Max;
@@ -46,12 +46,12 @@ enum drone_State_t
 
 enum action_Type_t
 {
-    actionType_NoCommand = 0,   // continue doing whatever you are doing
-    actionType_LandOnTopOf,     // trigger one 45 deg turn of robot (i)
-    actionType_LandInFrontOf,   // trigger one 180 deg turn of robot (i)
-    actionType_LandAtPoint,	 // land at a given point
-    actionType_Track,           // follow robot (i) at a constant height
-    actionType_Search           // ascend to 3 meters and go to (x, y)
+    no_Command = 0,   // continue doing whatever you are doing
+    land_On_Top_Of,     // trigger one 45 deg turn of robot (i)
+    land_In_Front_Of,   // trigger one 180 deg turn of robot (i)
+    land_At_Point,	 // land at a given point
+    track,           // follow robot (i) at a constant height
+    search           // ascend to 3 meters and go to (x, y)
 };
 
 struct observation_t
@@ -79,6 +79,10 @@ struct action_t{
     point_t where_To_Act = point_Zero;
 };
 
+static action_t action_Empty = {.type = no_Command,
+								.reward = -200000,
+								.when_To_Act = 0,
+								.where_To_Act = point_Zero;}
 
 struct tree_action_t{
     std::queue<action_t> actions;

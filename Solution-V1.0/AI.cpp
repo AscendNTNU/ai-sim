@@ -51,10 +51,7 @@ Action AI::chooseAction(Robot target){
     float step_y = step_size*sin(angle);
 
     // Temporary max rewarded action
-    action_t best_Action;
-    best_Action.reward = -1000;
-    best_Action.action_Type_t = ai_waiting;
-    best_Action.where_To_Act = point_Zero;
+    action_t best_Action = action_empty
     best_Action.where_To_Act.travel_Time = interseption.travel_Time;
     
     action_t step_Action;

@@ -10,18 +10,20 @@ tree_action_t DFS(Robot robot,tree_action_t currentLevel, int n){
 	tree_action_t temp = currentLevel;
 	tree_action_t max
 
-	action_t action_On = {.type = actionType_LandOnTopOf, .when_To_Act = 0};
-	action_t action_Front= {.type = actionType_LandInFrontOf, .when_To_Act = 0};
-	
-	point_t startPosition = robot.position;
-	point_t tempPosition = robot.position;
+	action_Top = action_Empty;
+    action_Top.type = land_On_Top_Of;
 
-	float startOrientation = robot.orientation;
+	action_Front action_Empty;
+    action_Front.type = land_In_Front_Of;
+	
+	point_t temp_Position = robot.position;
+
+	float start_Orientation = robot.orientation;
 
 	int i = 0;
 	
 	while (i > 0) {
-		if (isOutsideOfPlank(x,y, target.plank)) {
+		if (robot.plank->isOutsideOfPlank(temp_Position)) {
             if (backwards) {
                 return best_action;
             } else {
@@ -38,8 +40,8 @@ tree_action_t DFS(Robot robot,tree_action_t currentLevel, int n){
         temp.reward = findRobotValue(robot);
 		temp = currentLevel;
 		robot.setPositionOrientation(robot.getPosition(), robot.getOrientation()+0.785);
-		action_On.when_To_Act = i;
-        temp.actions.push(action_On);
+		action_Top.when_To_Act = i;
+        temp.actions.push(action_Top);
         temp = DFS(robot,temp, n);
 
         if(temp.reward > max.reward){
@@ -52,7 +54,7 @@ tree_action_t DFS(Robot robot,tree_action_t currentLevel, int n){
         float rewardInFront = findRobotValue(robot);
         temp.reward = findRobotValue(robot);
         action_Front.when_To_Act = i;
-        temp.actions.push(action_On);
+        temp.actions.push(action_Top);
         temp = DFS(robot, temp, n);
         if(temp.reward > max.reward){
         	max = temp;
@@ -60,15 +62,15 @@ tree_action_t DFS(Robot robot,tree_action_t currentLevel, int n){
 
 
         if (backwards) {
-            tempPosition.x -= step_x;
-            tempPosition.y -= step_y;
-            robot.setPositionOrientation(tempPosition, startOrientation + 3.14);
+            temp_Position.x -= step_x;
+            temp_Position.y -= step_y;
+            robot.setPositionOrientation(temp_Position, start_Orientation + 3.14);
             i -= 1;
 
         } else {
-			tempPosition.x += tempPosition.x;
-            tempPosition.y += tempPosition.y;
-            robot.setPositionOrientation(tempPosition, startOrientation);
+			temp_Position.x += temp_Position.x;
+            temp_Position.y += temp_Position.y;
+            robot.setPositionOrientation(temp_Position, start_Orientation);
             i += 1;
         }
         time_after_intersection = time_after_intersection + (step_size)/Robot_Speed;

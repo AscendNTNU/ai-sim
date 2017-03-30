@@ -15,6 +15,6 @@ private:
 public:
 	bool initializeSim();
 	bool getNewObservation();
-	bool sendCommand();
+	bool sendCommand(action_t action);
 	observation_t update_world();
 };

@@ -8,6 +8,6 @@ public:
     AI();
     State state;
     Robot chooseTarget(int num_Robots);
-    Action chooseAction();
+    action_t chooseAction();
     bool update(observation_t observation);
 };

@@ -20,6 +20,6 @@ Drone.o : Drone.cpp Drone.h Robot.cpp Robot.h structs.h
 	g++ -Wall -c -std=c++11 Drone.cpp
 
 SimIn.o : SimIn.cpp SimIn.h
-	g++ -Wall -c -std=c++11 SimIn.cpp SimIn.h
+	g++ -Wall -c -std=c++11 -Wswitch SimIn.cpp SimIn.h
 clean:
 	\rm *.o *~ p1

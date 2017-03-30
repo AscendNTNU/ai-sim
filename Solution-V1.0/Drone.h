@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 #include "structs.h"
 #include "Robot.h"
 

@@ -1,5 +1,6 @@
 #include "Plank.h"
 
+<<<<<<< Updated upstream
 Plank::Plank(point_t position, float angle, float time_Until_Turn, int num_Iterations){
 	this.endpoint_1 = point_Zero;
 	this.endpoint_2 = point_Zero;
@@ -9,36 +10,25 @@ Plank::Plank(point_t position, float angle, float time_Until_Turn, int num_Itera
     this.endpoint_1.y = time_Until_Turn*SPEED*sin(angle) + position.y;
     this.endpoint_2.x = (time_Until_Turn - 20+2.5)*SPEED*cos(angle) + position.x;
     this.endpoint_2.y = (time_Until_Turn - 20+2.5)*SPEED*sin(angle) + position.y;
+=======
+Plank::Plank(float x, float y, float angle, float time_Until_Turn, int num_Iterations){
+	this->endpoint_1 = point_Zero;
+	this->endpoint_2 = point_Zero;
+
+    this->angle = angle;
+	this->endpoint_1.x = time_Until_Turn*SPEED*cos(angle) + x;
+    this->endpoint_1.y = time_Until_Turn*SPEED*sin(angle) + y;
+    this->endpoint_2.x = (time_Until_Turn - 20+2.5)*SPEED*cos(angle) + x;
+    this->endpoint_2.y = (time_Until_Turn - 20+2.5)*SPEED*sin(angle) + y;
+>>>>>>> Stashed changes
     
-    float dx = this.endpoint_2.x - this.endpoint_1.x;
-    float dy = this.endpoint_2.y - this.endpoint_1.y;
+    float dx = this->endpoint_2.x - this->endpoint_1.x;
+    float dy = this->endpoint_2.y - this->endpoint_1.y;
 
-    this.length = sqrt(dx*dx + dy*dy);
+    this->length = sqrt(dx*dx + dy*dy);
 
-    this.reward = calculateReward(num_Iterations);
+    this->reward = calculateReward(num_Iterations);
 }
-
-Plank::Plank(Robot robot, int num_Iterations){
-    this.endpoint_1 = point_Zero;
-    this.endpoint_2 = point_Zero;
-
-    this.angle = robot.getOrientation();
-    float time_Until_Turn = robot.getTimer();
-    point_t position = robot.getPosition();
-
-    this.endpoint_1.x = time_Until_Turn*SPEED*cos(angle) + position.x;
-    this.endpoint_1.y = time_Until_Turn*SPEED*sin(angle) + position.y;
-    this.endpoint_2.x = (time_Until_Turn - 20+2.5)*SPEED*cos(angle) + x;
-    this.endpoint_2.y = (time_Until_Turn - 20+2.5)*SPEED*sin(angle) + y;
-    
-    float dx = this.endpoint_2.x - this.endpoint_1.x;
-    float dy = this.endpoint_2.y - this.endpoint_1.y;
-
-    this.length = sqrt(dx*dx + dy*dy);
-
-    this.reward = calculateReward(num_Iterations);
-}
-
 
 float Plank::getReward(){
 	return this.reward;

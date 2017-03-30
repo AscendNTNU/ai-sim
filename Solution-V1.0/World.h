@@ -2,6 +2,7 @@
 
 #include "structs.h"
 #include <time.h>
+#include <cmath>
 
 class World{
 private:
@@ -16,7 +17,7 @@ public:
 
 	//Get
 	point_t getOrigin();
-	double getCurrentTime();
+	float getCurrentTime();
 	float getOrientation();
 	bounds_t getBounds();
 	float getGridValue(float X, float Y);

@@ -1,28 +1,27 @@
-#pragma once
 #include "World.h"
 
 
 //Constructors
 World::World(float orientation){
 	this->origin = point_Zero;
-	this->time = 0;
+	this->start_Time = 0;
 	this->orientation = orientation;
-	bounds_t = {.x_Max = 20, .y_Max = 20}; 
+	this->bounds = {.x_Max = 20, .y_Max = 20}; 
 }
 
 //Get
 point_t World::getOrigin(){
-	return this.origin;
+	return this->origin;
 }
 float World::getCurrentTime(){
-	double seconds_since_start = difftime(time(0), this.start_time);
+	double seconds_since_start = difftime(time(0), this->start_Time);
 	return seconds_since_start;
 }
 float World::getOrientation(){
-	return this.orientation;
+	return this->orientation;
 }
 bounds_t World::getBounds(){
-	return this.bounds_t;
+	return this->bounds;
 }
 
 float World::getGridValue(float X, float Y){
@@ -49,6 +48,6 @@ float World::getGridValue(float X, float Y){
 
 //Set
 bool World::startTimer(){
-	this.start_Time = time(0);
+	this->start_Time = time(0);
 	return true;
 }

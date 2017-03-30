@@ -1,12 +1,11 @@
-#pragma once
-
 #include "AI.h"
 #include "Plank.h"
 
 
 AI::AI(){
-    this.state* = new State();
+    this->state = new State();
 }
+
 Robot AI::chooseTarget(int num_Robots){
     float max_reward = -200000;
     float reward = 0;
@@ -15,8 +14,8 @@ Robot AI::chooseTarget(int num_Robots){
 
     float timeToTurn = 20 - fmod(state.time,20);
 
-    for(int i = 0; i < this.state.getNumRobots(); i++){
-        Robot* robot = *this.state.robots[i];
+    for(int i = 0; i < this->state.getNumRobots(); i++){
+        Robot* robot = *this->state.robots[i];
         if (!robot->isMoving()) {
             // Robot is turning. Do we have correct angle?
         }
@@ -39,8 +38,8 @@ Robot AI::chooseTarget(int num_Robots){
 	}
     return target
 }
-Action AI::chooseAction(Robot target){
-    point_t interception = this.state.drone->stategetInterceptPoint(target);
+action_t AI::chooseAction(Robot target){
+    point_t interception = this->state.drone->stategetInterceptPoint(target);
     point_t step_Point = {.x = interseption.x, .y = interseption.y};
     float time_after_interseption = 0;
 
@@ -88,7 +87,7 @@ Action AI::chooseAction(Robot target){
     return best_Action;
 }
 
-action_t AI::getBestActionAtPosition(Robot target, point_t position, float time_after_interseption) {
+action_t getBestActionAtPosition(Robot target, point_t position, float time_after_interseption) {
     int num_Iterations = 5; // Number of iterations when summing along a plank
     action_t action;
     action.where_To_Act = position;
@@ -100,7 +99,7 @@ action_t AI::getBestActionAtPosition(Robot target, point_t position, float time_
     return actionWithMaxReward(plank_On_Top.getReward(), plank_In_Front.getReward(), action);
 }
 
-action_t AI::actionWithMaxReward(float reward_On_Top, float reward_In_Front, action_t action){
+action_t actionWithMaxReward(float reward_On_Top, float reward_In_Front, action_t action){
     if(reward_On_Top > reward_In_Front){
         action.action_Type_t = ai_landingOnTop;
         action.reward = reward_On_Top;
@@ -120,5 +119,5 @@ action_t AI::actionWithMaxReward(float reward_On_Top, float reward_In_Front, act
 }
 
 bool AI::update(observation_t observation){
-    this.state.update(observation);
+    this->state.updateState(observation);
 }

@@ -63,3 +63,14 @@ void Plank::updatePlank(point_t position, float angle, float time_After_Turn, in
 
     this->reward = calculateReward(num_Iterations);
 }
+
+bool Plank::pointIsOutsideOfPlank(point_t point){
+	if ((point.x > this->endpoint_1.x && point.x > this->endpoint_2.x) || 
+		(point.x < this->endpoint_1.x && point.x < this->endpoint_2.x) ||
+	    (point.y > this->endpoint_1.y && point.y > this->endpoint_2.y) || 
+	    (point.y < this->endpoint_1.y && point.y < this->endpoint_2.y)) {
+	    return true;
+	} else {
+	    return false;
+	}
+}

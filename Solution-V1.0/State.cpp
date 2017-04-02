@@ -1,36 +1,44 @@
 #pragma once
 #include "State.h"
 
+
 State::State(){
-	this.drone = new Drone();
+	this->drone = new Drone();
 	
-	for(int i = 0, i<10; i++){
-		this.robot[i]* = new Robot();
+	for(int i = 0; i<10; i++){
+		this->robots[i] = new Robot();
 	}
 	
-	for(int i = 0, i<4; i++){
-		this.obstacles[i]* = new Robot();
+	for(int i = 0; i<4; i++){
+		this->obstacles[i] = new Robot();
 	}
-	this.time_Stamp = world.getCurrentTime();
+	this->time_Stamp = world.getCurrentTime();
 }
 
-Drone State::getDrone(){
-	return this.drone;
+Drone* State::getDrone(){
+	return this->drone;
 }
-Robot State::getRobot(int index){
-	return this.robots[index];
+Robot* State::getRobot(int index){
+	return this->robots[index];
 }
-Robot State::getObstacle(int index){
-	return this.obstacles[index];
+Robot* State::getObstacle(int index){
+	return this->obstacles[index];
+}
+
+float State::getTimeStamp(){
+	return this->time_Stamp;
 }
 
 
 bool State::updateState(observation_t observation){
-	this.drone.update(observation);
+	point_t position = point_Zero;
+	this->drone->update(observation);
 	for(int i = 0; i < 10; i++){
-		this.robots[i].update(observation.robot_x[i], observation.robot_y[i], observation.robot_q[i]);
+		position = {.x = observation.robot_x[i], .y = observation.robot_y[i]};
+		this->robots[i]->update(position, observation.robot_q[i]);
 	}
 	for(int i = 0; i < 4; i++){
-		this.obstacles[i].update(observation.obstacle_x[i], observation.obstacle_y[i], observation.obstacle_q[i]);
+		position = {.x = observation.robot_x[i], .y = observation.robot_y[i]};
+		this->obstacles[i]->update(position, observation.obstacle_q[i]);
 	}
 }

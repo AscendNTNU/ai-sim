@@ -13,8 +13,8 @@ private:
     float reward;
     float angle;
 public:
-	Plank Plank();
-	Plank Plank(point_t position, float angle, float time_After_Turn, int num_Iterations);
+	Plank();
+	Plank(point_t position, float angle, float time_After_Turn, int num_Iterations);
 	float getReward();
 	float getAngle();
 	float getLength();
@@ -23,4 +23,5 @@ public:
 	bool willExitRed();
 	float calculateReward();
 	void updatePlank(point_t position, float angle, float time_After_Turn, int num_Iterations);
+	bool pointIsOutsideOfPlank(point_t point);
 };

@@ -49,7 +49,7 @@ float Drone::getDistanceToPoint(point_t point){
 }
 
 
-IntersectionPoint Drone::getInterceptPoint(Robot robot) {
+IntersectionPoint Drone::getInterceptPoint(Robot* robot) {
 	
 	Drone drone = new Drone(); 
 

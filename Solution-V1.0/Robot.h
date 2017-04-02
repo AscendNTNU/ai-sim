@@ -10,26 +10,26 @@ private:
 	float orientation;
 	point_t old_Position;
 	float old_Orientation;
-	float robot_Timer;
-	float speed;
-	Plank current_Plank;
-	
+	float time_After_Turn;
+	float speed;	
 public:
 	//constructors
 	Robot();
+	Plank* current_Plank;
 
 	//get
 	point_t getPosition();
 	float getOrientation();
-	float getRobotTimer();
+	float getTimeAfterTurn();
 	float getSpeed();
-	float getPlank();
+	Plank* getCurrentPlank();
 
 	//set
 	void setPositionOrientation(point_t positionw, float q);
 	void addToTimer(float time);
 	
-	void update(float x,float y,float q);
-	
+	//methods
+	action_t chooseAction(Robot target);
 	bool isMoving();
+	void update(point_t position,float q);
 };

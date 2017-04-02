@@ -1,33 +1,34 @@
 #include "World.h"
+#include "Robot.h"
 
 Robot::Robot(){
-	this.position = point_Zero;
-	this.old_Position = point_Zero;
-	this.orientation = 0;
-	this.time_After_Turn = fmod(world.getCurrentTime(), 20); // Seconds after beginning of turn. When 20 it will start to turn again
-	this.speed = 0.33;
-	this.current_Plank = new Plank();
+	this->position = point_Zero;
+	this->old_Position = point_Zero;
+	this->orientation = 0;
+	this->time_After_Turn = fmod(world.getCurrentTime(), 20); // Seconds after beginning of turn. When 20 it will start to turn again
+	this->speed = 0.33;
+	this->current_Plank = new Plank();
 }
 
 point_t Robot::getPosition(){
-	return this.position;
+	return this->position;
 }
 float Robot::getOrientation(){
-	return this.orientation;
+	return this->orientation;
 }
 float Robot::getTimeAfterTurn(){
-	return this.rimer
+	return this->time_After_Turn;
 }
-float Robot::getRobotSpeed(){
-	return this.speed;
+float Robot::getSpeed(){
+	return this->speed;
 }
-Plank Robot::getCurrentPlank(){
-	return this.current_Plank;
+Plank* Robot::getCurrentPlank(){
+	return this->current_Plank;
 }
 
 bool Robot::isMoving(){
-	if (this.old_position.x == this.position.x && 
-	    this.old_position.y == this.position.y) {
+	if (this->old_Position.x == this->position.x && 
+	    this->old_Position.y == this->position.y) {
 	    return false;
 	} else {
 		return true;
@@ -35,18 +36,18 @@ bool Robot::isMoving(){
 }
 
 void Robot::update(point_t new_Position, float new_Orientation){
-	this.old_Position = this.position;
-	this.old_Orientation = this.orientation;
+	this->old_Position = this->position;
+	this->old_Orientation = this->orientation;
 
-	this.position.position = new_Position;
-	this.orientation = new_Orientation;
+	this->position = new_Position;
+	this->orientation = new_Orientation;
 }
 
 void Robot::setPositionOrientation(point_t position, float q){
-	this.position = position;
-	this.orientation = q;
+	this->position = position;
+	this->orientation = q;
 }
 
 void Robot::addToTimer(float time){
-	this.time_After_Turn += time;
+	this->time_After_Turn += time;
 }

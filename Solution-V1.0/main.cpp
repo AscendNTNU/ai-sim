@@ -1,15 +1,11 @@
 #include "World.h"
 
+World* world;
+
 int main(){
 	float compass_orientation = 0.0;
-	World* world = new World(compass_orientation);
+	world = new World(compass_orientation);
 }
-
-
-
-
-
-
 //From SolutionV0.2
 
 // void printActionIteration(int i, Target target, float x, float y, sim_Observed_State state, float time_until_intersection, float time_after_intersection) {

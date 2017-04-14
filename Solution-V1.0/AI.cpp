@@ -131,4 +131,5 @@ action_t AI::actionWithMaxReward(float reward_On_Top, float reward_In_Front, act
 
 bool AI::update(observation_t observation) {
     this->state->updateState(observation);
+    return true;
 }

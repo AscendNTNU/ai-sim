@@ -15,7 +15,7 @@ private:
 	point_t prev_Position;
 	float prev_Orientation;
 
-	drone_State_t drone_State;
+	drone_State_t state;
 
 public:
 	Drone();
@@ -30,7 +30,7 @@ public:
 	//actions
 	void wait(float time);
 	int doAction(action_t action);
-	// float getDistanceToPoint(point_t point);
+	float getDistanceToPoint(point_t point);
 	// float getTravelTimeToPoint(point_t point);
 	point_t getInterceptPoint(Robot* robot);
 };

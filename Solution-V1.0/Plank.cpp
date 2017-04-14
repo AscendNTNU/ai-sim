@@ -10,38 +10,40 @@ Plank::Plank(){
 
 Plank::Plank(point_t position, float angle, float time_After_Turn, int num_Iterations){
 	Plank();
-	this.updatePlank(position, angle, time_After_Turn, num_Iterations)
+	this->updatePlank(position, angle, time_After_Turn, num_Iterations);
 }
 
 float Plank::getReward(){
-	return this.reward;
+	return this->reward;
 }
 float Plank::getAngle(){
-	return this.angle;
+	return this->angle;
 }
 float Plank::getLength(){
-	return this.length;
+	return this->length;
 }
-bool Plank::will_Exit_Green(){
+bool Plank::willExitGreen(){
+    std::cout << "Plank will exit green not implemented" << std::endl;
 	return false; //Fix this
 }
-bool Plank::will_Exit_Red(){
+bool Plank::willExitRed(){
+    std::cout << "Plank will exit red not implemented" << std::endl;
 	return false; //Fix this
 }
 
 float Plank::calculateReward(int n){
-    float step_tot = this.length/n;
-    float step_x = step_tot*cos(this.angle);
-    float step_y = step_tot*sin(this.angle);
+    float step_tot = this->length/n;
+    float step_x = step_tot*cos(this->angle);
+    float step_y = step_tot*sin(this->angle);
 
     float area = 0.0;  // signed area
     float x = 0.0;
     float y = 0.0;
 
     for (int i = 0; i < n; i++) {
-        x = plank.x_1 + (i + 0.5) * step_x;
-        y = plank.y_1 + (i + 0.5) * step_y;
-        area += world.getGridValue(x, y) * step_tot; // sum up each small rectangle
+        x = this->endpoint_1.x + (i + 0.5) * step_x;
+        y = this->endpoint_1.y + (i + 0.5) * step_y;
+        area += world->getGridValue(x, y) * step_tot; // sum up each small rectangle
     }
     // area = area/plank.length;
     return area;
@@ -51,10 +53,10 @@ void Plank::updatePlank(point_t position, float angle, float time_After_Turn, in
 	this->endpoint_2 = point_Zero;
 	
     this->angle = angle;
-	this->endpoint_1.position.x = (20-time_After_Turn)*SPEED*cos(angle) + position.x;
-    this->endpoint_1.position.y = (20-time_After_Turn)*SPEED*sin(angle) + position.y;
-    this->endpoint_2.position.x = (time_After_Turn)*SPEED*cos(angle) + position.x; // Adding 2.5 because of turn time
-    this->endpoint_2.position.y = (time_After_Turn)*SPEED*sin(angle) + position.y;
+	this->endpoint_1.x = (20-time_After_Turn)*ROBOT_SPEED*cos(angle) + position.x;
+    this->endpoint_1.y = (20-time_After_Turn)*ROBOT_SPEED*sin(angle) + position.y;
+    this->endpoint_2.x = (time_After_Turn)*ROBOT_SPEED*cos(angle) + position.x; // Adding 2.5 because of turn time
+    this->endpoint_2.y = (time_After_Turn)*ROBOT_SPEED*sin(angle) + position.y;
     
     float dx = this->endpoint_2.x - this->endpoint_1.x;
     float dy = this->endpoint_2.y - this->endpoint_1.y;

@@ -1,6 +1,4 @@
-#pragma once
 #include "State.h"
-
 
 State::State(){
 	this->drone = new Drone();
@@ -12,7 +10,7 @@ State::State(){
 	for(int i = 0; i<4; i++){
 		this->obstacles[i] = new Robot();
 	}
-	this->time_Stamp = world.getCurrentTime();
+	this->time_Stamp = world->getCurrentTime();
 }
 
 Drone* State::getDrone(){
@@ -41,4 +39,5 @@ bool State::updateState(observation_t observation){
 		position = {.x = observation.robot_x[i], .y = observation.robot_y[i]};
 		this->obstacles[i]->update(position, observation.obstacle_q[i]);
 	}
+	return true;
 }

@@ -1,9 +1,11 @@
 #pragma once
 
+#include <iostream>
+
 #include "structs.h"
 #include "World.h"
 
-extern World world;
+extern World* world;
 
 class Plank{
 private:
@@ -21,7 +23,7 @@ public:
 	
 	bool willExitGreen();
 	bool willExitRed();
-	float calculateReward();
+	float calculateReward(int n);
 	void updatePlank(point_t position, float angle, float time_After_Turn, int num_Iterations);
 	bool pointIsOutsideOfPlank(point_t point);
 };

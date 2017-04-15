@@ -1,6 +1,4 @@
 #include "AI.h"
-#include "Plank.h"
-
 
 AI::AI(){
     this->state = new State();

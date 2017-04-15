@@ -1,11 +1,12 @@
 #pragma once
+
 #include "structs.h"
 #define SIM_IMPLEMENTATION
 #define SIM_CLIENT_CODE
 #include "../sim.h"
 #include "../gui.h"
 
-class SimIn{
+class SimSim{
 private:
 	sim_State state;
 	sim_Command cmd;
@@ -13,8 +14,8 @@ private:
     sim_Observed_State previous_state;
 
 public:
-	bool initializeSim();
+	SimSim();
 	bool getNewObservation();
 	bool sendCommand(action_t action);
-	observation_t update_world();
+	observation_t updateObservation();
 };

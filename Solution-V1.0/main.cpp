@@ -1,10 +1,49 @@
 #include "World.h"
+#include "AI.h"
+
+#include "SimSim.h"
+
+enum world_Type_t {simSim, rosSim, realWorld};
 
 World* world;
 
+world_Type_t world_Type = simSim;
+
+bool simSimLoop(AI* ai){
+	SimSim* simSim = new SimSim();
+	observation_t observation;
+	while(1){
+		//get observations
+		observation = simSim->updateObservation();
+		//Send to AI
+		ai->update(observation);
+		//Return AI command
+		Robot* target = ai->chooseTarget(10);
+		action_t action = ai->chooseAction(target);
+
+		//Send AI command to simulator
+		simSim->sendCommand(action); //TODO
+	}
+}
+
 int main(){
 	float compass_orientation = 0.0;
+	
 	world = new World(compass_orientation);
+	AI* ai = new AI();
+
+	switch(world_Type){
+		case simSim:
+			simSimLoop(ai);
+		break;
+		case rosSim:
+			//todo
+		break;
+		case realWorld:
+			//todo
+		break;
+	}
+
 }
 //From SolutionV0.2
 

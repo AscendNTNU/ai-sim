@@ -2,6 +2,7 @@
 
 #include "Robot.h"
 #include "State.h"
+#include "Plank.h"
 
 class AI{
 public:

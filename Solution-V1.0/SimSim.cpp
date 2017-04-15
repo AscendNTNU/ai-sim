@@ -1,17 +1,16 @@
-#include "SimIn.h"
+#include "SimSim.h"
 
-bool SimIn::initializeSim(){
+SimSim::SimSim(){
 	sim_init_msgs(true);
-	return true;
 }
-bool SimIn::getNewObservation(){
+bool SimSim::getNewObservation(){
 	 sim_recv_state(&this->state);
      this->previous_state = this->observed_state;
      this->observed_state = sim_observe_state(state);
      return true;
 }
 
-bool SimIn::sendCommand(action_t action){
+bool SimSim::sendCommand(action_t action){
 	//Todo : action stuct to sim action
 	// cmd.type = sim_CommandType_LandInFrontOf;
 	// cmd.x = action.where_To_Act.x;
@@ -27,7 +26,7 @@ bool SimIn::sendCommand(action_t action){
 }
 
 //Update world
-observation_t SimIn::update_world(){
+observation_t SimSim::updateObservation(){
 	
 	observation_t observation;
 
@@ -42,8 +41,8 @@ observation_t SimIn::update_world(){
 	observation.drone_cmd_done = this->observed_state.drone_cmd_done;
 
 	for(int i = 0; i < 10; i++){
-		observation.target_x[i] = this->observed_state.target_x[i];
-		observation.target_y[i] = this->observed_state.target_y[i];
+		observation.robot_x[i] = this->observed_state.target_x[i];
+		observation.robot_y[i] = this->observed_state.target_y[i];
 	}
 	for(int i = 0; i < 4; i++){
 		observation.obstacle_x[i] = this->observed_state.obstacle_x[i];

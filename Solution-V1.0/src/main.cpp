@@ -14,14 +14,20 @@ bool simSimLoop(AI* ai){
 	observation_t observation;
 	while(1){
 		//get observations
+		std::cout << "Observing" << std::endl;
 		observation = simSim->updateObservation();
 		//Send to AI
+		std::cout <<"AI updating"<< std::endl;
 		ai->update(observation);
 		//Return AI command
+		std::cout <<"AI choose target: Not implemented"<< std::endl;
 		Robot* target = ai->chooseTarget(10);
+		target = new Robot();
+		std::cout <<"AI choose action"<< std::endl;
 		action_t action = ai->chooseAction(target);
 
 		//Send AI command to simulator
+		std::cout <<"Send action"<< std::endl;
 		simSim->sendCommand(action); //TODO
 	}
 }

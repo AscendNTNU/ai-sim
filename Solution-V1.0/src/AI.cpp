@@ -59,6 +59,7 @@ action_t AI::chooseAction(Robot* target){
     bool backwards = false;
     int i = 1;
     while (i > 0) {
+        std::cout << "chooseAction loop: " << i << std::endl;
         if (target->current_Plank->pointIsOutsideOfPlank(step_Point)) {
             // End of plank was reached
             if (backwards) {

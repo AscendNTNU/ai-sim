@@ -6,6 +6,7 @@
 
 class Robot{
 private:
+	int index;
 	point_t position;
 	float orientation;
 	point_t old_Position;
@@ -18,6 +19,7 @@ public:
 	Plank* current_Plank;
 
 	//get
+	int getIndex();
 	point_t getPosition();
 	float getOrientation();
 	float getTimeAfterTurn();
@@ -25,11 +27,11 @@ public:
 	Plank* getCurrentPlank();
 
 	//set
-	void setPositionOrientation(point_t positionw, float q);
+	void setPositionOrientation(point_t position, float q);
 	void addToTimer(float time);
 	
 	//methods
 	action_t chooseAction(Robot target);
 	bool isMoving();
-	void update(point_t position,float q);
+	void update(int index, point_t position,float q);
 };

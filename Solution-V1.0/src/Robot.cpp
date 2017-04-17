@@ -2,12 +2,17 @@
 #include "Robot.h"
 
 Robot::Robot(){
+	this->index = 1337;
 	this->position = point_Zero;
 	this->old_Position = point_Zero;
 	this->orientation = 0;
 	this->time_After_Turn = fmod(world->getCurrentTime(), 20); // Seconds after beginning of turn. When 20 it will start to turn again
 	this->speed = 0.33;
 	this->current_Plank = new Plank();
+}
+
+int Robot::getIndex(){
+	return this->index;
 }
 
 point_t Robot::getPosition(){
@@ -35,10 +40,11 @@ bool Robot::isMoving(){
 	}
 }
 
-void Robot::update(point_t new_Position, float new_Orientation){
+void Robot::update(int index, point_t new_Position, float new_Orientation){
 	this->old_Position = this->position;
 	this->old_Orientation = this->orientation;
 
+	this->index = index;
 	this->position = new_Position;
 	this->orientation = new_Orientation;
 }

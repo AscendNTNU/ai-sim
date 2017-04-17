@@ -33,11 +33,11 @@ bool State::updateState(observation_t observation){
 	this->drone->update(observation);
 	for(int i = 0; i < 10; i++){
 		position = {.x = observation.robot_x[i], .y = observation.robot_y[i]};
-		this->robots[i]->update(position, observation.robot_q[i]);
+		this->robots[i]->update(i, position, observation.robot_q[i]);
 	}
 	for(int i = 0; i < 4; i++){
 		position = {.x = observation.robot_x[i], .y = observation.robot_y[i]};
-		this->obstacles[i]->update(position, observation.obstacle_q[i]);
+		this->obstacles[i]->update(i, position, observation.obstacle_q[i]);
 	}
 	return true;
 }

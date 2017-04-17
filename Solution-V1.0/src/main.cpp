@@ -22,13 +22,13 @@ bool simSimLoop(AI* ai){
 		//Return AI command
 		std::cout <<"AI choose target: Not implemented"<< std::endl;
 		Robot* target = ai->chooseTarget(10);
-		target = new Robot();
 		std::cout <<"AI choose action"<< std::endl;
 		action_t action = ai->chooseAction(target);
 
 		//Send AI command to simulator
 		std::cout <<"Send action"<< std::endl;
-		simSim->sendCommand(action); //TODO
+		bool verify = simSim->sendCommand(action); //TODO
+		std::cout << "Action send worked? " << verify << std::endl;
 	}
 }
 

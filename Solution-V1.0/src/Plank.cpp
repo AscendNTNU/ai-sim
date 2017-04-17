@@ -23,12 +23,21 @@ float Plank::getLength(){
 	return this->length;
 }
 bool Plank::willExitGreen(){
-    std::cout << "Plank will exit green not implemented" << std::endl;
+    std::cout << "Plank will exit green using temporary solution" << std::endl;
+    if(this->endpoint_1.y > 20 || this->endpoint_2.y > 20){
+        return true;
+    }
 	return false; //Fix this
 }
 bool Plank::willExitRed(){
-    std::cout << "Plank will exit red not implemented" << std::endl;
-	return false; //Fix this
+    std::cout << "Plank will exit red using temporary solution" << std::endl;
+	if(this->endpoint_1.y < 0 || this->endpoint_1.x > 20 || this->endpoint_1.x  < 0){
+        return true;
+    }
+    if(this->endpoint_2.y < 0 || this->endpoint_2.x > 20 || this->endpoint_2.x  < 0){
+        return true;
+    }
+    return false; //Fix this
 }
 
 float Plank::calculateReward(int n){

@@ -5,6 +5,7 @@
 #include <vector>
 #include "lib/jo_gif.cpp"
 
+#include <iostream>
 #include <stdint.h>
 typedef float       r32;
 typedef uint64_t    u64;
@@ -391,6 +392,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt)
             {
               cmd.heatmap[bit] = 0.0;
             }
+            std::cout << cmd.i << std::endl;
             STATE = sim_tick(STATE, cmd);
             add_history(cmd, STATE);
             seek_cursor = HISTORY_LENGTH-1;

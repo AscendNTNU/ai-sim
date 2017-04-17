@@ -21,18 +21,22 @@ Robot* AI::chooseTarget(int num_Robots){
 
 		if(robot->current_Plank->willExitGreen()) {
             // Ignore it
+
 			continue;
 		}
 
         reward = robot->current_Plank->getReward();
-
+        std::cout << reward << std::endl;
         if(reward > max_reward){
             max_reward = reward;
             target = robot;
+            std::cout << "here" << std::endl;
 			robotChosen = true;
         }
     }
 	if(!robotChosen) {
+        std::cout << "No target chosen! Error" << std::endl;
+        target = this->state->robots[0];
 		// Found no target! What to do?
 	}
     return target;
@@ -53,6 +57,7 @@ action_t AI::chooseAction(Robot* target){
 
     // Temporary max rewarded action
     action_t best_Action = action_Empty;
+    
     best_Action.where_To_Act.travel_Time = interception.travel_Time;
     
     action_t step_Action;
@@ -60,9 +65,11 @@ action_t AI::chooseAction(Robot* target){
     int i = 1;
     while (i > 0) {
         std::cout << "chooseAction loop: " << i << std::endl;
+        std::cout << "Step point x " << step_Point.x << std::endl;
         if (target->current_Plank->pointIsOutsideOfPlank(step_Point)) {
             // End of plank was reached
             if (backwards) {
+                best_Action.target = target->getIndex();
                 return best_Action;
             } else {
                 i = n+1;
@@ -83,15 +90,15 @@ action_t AI::chooseAction(Robot* target){
             };
             i -= 1;
         } else {
-            step_Point = {
-                .x = step_Point.x+step_x, 
-                .y = step_Point.y+step_y
-            };
+            step_Point.x = step_Point.x+step_x; 
+            step_Point.y = step_Point.y+step_y;
             i += 1;
         }
         time_after_interception = time_after_interception + (step_size)/target->getSpeed();
 
     }
+    
+    best_Action.target = target->getIndex();
     return best_Action;
 }
 

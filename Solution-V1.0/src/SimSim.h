@@ -30,18 +30,60 @@ bool SimSim::getNewObservation(){
      return true;
 }
 
-bool SimSim::sendCommand(action_t action){
-	//Todo : action stuct to sim action
-	// cmd.type = sim_CommandType_LandInFrontOf;
-	// cmd.x = action.where_To_Act.x;
-	// cmd.y = action.where_To_Act.y;
+sim_CommandType aiActionConverter(action_Type_t action){
+	switch(action){
 
+		case landing_On_Top:
+			return sim_CommandType_LandOnTopOf;
+		break;
+		case land_In_Front_Of:
+			return sim_CommandType_LandInFrontOf;
+		break;
+		case land_At_Point:
+			std::cout << "Land at point not implemented yet" << std::endl;
+			return sim_CommandType_NoCommand;
+		break;
+		case search:
+			return sim_CommandType_Search;
+		break;
+		default:
+			return sim_CommandType_NoCommand;
+		break;
+
+	}
+}
+
+	// {
+	//     no_Command = 0,   // continue doing whatever you are doing
+	//     land_On_Top_Of,     // trigger one 45 deg turn of robot (i)
+//     land_In_Front_Of,   // trigger one 180 deg turn of robot (i),
+//     land_At_Point,	 // land at a given point
+//     track,           // follow robot (i) at a constant height
+//     search           // ascend to 3 meters and go to (x, y)
+// };
+
+
+    // sim_CommandType_NoCommand = 0,   // continue doing whatever you are doing
+    // sim_CommandType_LandOnTopOf,     // trigger one 45 deg turn of robot (i)
+    // sim_CommandType_LandInFrontOf,   // trigger one 180 deg turn of robot (i)
+    // sim_CommandType_Track,           // follow robot (i) at a constant height
+    // sim_CommandType_Search,          // ascend to 3 meters and go to (x, y)
+
+bool SimSim::sendCommand(action_t action){
+	std::cout << "there" << std::endl;
+	this->cmd.type = aiActionConverter(action.type);
+	this->cmd.x = action.where_To_Act.x;
+	this->cmd.y = action.where_To_Act.y;
+
+	std::cout << "target :" << action.target << std::endl;	
+	this->cmd.i = action.target;
+	std::cout << "target :" << cmd.i << std::endl;
 	// for(int i = 0; i < 10; i++){
 	// 	if(action.target.x == this->observed_state.target[i] && action.target.y == this->observed_state.target[i]){
 	// 		cmd.i = i;
 	// 	}
 	// }
-	// sim_send_cmd(&cmd);
+	sim_send_cmd(&this->cmd);
 	return true;
 }
 

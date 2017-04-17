@@ -67,6 +67,7 @@ enum action_Type_t
 };
 
 struct action_t{
+    int target;
     action_Type_t type;
     float reward;
     float when_To_Act;
@@ -74,6 +75,7 @@ struct action_t{
 };
 
 static action_t action_Empty = {
+    .target = -1,
 	.type = no_Command,
 	.reward = -200000,
 	.when_To_Act = 0,

@@ -16,13 +16,11 @@ Robot* AI::chooseTarget(int num_Robots){
     for(int i = 0; i < num_Robots; i++){
         Robot* robot = this->state->robots[i];
         if (!robot->isMoving()) {
-            // Robot is turning. Do we have correct angle?
-            std::cout << "Not moving " << i << std::endl;
+            std::cout << "Robot is turning. Do we have correct angle?" << std::endl;
         }
 
 		if(robot->current_Plank->willExitGreen()) {
-            // Ignore it
-            std::cout << "Exiting " << i << std::endl;
+            std::cout <<  "Robot will exit green line. Ignoring it" << std::endl;
 			continue;
 		}
 
@@ -38,7 +36,7 @@ Robot* AI::chooseTarget(int num_Robots){
 	if(!robotChosen) {
         std::cout << "No target chosen! Error" << std::endl;
         target = this->state->robots[0];
-		// Found no target! What to do?
+		std::cout << "Found no target! What to do?" << std::endl;
 	}
     return target;
 }
@@ -85,7 +83,7 @@ action_t AI::chooseAction(Robot* target){
         }
 
         if (backwards) {
-            step_Point.x = step_Point.x-step_x; 
+            step_Point.x = step_Point.x-step_x;
             step_Point.y = step_Point.y-step_y;
             i -= 1;
         } else {

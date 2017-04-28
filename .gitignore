@@ -1,4 +1,5 @@
 a.out
+run
 Solution-V1.0/*.o
 build/*
 build/*.lib

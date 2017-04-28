@@ -23,8 +23,9 @@ float Plank::getLength(){
 	return this->length;
 }
 bool Plank::willExitGreen(){
-    std::cout << "Plank will exit green using temporary solution" << std::endl;
-    if(this->endpoint_1.y > 20 || this->endpoint_2.y > 20){
+
+    if(this->endpoint_1.y > 20){
+        std::cout << "Plank will exit green using temporary solution" << std::endl;
         return true;
     }
 	return false; //Fix this

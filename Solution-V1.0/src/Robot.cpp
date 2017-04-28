@@ -2,7 +2,7 @@
 #include "Robot.h"
 
 Robot::Robot(){
-	this->index = 1337;
+	this->index = 0;
 	this->position = point_Zero;
 	this->old_Position = point_Zero;
 	this->orientation = 0;
@@ -43,10 +43,11 @@ bool Robot::isMoving(){
 void Robot::update(int index, point_t new_Position, float new_Orientation){
 	this->old_Position = this->position;
 	this->old_Orientation = this->orientation;
-
+	this->time_After_Turn = fmod(world->getCurrentTime(), 20);
 	this->index = index;
 	this->position = new_Position;
 	this->orientation = new_Orientation;
+	this->current_Plank->updatePlank(this->position, this->orientation, this->time_After_Turn, 100);
 }
 
 void Robot::setPositionOrientation(point_t position, float q){

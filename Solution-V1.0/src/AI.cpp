@@ -5,7 +5,7 @@ AI::AI(){
 }
 
 Robot* AI::chooseTarget(int num_Robots){
-    float max_reward = -200000;
+    float max_reward = -300000;
     float reward = 0;
 	bool robotChosen = false;
     Robot* target = NULL;
@@ -17,11 +17,12 @@ Robot* AI::chooseTarget(int num_Robots){
         Robot* robot = this->state->robots[i];
         if (!robot->isMoving()) {
             // Robot is turning. Do we have correct angle?
+            std::cout << "Not moving " << i << std::endl;
         }
 
 		if(robot->current_Plank->willExitGreen()) {
             // Ignore it
-
+            std::cout << "Exiting " << i << std::endl;
 			continue;
 		}
 
@@ -84,10 +85,8 @@ action_t AI::chooseAction(Robot* target){
         }
 
         if (backwards) {
-            step_Point = {
-                .x = step_Point.x-step_x, 
-                .y = step_Point.y-step_y
-            };
+            step_Point.x = step_Point.x-step_x; 
+            step_Point.y = step_Point.y-step_y;
             i -= 1;
         } else {
             step_Point.x = step_Point.x+step_x; 

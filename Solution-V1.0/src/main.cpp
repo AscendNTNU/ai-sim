@@ -20,7 +20,7 @@ bool simSimLoop(AI* ai){
 		std::cout <<"AI updating"<< std::endl;
 		ai->update(observation);
 		//Return AI command
-		std::cout <<"AI choose target: Not implemented"<< std::endl;
+		std::cout <<"AI choose target"<< std::endl;
 		Robot* target = ai->chooseTarget(10);
 		std::cout <<"AI choose action"<< std::endl;
 		action_t action = ai->chooseAction(target);

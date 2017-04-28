@@ -6,7 +6,7 @@ World::World(float orientation){
 	this->origin = point_Zero;
 	this->start_Time = 0;
 	this->orientation = orientation;
-	this->bounds = {.x_Max = 20, .y_Max = 20}; 
+	this->bounds = (bounds_t){.x_Max = 20, .y_Max = 20}; 
 }
 
 //Get

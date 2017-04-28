@@ -33,14 +33,13 @@ bool SimSim::getNewObservation(){
 sim_CommandType aiActionConverter(action_Type_t action){
 	switch(action){
 
-		case landing_On_Top:
+		case land_On_Top_Of:
 			return sim_CommandType_LandOnTopOf;
 		break;
 		case land_In_Front_Of:
 			return sim_CommandType_LandInFrontOf;
 		break;
 		case land_At_Point:
-			std::cout << "Land at point not implemented yet" << std::endl;
 			return sim_CommandType_NoCommand;
 		break;
 		case search:

@@ -29,7 +29,7 @@ Robot* AI::chooseTarget(int num_Robots){
         if(reward > max_reward){
             max_reward = reward;
             target = robot;
-            std::cout << "here" << std::endl;
+            std::cout << "This reward chosen" << std::endl;
 			robotChosen = true;
         }
     }
@@ -67,14 +67,18 @@ action_t AI::chooseAction(Robot* target){
             // End of plank was reached
             if (backwards) {
                 best_Action.target = target->getIndex();
+                std::cout << "Done" << std::endl;
                 return best_Action;
             } else {
+                std::cout << "Here" << std::endl;
                 i = n+1;
                 backwards = true;
                 angle += MATH_PI;
             }
         }
+        std::cout << "I is " << i << std::endl;
         step_Action = getBestActionAtPosition(target, step_Point, time_after_interception);
+        std::cout << "Reward is " << step_Action.reward << std::endl;
         if (step_Action.reward > best_Action.reward) {
             best_Action = step_Action;
             best_Action.when_To_Act = time_after_interception + interception.travel_Time;

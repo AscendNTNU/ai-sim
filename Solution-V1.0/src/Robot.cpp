@@ -47,7 +47,7 @@ void Robot::update(int index, point_t new_Position, float new_Orientation){
 	this->index = index;
 	this->position = new_Position;
 	this->orientation = new_Orientation;
-	this->current_Plank->updatePlank(this->position, this->orientation, this->time_After_Turn, 100);
+	this->current_Plank->updatePlank(this->position, this->orientation, this->time_After_Turn, 10);
 }
 
 void Robot::setPositionOrientation(point_t position, float q){

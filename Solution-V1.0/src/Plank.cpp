@@ -59,8 +59,6 @@ float Plank::calculateReward(int n){
     return area;
 }
 void Plank::updatePlank(point_t position, float angle, float time_After_Turn, int num_Iterations){
-	this->endpoint_1 = point_Zero;
-	this->endpoint_2 = point_Zero;
 	
     this->angle = angle;
 	this->endpoint_1.x = (20-time_After_Turn)*ROBOT_SPEED*cos(angle) + position.x;

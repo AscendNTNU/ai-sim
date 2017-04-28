@@ -16,6 +16,7 @@ public:
 	SimSim();
 	bool getNewObservation();
 	bool sendCommand(action_t action);
+	bool isActionDone();
 	observation_t updateObservation();
 };
 
@@ -28,6 +29,11 @@ bool SimSim::getNewObservation(){
      this->previous_state = this->observed_state;
      this->observed_state = sim_observe_state(state);
      return true;
+}
+
+bool SimSim::isActionDone(){
+	observation_t observation = this->updateObservation();
+	return observation.drone_cmd_done;
 }
 
 sim_CommandType aiActionConverter(action_Type_t action){
@@ -83,6 +89,9 @@ bool SimSim::sendCommand(action_t action){
 	// 	}
 	// }
 	sim_send_cmd(&this->cmd);
+	while (!this->isActionDone()) {
+		std::cout << "Waiting for action to be done" << std::endl;
+	}
 	return true;
 }
 

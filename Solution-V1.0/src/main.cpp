@@ -28,7 +28,7 @@ bool simSimLoop(AI* ai){
 		//Send AI command to simulator
 		std::cout <<"Send action"<< std::endl;
 		bool verify = simSim->sendCommand(action); //TODO
-		std::cout << "Action send worked? " << verify << std::endl;
+		// std::cout << "Action send worked? " << verify << std::endl;
 	}
 }
 

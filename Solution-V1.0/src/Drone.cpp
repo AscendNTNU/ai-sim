@@ -20,7 +20,7 @@ drone_State_t Drone::getState(){
 bool Drone::update(observation_t observation){
 	
 	point_t new_Position = {observation.drone_x, observation.drone_y, 1};
-	this->prev_Position =  this->position;
+	this->prev_Position = this->position;
 
 	this->position = new_Position;
 	this->command_Done = observation.drone_cmd_done;
@@ -30,17 +30,6 @@ bool Drone::update(observation_t observation){
 
 void Drone::wait(float time){
 	//NOT IMPLEMENTED YET
-}
-
-int Drone::doAction(action_t action){
-
-	//Simulaiton implementation
-	// sim_Command cmd;
- //    cmd.type = action.type;
- //    cmd.i = action.target.index;
- //    cmd.reward = action.reward;
- //    sim_send_cmd(&action.cmd);
-	return -1;
 }
 
 float Drone::getDistanceToPoint(point_t point){

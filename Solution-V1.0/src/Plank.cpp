@@ -22,6 +22,14 @@ float Plank::getAngle(){
 float Plank::getLength(){
 	return this->length;
 }
+
+point_t Plank::getPoint(int i){
+
+    if(i==2){
+        return this->endpoint_2;
+    }
+    return this->endpoint_1;
+}
 bool Plank::willExitGreen(){
 
     if(this->endpoint_1.y > 20){
@@ -49,7 +57,7 @@ float Plank::calculateReward(int n){
     float area = 0.0;  // signed area
     float x = 0.0;
     float y = 0.0;
-
+ 
     for (int i = 0; i < n; i++) {
         x = this->endpoint_1.x + (i + 0.5) * step_x;
         y = this->endpoint_1.y + (i + 0.5) * step_y;
@@ -60,11 +68,12 @@ float Plank::calculateReward(int n){
 }
 void Plank::updatePlank(point_t position, float angle, float time_After_Turn, int num_Iterations){
 	
+
     this->angle = angle;
 	this->endpoint_1.x = (20-time_After_Turn)*ROBOT_SPEED*cos(angle) + position.x;
     this->endpoint_1.y = (20-time_After_Turn)*ROBOT_SPEED*sin(angle) + position.y;
-    this->endpoint_2.x = (time_After_Turn)*ROBOT_SPEED*cos(angle) + position.x; // Adding 2.5 because of turn time
-    this->endpoint_2.y = (time_After_Turn)*ROBOT_SPEED*sin(angle) + position.y;
+    this->endpoint_2.x = (time_After_Turn+2.5)*ROBOT_SPEED*cos(angle) + position.x; // Adding 2.5 because of turn time
+    this->endpoint_2.y = (time_After_Turn+2.5)*ROBOT_SPEED*sin(angle) + position.y;
     
     float dx = this->endpoint_2.x - this->endpoint_1.x;
     float dy = this->endpoint_2.y - this->endpoint_1.y;

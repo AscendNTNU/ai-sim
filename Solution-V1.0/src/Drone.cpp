@@ -50,7 +50,7 @@ point_t Drone::getInterceptPoint(Robot* robot) {
 	float x_d = this->position.x;
 	float y_d = this->position.y;
 
-	if(time_Until_Turn > 20) {
+	if(time_Until_Turn > 18) {
 		float time_Since_Turn = robot->getTimeAfterTurn();
 		robot_Ori = robot_Ori - (MATH_PI/2)*(time_Since_Turn) + MATH_PI;
 
@@ -70,7 +70,7 @@ point_t Drone::getInterceptPoint(Robot* robot) {
 	float x_bf = 0;
 	float y_bf = 0;
 
-	if(t1 > (time_Until_Turn+2))
+	if(t1 > (time_Until_Turn))
 	{
 		t1 = time_Until_Turn;
 		float x_b1 = robot_Pos.x +time_Until_Turn*robot->getSpeed()*cos(robot_Ori);

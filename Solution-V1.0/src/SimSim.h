@@ -75,24 +75,44 @@ sim_CommandType aiActionConverter(action_Type_t action){
     // sim_CommandType_Search,          // ascend to 3 meters and go to (x, y)
 
 bool SimSim::sendCommand(action_t action){
-	std::cout << "there" << std::endl;
-	this->cmd.type = aiActionConverter(action.type);
+
+	//Fly to interception point
+	observation_t observation = this->updateObservation();
+
+
+	this->cmd.type = sim_CommandType_Search;
 	this->cmd.x = action.where_To_Act.x;
 	this->cmd.y = action.where_To_Act.y;
-
-	std::cout << "target :" << action.target << std::endl;	
-	this->cmd.i = action.target;
-	std::cout << "target :" << cmd.i << std::endl;
-	// for(int i = 0; i < 10; i++){
-	// 	if(action.target.x == this->observed_state.target[i] && action.target.y == this->observed_state.target[i]){
-	// 		cmd.i = i;
-	// 	}
-	// }
 	sim_send_cmd(&this->cmd);
+
 	while (!this->isActionDone()) {
-		std::cout << "Waiting for action to be done" << std::endl;
+		std::cout << "travel not done yet" << std::endl;
+	}
+
+	//Wait for correct time to act
+	observation = this->updateObservation();
+	float action_Start = observation.elapsed_time;
+	while(observation.elapsed_time-action_Start <= action.when_To_Act){
+		if(observed_state.target_x[action.target] > 20 || observed_state.target_x[action.target] < 0 ||
+			observed_state.target_y[action.target] > 20 || observed_state.target_y[action.target] < 0) {
+			std::cout << "Target removed before we could do action. Choose target again." << std::endl;
+			return false;
+		}
+		observation = this->updateObservation();
+		std::cout << "waiting for action timing" << std::endl;
+	}
+
+	//If target is not turning act, if not dont do anything(most likely a stupid action if timer is wrong)
+	// if(action.target.isMoving()){
+	this->cmd.type = aiActionConverter(action.type);
+	this->cmd.i = action.target;
+	sim_send_cmd(&this->cmd);
+
+	while (!this->isActionDone()) {
+		std::cout << "action not done yet" << std::endl;
 	}
 	return true;
+	// }
 }
 
 //Update world

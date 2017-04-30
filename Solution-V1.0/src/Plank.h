@@ -20,6 +20,7 @@ public:
 	float getReward();
 	float getAngle();
 	float getLength();
+	point_t getPoint(int i);
 	
 	bool willExitGreen();
 	bool willExitRed();

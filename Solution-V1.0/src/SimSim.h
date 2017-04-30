@@ -86,7 +86,7 @@ bool SimSim::sendCommand(action_t action){
 	sim_send_cmd(&this->cmd);
 
 	while (!this->isActionDone()) {
-		std::cout << "travel not done yet" << std::endl;
+		// std::cout << "Travel not done yet" << std::endl;
 	}
 
 	//Wait for correct time to act
@@ -99,7 +99,7 @@ bool SimSim::sendCommand(action_t action){
 			return false;
 		}
 		observation = this->updateObservation();
-		std::cout << "waiting for action timing" << std::endl;
+		// std::cout << "Waiting for action timing" << std::endl;
 	}
 
 	//If target is not turning act, if not dont do anything(most likely a stupid action if timer is wrong)
@@ -109,7 +109,7 @@ bool SimSim::sendCommand(action_t action){
 	sim_send_cmd(&this->cmd);
 
 	while (!this->isActionDone()) {
-		std::cout << "action not done yet" << std::endl;
+		// std::cout << "Action not done yet" << std::endl;
 	}
 	return true;
 	// }
@@ -133,10 +133,12 @@ observation_t SimSim::updateObservation(){
 	for(int i = 0; i < 10; i++){
 		observation.robot_x[i] = this->observed_state.target_x[i];
 		observation.robot_y[i] = this->observed_state.target_y[i];
+		observation.robot_q[i] = this->observed_state.target_q[i];
 	}
 	for(int i = 0; i < 4; i++){
 		observation.obstacle_x[i] = this->observed_state.obstacle_x[i];
 		observation.obstacle_y[i] = this->observed_state.obstacle_y[i];
+		observation.obstacle_q[i] = this->observed_state.obstacle_q[i];
 	}
 
 	return observation;

@@ -99,8 +99,8 @@ point_t Drone::getInterceptPoint(Robot* robot) {
 	point_t intersection;
 	intersection.x = x_bf;
 	intersection.y = y_bf;
-	std::cout << "T1: " << t1 << std::endl;
-	std::cout << "T2: " << t2 << std::endl;
+	// std::cout << "T1: " << t1 << std::endl;
+	// std::cout << "T2: " << t2 << std::endl;
 	float t = t1+t2;
 	intersection.travel_Time = t;
 

@@ -71,7 +71,9 @@ std::ostream& operator<<(std::ostream &strm, const Robot &robot) {
     << "Orientation: "  << orientation 			<< std::endl
     << "Old orient.: "  << old_Orientation		<< std::endl
     << "Time after: "	<< robot.time_After_Turn<< std::endl
-    << "Speed: " 		<< robot.speed 			<< std::endl;
+    << "Speed: " 		<< robot.speed 			<< std::endl
+    << "Current plank: "<< *robot.current_Plank
+    << "-------------"	<< std::endl;
     return strm;
 };
 

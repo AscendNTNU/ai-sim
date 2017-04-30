@@ -25,11 +25,9 @@ Robot* AI::chooseTarget(int num_Robots){
 		}
 
         reward = robot->current_Plank->getReward();
-        std::cout << reward;
         if(reward > max_reward){
             max_reward = reward;
             target = robot;
-            std::cout << "This reward chosen" << std::endl;
 			robotChosen = true;
         }
     }
@@ -46,9 +44,9 @@ action_t AI::chooseAction(Robot* target){
         .x = interception.x, 
         .y = interception.y
     };
-    std::cout << "Target" << std::endl;
-    std::cout << *target << std::endl;
     std::cout << "Intercept: " << step_Point << std::endl;
+    std::cout << "Target: " << std::endl;
+    std::cout << *target << std::endl;
 
     float time_after_interception = 0;
 
@@ -67,14 +65,10 @@ action_t AI::chooseAction(Robot* target){
     bool backwards = false;
     int i = 1;
     while (i > 0) {
-        std::cout << "Iteration: " << i << std::endl;
-        std::cout << "Time: " << world->getCurrentTime() << std::endl;
-        std::cout << "Step point: " << step_Point << std::endl;
-        std::cout << *(target->current_Plank) << std::endl;
         if (target->current_Plank->pointIsOutsideOfPlank(step_Point)) {
             if (backwards) {
                 best_Action.target = target->getIndex();
-                std::cout << "Best action: "<< std::endl << best_Action << std::endl;
+                // std::cout << "Best action: "<< std::endl << best_Action << std::endl;
                 return best_Action;
             } else {
                 i = n+1;
@@ -83,10 +77,13 @@ action_t AI::chooseAction(Robot* target){
             }
         }
         step_Action = getBestActionAtPosition(target, step_Point, time_after_interception);
-        std::cout << "Step action: " << std::endl << step_Action << std::endl;
+        // std::cout << "Iteration: " << i << std::endl;
+        // std::cout << "Step point: " << step_Point << std::endl;
+        // std::cout << *(target->current_Plank) << std::endl;
+        // std::cout << "Step action: " << std::endl << step_Action << std::endl;
         if (step_Action.reward > best_Action.reward) {
             best_Action = step_Action;
-            best_Action.when_To_Act = time_after_interception;// + interception.travel_Time;
+            best_Action.when_To_Act = time_after_interception;// + interception.travel_Time; Denne skal kanskje være globalt tispunkt etter start?
         }
         if (backwards) {
             step_Point.x = step_Point.x-step_x;

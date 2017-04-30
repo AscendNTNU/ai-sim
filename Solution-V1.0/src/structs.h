@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+#include <iostream>
 static const int DRONE_SPEED = 1;
 static const float ROBOT_SPEED = 0.33;
 static const float MATH_PI = 3.141592653589793238;
@@ -17,6 +18,11 @@ static point_t point_Zero = {
 	.y = 0.0, 
 	.z = 0.0, 
 	.travel_Time = 0.0
+};
+
+inline std::ostream& operator<<(std::ostream &strm, const point_t &point) {
+    strm << "[" << point.x << ", " << point.y << "]";
+    return strm;
 };
 
 struct bounds_t{
@@ -80,6 +86,16 @@ static action_t action_Empty = {
 	.reward = -200000,
 	.when_To_Act = 0,
 	.where_To_Act = point_Zero
+};
+
+inline std::ostream& operator<<(std::ostream &strm, const action_t &action) {
+    strm << "--- Action ---" << std::endl
+    << "Target: " << action.target << std::endl
+    << "Type: " << action.type << std::endl
+    << "Reward: " << action.reward << std::endl
+    << "When to act: " << action.when_To_Act << std::endl
+    << "Where to act: " << action.where_To_Act << std::endl;
+    return strm;
 };
 
 struct tree_action_t{

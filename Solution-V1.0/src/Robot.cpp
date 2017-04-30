@@ -58,3 +58,37 @@ void Robot::setPositionOrientation(point_t position, float q){
 void Robot::addToTimer(float time){
 	this->time_After_Turn += time;
 }
+
+std::ostream& operator<<(std::ostream &strm, const Robot &robot) {
+
+    float orientation = fmod(robot.orientation,MATH_PI);
+    float old_Orientation = fmod(robot.old_Orientation,MATH_PI);
+
+    strm << "--- Robot ---" << std::endl
+    << "Index: "   		<< robot.index 			<< std::endl
+    << "position: "   	<< robot.position 		<< std::endl
+    << "Old pos.: "     << robot.old_Position 	<< std::endl
+    << "Orientation: "  << orientation 			<< std::endl
+    << "Old orient.: "  << old_Orientation		<< std::endl
+    << "Time after: "	<< robot.time_After_Turn<< std::endl
+    << "Speed: " 		<< robot.speed 			<< std::endl;
+    return strm;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

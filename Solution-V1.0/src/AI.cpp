@@ -25,7 +25,7 @@ Robot* AI::chooseTarget(int num_Robots){
 		}
 
         reward = robot->current_Plank->getReward();
-        std::cout << reward << std::endl;
+        std::cout << reward;
         if(reward > max_reward){
             max_reward = reward;
             target = robot;
@@ -46,8 +46,9 @@ action_t AI::chooseAction(Robot* target){
         .x = interception.x, 
         .y = interception.y
     };
-    std::cout << "Intercept x" << step_Point.x << " Intercept y " << step_Point.y << std::endl;
-    std::cout << "Robot x" << target->getPosition().x << " Robot y " << target->getPosition().y << std::endl;
+    std::cout << "Target" << std::endl;
+    std::cout << *target << std::endl;
+    std::cout << "Intercept: " << step_Point << std::endl;
 
     float time_after_interception = 0;
 
@@ -66,30 +67,27 @@ action_t AI::chooseAction(Robot* target){
     bool backwards = false;
     int i = 1;
     while (i > 0) {
+        std::cout << "Iteration: " << i << std::endl;
+        std::cout << "Time: " << world->getCurrentTime() << std::endl;
+        std::cout << "Step point: " << step_Point << std::endl;
+        std::cout << *(target->current_Plank) << std::endl;
         if (target->current_Plank->pointIsOutsideOfPlank(step_Point)) {
-            // End of plank was reached
             if (backwards) {
                 best_Action.target = target->getIndex();
-                std::cout << "Target is " << target->getIndex() << std::endl;
-                std::cout << best_Action.where_To_Act.x << "," <<  best_Action.where_To_Act.y << std::endl;
+                std::cout << "Best action: "<< std::endl << best_Action << std::endl;
                 return best_Action;
             } else {
-                std::cout << step_Point.x << "," << step_Point.y << std::endl;
-                std::cout << target->current_Plank->getPoint(1).x << "," << target->current_Plank->getPoint(1).y << std::endl;
-                std::cout << target->current_Plank->getPoint(2).x << "," << target->current_Plank->getPoint(2).y << std::endl;
                 i = n+1;
                 backwards = true;
                 angle += MATH_PI;
             }
         }
-        std::cout << "I is " << i << std::endl;
         step_Action = getBestActionAtPosition(target, step_Point, time_after_interception);
-        std::cout << "Reward is " << step_Action.reward << std::endl;
+        std::cout << "Step action: " << std::endl << step_Action << std::endl;
         if (step_Action.reward > best_Action.reward) {
             best_Action = step_Action;
             best_Action.when_To_Act = time_after_interception;// + interception.travel_Time;
         }
-
         if (backwards) {
             step_Point.x = step_Point.x-step_x;
             step_Point.y = step_Point.y-step_y;

@@ -14,7 +14,7 @@ point_t World::getOrigin(){
 	return this->origin;
 }
 float World::getCurrentTime(){
-	double seconds_since_start = difftime(time(0), this->start_Time);
+	float seconds_since_start = difftime(time(0), this->start_Time);
 	return seconds_since_start;
 }
 float World::getOrientation(){

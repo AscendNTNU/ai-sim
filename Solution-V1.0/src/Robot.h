@@ -34,4 +34,5 @@ public:
 	action_t chooseAction(Robot target);
 	bool isMoving();
 	void update(int index, point_t position,float q);
+	friend std::ostream& operator<<(std::ostream &strm, const Robot &robot);
 };

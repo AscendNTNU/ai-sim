@@ -9,6 +9,8 @@ World* world;
 
 world_Type_t world_Type = simSim;
 
+bool timer_Started = false;
+
 bool simSimLoop(AI* ai){
 	SimSim* simSim = new SimSim();
 	observation_t observation;
@@ -16,6 +18,9 @@ bool simSimLoop(AI* ai){
 		//get observations
 		std::cout << "Observing" << std::endl;
 		observation = simSim->updateObservation();
+		if (!timer_Started) {
+			timer_Started = world->startTimer();
+		}
 		//Send to AI
 		std::cout <<"AI updating"<< std::endl;
 		ai->update(observation);
@@ -24,7 +29,6 @@ bool simSimLoop(AI* ai){
 		Robot* target = ai->chooseTarget(10);
 		std::cout <<"AI choose action"<< std::endl;
 		action_t action = ai->chooseAction(target);
-
 		//Send AI command to simulator
 		std::cout <<"Send action"<< std::endl;
 		bool verify = simSim->sendCommand(action); //TODO

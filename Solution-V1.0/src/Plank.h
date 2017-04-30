@@ -27,4 +27,5 @@ public:
 	float calculateReward(int n);
 	void updatePlank(point_t position, float angle, float time_After_Turn, int num_Iterations);
 	bool pointIsOutsideOfPlank(point_t point);
+    friend std::ostream& operator<<(std::ostream &strm, const Plank &plank);
 };

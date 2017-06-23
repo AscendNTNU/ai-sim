@@ -11,7 +11,7 @@ private:
 	float orientation;
 	point_t old_Position;
 	float old_Orientation;
-	float time_After_Turn;
+	float time_After_Turn_Start;
 	float speed;	
 public:
 	//constructors

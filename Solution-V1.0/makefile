@@ -4,7 +4,7 @@ BUILDDIR = build/build
 $(BUILDDIR)/run : main.o AI.o World.o State.o Robot.o Drone.o Plank.o
 	g++ -Wall main.o World.o AI.o State.o Robot.o Drone.o Plank.o -o run
 
-$(BUILDDIR)/main.o : main.cpp AI.cpp State.cpp Robot.cpp Drone.cpp Plank.cpp SimSim.cpp
+$(BUILDDIR)/main.o : main.cpp AI.cpp State.cpp Robot.cpp Drone.cpp Plank.cpp
 	g++ -Wall -c -std=c++11 main.cpp
 
 $(BUILDDIR)/World.o :  World.cpp

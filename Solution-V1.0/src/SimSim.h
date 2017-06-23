@@ -134,6 +134,7 @@ observation_t SimSim::updateObservation(){
 		observation.robot_x[i] = this->observed_state.target_x[i];
 		observation.robot_y[i] = this->observed_state.target_y[i];
 		observation.robot_q[i] = this->observed_state.target_q[i];
+		// std::cout << "Angle: " << this->observed_state.target_q[i] << std::endl;
 	}
 	for(int i = 0; i < 4; i++){
 		observation.obstacle_x[i] = this->observed_state.obstacle_x[i];

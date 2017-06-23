@@ -1,6 +1,5 @@
 #include "World.h"
 #include "AI.h"
-
 #include "SimSim.h"
 
 enum world_Type_t {simSim, rosSim, realWorld};

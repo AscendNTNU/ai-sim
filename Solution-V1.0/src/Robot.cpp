@@ -6,7 +6,7 @@ Robot::Robot(){
 	this->position = point_Zero;
 	this->old_Position = point_Zero;
 	this->orientation = 0;
-	this->time_After_Turn = fmod(world->getCurrentTime(), 20); // Seconds after beginning of turn. When 20 it will start to turn again
+	this->time_After_Turn_Start = fmod(world->getCurrentTime(), 20); // Seconds after beginning of turn. When 20 it will start to turn again
 	this->speed = 0.33;
 	this->current_Plank = new Plank();
 }
@@ -22,7 +22,7 @@ float Robot::getOrientation(){
 	return this->orientation;
 }
 float Robot::getTimeAfterTurn(){
-	return this->time_After_Turn;
+	return this->time_After_Turn_Start;
 }
 float Robot::getSpeed(){
 	return this->speed;
@@ -43,11 +43,11 @@ bool Robot::isMoving(){
 void Robot::update(int index, point_t new_Position, float new_Orientation){
 	this->old_Position = this->position;
 	this->old_Orientation = this->orientation;
-	this->time_After_Turn = fmod(world->getCurrentTime(), 20);
+	this->time_After_Turn_Start = fmod(world->getCurrentTime(), 20);
 	this->index = index;
 	this->position = new_Position;
-	this->orientation = new_Orientation;
-	this->current_Plank->updatePlank(this->position, this->orientation, this->time_After_Turn, 10);
+	this->orientation = fmod(new_Orientation, 2*MATH_PI);
+	this->current_Plank->updatePlank(this->position, this->orientation, this->time_After_Turn_Start, 10);
 }
 
 void Robot::setPositionOrientation(point_t position, float q){
@@ -56,24 +56,24 @@ void Robot::setPositionOrientation(point_t position, float q){
 }
 
 void Robot::addToTimer(float time){
-	this->time_After_Turn += time;
+	this->time_After_Turn_Start += time;
 }
 
 std::ostream& operator<<(std::ostream &strm, const Robot &robot) {
 
-    float orientation = fmod(robot.orientation,MATH_PI);
-    float old_Orientation = fmod(robot.old_Orientation,MATH_PI);
+    float orientation = fmod(robot.orientation,2*MATH_PI);
+    float old_Orientation = fmod(robot.old_Orientation,2*MATH_PI);
 
     strm << "--- Robot ---" << std::endl
-    << "Index: "   		<< robot.index 			<< std::endl
-    << "position: "   	<< robot.position 		<< std::endl
-    << "Old pos.: "     << robot.old_Position 	<< std::endl
-    << "Orientation: "  << orientation 			<< std::endl
-    << "Old orient.: "  << old_Orientation		<< std::endl
-    << "Time after: "	<< robot.time_After_Turn<< std::endl
-    << "Speed: " 		<< robot.speed 			<< std::endl
+    << "Index: "   		<< robot.index 				<< std::endl
+    << "Position: "   	<< robot.position 			<< std::endl
+    << "Old pos.: "     << robot.old_Position 		<< std::endl
+    << "Orientation: "  << robot.orientation 		<< std::endl
+    << "Old orient.: "  << robot.old_Orientation	<< std::endl
+    << "Time after: "	<< robot.time_After_Turn_Start<< std::endl
+    << "Speed: " 		<< robot.speed 				<< std::endl
     << "Current plank: "<< *robot.current_Plank
-    << "-------------"	<< std::endl;
+    << "-------------"								<< std::endl;
     return strm;
 };
 

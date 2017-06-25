@@ -32,8 +32,8 @@
 
 #ifndef SIM_HEADER_INCLUDE
 #define SIM_HEADER_INCLUDE
-#define Num_Obstacles (4)  // Number of robots with pole
-#define Num_Targets   (10) // Number of robots without pole
+#define Num_Obstacles (0)  // Number of robots with pole
+#define Num_Targets   (2) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
 #define pixels_each_meter (1) //for heatmap
 
@@ -64,6 +64,7 @@ struct sim_Observed_State
     float drone_x;
     float drone_y;
     bool  drone_cmd_done;
+    int num_Targets;
 
     bool  target_in_view[Num_Targets];
     bool  target_reversing[Num_Targets];
@@ -1109,6 +1110,7 @@ sim_Observed_State sim_observe_state(sim_State state)
     result.drone_x = state.drone.x;
     result.drone_y = state.drone.y;
     result.drone_cmd_done = state.drone.cmd_done;
+    result.num_Targets = Num_Targets;
     sim_Robot *targets = state.robots;
     sim_Robot *obstacles = state.robots + Num_Targets;
     float visible_radius = compute_drone_view_radius(state.drone.z);

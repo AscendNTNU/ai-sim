@@ -130,6 +130,8 @@ observation_t SimSim::updateObservation(){
 
 	observation.drone_cmd_done = this->observed_state.drone_cmd_done;
 
+	observation.num_Targets = this->observed_state.num_Targets;
+
 	for(int i = 0; i < 10; i++){
 		observation.robot_x[i] = this->observed_state.target_x[i];
 		observation.robot_y[i] = this->observed_state.target_y[i];

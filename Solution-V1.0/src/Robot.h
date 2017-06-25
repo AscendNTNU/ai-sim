@@ -33,6 +33,6 @@ public:
 	//methods
 	action_t chooseAction(Robot target);
 	bool isMoving();
-	void update(int index, point_t position,float q);
+	void update(int index, point_t position,float q, float elapsed_time);
 	friend std::ostream& operator<<(std::ostream &strm, const Robot &robot);
 };

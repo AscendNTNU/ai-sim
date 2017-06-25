@@ -22,7 +22,7 @@ bool simSimLoop(AI* ai){
 		//Send to AI
 		ai->update(observation);
 		//Return AI command
-		Robot* target = ai->chooseTarget(10);
+		Robot* target = ai->chooseTarget(observation.num_Targets);
 		action_t action = ai->chooseAction(target);
 		//Send AI command to simulator
 		bool verify = simSim->sendCommand(action); //TODO
@@ -45,6 +45,7 @@ int main(){
 		break;
 		case realWorld:
 			//todo
+			//Can use observation.elapsed_time = world->getCurrentTime()?
 		break;
 	}
 

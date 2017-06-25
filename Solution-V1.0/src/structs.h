@@ -51,6 +51,7 @@ struct observation_t
     float drone_x;
     float drone_y;
     bool  drone_cmd_done;
+    int num_Targets;
 
     float robot_x[10];
     float robot_y[10];

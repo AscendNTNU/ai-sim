@@ -106,12 +106,12 @@ action_t AI::getBestActionAtPosition(Robot* target, point_t position, float time
     int num_Iterations = 5; // Number of iterations when summing along a plank
     action_t action;
     action.where_To_Act = position;
-    float time_After_Turn = fmod(this->state->getTimeStamp() + position.travel_Time + time_after_interception, 20);
+    float time_After_Turn_Start = fmod(this->state->getTimeStamp() + position.travel_Time + time_after_interception, 20);
 
     Plank* plank_On_Top = new Plank(position, fmod(target->getOrientation() + (MATH_PI/4), 2*MATH_PI), 
-                                    time_After_Turn, num_Iterations);
+                                    time_After_Turn_Start, num_Iterations);
     Plank* plank_In_Front = new Plank(position, fmod(target->getOrientation() + MATH_PI, 2*MATH_PI), 
-                                    time_After_Turn, num_Iterations);
+                                    time_After_Turn_Start, num_Iterations);
 
     return actionWithMaxReward(plank_On_Top->getReward(), plank_In_Front->getReward(), action);
 }

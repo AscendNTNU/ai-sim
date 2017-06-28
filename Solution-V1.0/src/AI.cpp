@@ -78,16 +78,20 @@ action_t AI::chooseAction(Robot* target){
                 angle += MATH_PI;
             }
         }
-        step_Action = getBestActionAtPosition(target, step_Point, time_after_interception);
-        // std::cout << "Iteration: " << i << std::endl;
-        // std::cout << "Step point: " << step_Point << std::endl;
-        // std::cout << *(target->current_Plank) << std::endl;
-        // std::cout << "Step action: " << std::endl << step_Action << std::endl;
-        if (step_Action.reward > best_Action.reward) {
-            best_Action = step_Action;
-            best_Action.when_To_Act = time_after_interception;// + interception.travel_Time; Denne skal kanskje være globalt tispunkt etter start?
-        }
-        if (backwards) {
+		else {
+			step_Action = getBestActionAtPosition(target, step_Point, time_after_interception);
+			// std::cout << "Iteration: " << i << std::endl;
+			// std::cout << "Step point: " << step_Point << std::endl;
+			// std::cout << *(target->current_Plank) << std::endl;
+			// std::cout << "Step action: " << std::endl << step_Action << std::endl;
+			if (step_Action.reward > best_Action.reward) {
+				best_Action = step_Action;
+				best_Action.when_To_Act = time_after_interception;// + interception.travel_Time; Denne skal kanskje være globalt tispunkt etter start?
+			}
+		}
+        
+		
+		if (backwards) {
             step_Point.x = step_Point.x-step_x;
             step_Point.y = step_Point.y-step_y;
             i -= 1;

@@ -17,6 +17,7 @@ Robot* AI::chooseTarget(int num_Robots){
         Robot* robot = this->state->robots[i];
         if (!robot->isMoving()) {
             std::cout << "Robot is turning. Do we have correct angle?" << std::endl;
+            continue;
         }
 
 		if(robot->current_Plank->willExitGreen()) {
@@ -33,7 +34,8 @@ Robot* AI::chooseTarget(int num_Robots){
     }
 	if(!robotChosen) {
         std::cout << "No target chosen! Error" << std::endl;
-        target = this->state->robots[0];
+        Robot* dummy = new Robot(-1);
+        target = dummy;
 		std::cout << "Found no target! What to do?" << std::endl;
 	}
     return target;

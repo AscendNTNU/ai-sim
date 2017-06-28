@@ -5,8 +5,10 @@
 enum world_Type_t {simSim, rosSim, realWorld};
 
 World* world;
+Robot* target;
 
 world_Type_t world_Type = simSim;
+int target_index = -1;
 
 bool timer_Started = false;
 
@@ -22,7 +24,11 @@ bool simSimLoop(AI* ai){
 		//Send to AI
 		ai->update(observation);
 		//Return AI command
-		Robot* target = ai->chooseTarget(observation.num_Targets);
+		target_index = -1;
+		while(target_index == -1){
+			target = ai->chooseTarget(observation.num_Targets);
+			target_index = target->getIndex();
+		}
 		action_t action = ai->chooseAction(target);
 		//Send AI command to simulator
 		bool verify = simSim->sendCommand(action); //TODO

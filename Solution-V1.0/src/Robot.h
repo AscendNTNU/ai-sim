@@ -16,6 +16,7 @@ private:
 public:
 	//constructors
 	Robot();
+	Robot(int index);
 	Plank* current_Plank;
 
 	//get

@@ -11,6 +11,17 @@ Robot::Robot(){
 	this->time_After_Turn_Start = 0;
 }
 
+Robot::Robot(int index){
+	this->index = index;
+	this->position = point_Zero;
+	this->old_Position = point_Zero;
+	this->orientation = 0;
+	this->speed = 0.33;
+	this->current_Plank = new Plank();
+	this->time_After_Turn_Start = 0;
+}
+
+
 int Robot::getIndex(){
 	return this->index;
 }

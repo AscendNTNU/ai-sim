@@ -57,8 +57,8 @@ void Robot::update(int index, point_t new_Position, float new_Orientation, float
 	this->index = index;
 	this->position = new_Position;
 	this->orientation = fmod(new_Orientation, 2*MATH_PI);
-	this->current_Plank->updatePlank(this->position, this->orientation, this->time_After_Turn_Start, 10);
 	this->time_After_Turn_Start = fmod(elapsed_time, 20);
+	this->current_Plank->updatePlank(this->position, this->orientation, this->time_After_Turn_Start, 10);
 
 }
 
@@ -85,21 +85,3 @@ std::ostream& operator<<(std::ostream &strm, const Robot &robot) {
     << "-------------"								<< std::endl;
     return strm;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

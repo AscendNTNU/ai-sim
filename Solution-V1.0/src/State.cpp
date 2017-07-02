@@ -36,7 +36,7 @@ bool State::updateState(observation_t observation){
 		this->robots[i]->update(i, position, observation.robot_q[i], observation.elapsed_time);
 	}
 	for(int i = 0; i < 4; i++){
-		position = (point_t){.x = observation.robot_x[i], .y = observation.robot_y[i]};
+		position = (point_t){.x = observation.obstacle_x[i], .y = observation.obstacle_y[i]};
 		this->obstacles[i]->update(i, position, observation.obstacle_q[i], observation.elapsed_time);
 	}
 	return true;

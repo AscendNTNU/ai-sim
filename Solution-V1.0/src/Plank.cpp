@@ -70,7 +70,7 @@ void Plank::updatePlank(point_t position, float angle, float time_After_Turn_Sta
 	
     this->angle = angle;
 	if(time_After_Turn_Start < 2){
-		angle = -1* (MATH_PI/2) * (2-time_After_Turn_Start);
+		this->angle = (MATH_PI/2) * (2-time_After_Turn_Start);
 		this->endpoint_1.x = position.x;
 		this->endpoint_1.y = position.y;
 	}
@@ -78,8 +78,8 @@ void Plank::updatePlank(point_t position, float angle, float time_After_Turn_Sta
 		this->endpoint_1.x = position.x + (20 - time_After_Turn_Start)*ROBOT_SPEED*cos(angle);
 		this->endpoint_1.y = position.y + (20 - time_After_Turn_Start)*ROBOT_SPEED*sin(angle);
 	}
-	this->endpoint_2.x = this->endpoint_1.x - (20-2)*ROBOT_SPEED*cos(angle); // Subtracting 2.5 because of turn time (no translation)
-	this->endpoint_2.y = this->endpoint_1.y - (20-2)*ROBOT_SPEED*sin(angle);
+	this->endpoint_2.x = this->endpoint_1.x - (20-2)*ROBOT_SPEED*cos(this->angle); // Subtracting 2.5 because of turn time (no translation)
+	this->endpoint_2.y = this->endpoint_1.y - (20-2)*ROBOT_SPEED*sin(this->angle);
 	
 
     float dx = this->endpoint_2.x - this->endpoint_1.x;

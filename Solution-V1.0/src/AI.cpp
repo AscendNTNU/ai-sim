@@ -5,7 +5,7 @@ AI::AI(){
 }
 
 Robot* AI::chooseTarget(int num_Robots){
-    float max_reward = -300000;
+    float max_reward = -20000;
     float reward = 0;
 	bool robotChosen = false;
     Robot* target = NULL;
@@ -15,15 +15,19 @@ Robot* AI::chooseTarget(int num_Robots){
 
     for(int i = 0; i < num_Robots; i++){
         Robot* robot = this->state->robots[i];
+        if (robot)
         if (!robot->isMoving()) {
             std::cout << "Robot is turning. Do we have correct angle?" << std::endl;
             continue;
         }
-
 		if(robot->current_Plank->willExitGreen()) {
             std::cout <<  "Robot will exit green line. Ignoring it" << std::endl;
 			continue;
 		}
+
+        if(robot->outOfField()){
+            continue;
+        }
 
         reward = robot->current_Plank->getReward();
         if(reward > max_reward){
@@ -61,8 +65,8 @@ action_t AI::chooseAction(Robot* target){
     // Temporary max rewarded action
     action_t best_Action = action_Empty;
     
-    best_Action.where_To_Act.travel_Time = interception.travel_Time;
-    
+    float start_time = this->state->getTimeStamp();
+    float time_stamp = start_time + interception.travel_Time;
     action_t step_Action;
     bool backwards = false;
     int i = 1;
@@ -70,7 +74,9 @@ action_t AI::chooseAction(Robot* target){
         if (target->current_Plank->pointIsOutsideOfPlank(step_Point)) {
             if (backwards) {
                 best_Action.target = target->getIndex();
-                // std::cout << "Best action: "<< std::endl << best_Action << std::endl;
+                std::cout << "Best action: "<< std::endl << best_Action.when_To_Act << std::endl;
+                std::cout << "Time expected: " << best_Action.when_To_Act << std::endl;
+
                 return best_Action;
             } else {
                 i = n+1;
@@ -79,15 +85,12 @@ action_t AI::chooseAction(Robot* target){
             }
         }
 		else {
-			step_Action = getBestActionAtPosition(target, step_Point, time_after_interception);
-			// std::cout << "Iteration: " << i << std::endl;
-			// std::cout << "Step point: " << step_Point << std::endl;
-			// std::cout << *(target->current_Plank) << std::endl;
-			// std::cout << "Step action: " << std::endl << step_Action << std::endl;
+			step_Action = getBestActionAtPosition(target, step_Point, time_stamp);
 			if (step_Action.reward > best_Action.reward) {
 				best_Action = step_Action;
-				best_Action.when_To_Act = time_after_interception;// + interception.travel_Time; Denne skal kanskje være globalt tispunkt etter start?
-			}
+				best_Action.when_To_Act = time_stamp;//time_after_interception + interception.travel_Time;// Denne skal kanskje være globalt tispunkt etter start?
+			
+            }
 		}
         
 		
@@ -100,24 +103,31 @@ action_t AI::chooseAction(Robot* target){
             step_Point.y = step_Point.y+step_y;
             i += 1;
         }
-        time_after_interception = time_after_interception + (step_size)/target->getSpeed();
+        time_stamp += (step_size)/target->getSpeed();
 
     }
-    
+
+    std::cout << "Best action: "<< std::endl << best_Action.when_To_Act << std::endl;
+    std::cout << "Time expected: " << best_Action.when_To_Act << std::endl;
+
     best_Action.target = target->getIndex();
     return best_Action;
 }
 
-action_t AI::getBestActionAtPosition(Robot* target, point_t position, float time_after_interception) {
+action_t AI::getBestActionAtPosition(Robot* target, point_t position, float timeStamp) {
     int num_Iterations = 5; // Number of iterations when summing along a plank
     action_t action;
     action.where_To_Act = position;
-    float time_After_Turn_Start = fmod(this->state->getTimeStamp() + position.travel_Time + time_after_interception, 20);
+    float time_After_Turn_Start = fmod(timeStamp, 20);
 
     Plank* plank_On_Top = new Plank(position, fmod(target->getOrientation() + (MATH_PI/4), 2*MATH_PI), 
                                     time_After_Turn_Start, num_Iterations);
     Plank* plank_In_Front = new Plank(position, fmod(target->getOrientation() + MATH_PI, 2*MATH_PI), 
                                     time_After_Turn_Start, num_Iterations);
+    if(time_After_Turn_Start < 2 or time_After_Turn_Start > 19){
+        action.reward = -20000;
+        return action;
+    }
 
     return actionWithMaxReward(plank_On_Top->getReward(), plank_In_Front->getReward(), action);
 }
@@ -138,6 +148,7 @@ action_t AI::actionWithMaxReward(float reward_On_Top, float reward_In_Front, act
         action.type = no_Command;
         action.reward = 0;
     }
+    action.type = land_In_Front_Of;
     return action;
 }
 

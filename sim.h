@@ -684,6 +684,10 @@ robot_fsm(sim_Robot *robot,robot_State state,
             {
                 TransitionTo(TopTouch);
             }
+            else if (event.is_bumper)
+            {
+                TransitionTo(TargetCollision);
+            }
             else if (event.elapsed_time - internal->begin_reverse > Reverse_Length)
             {
                 TransitionTo(TargetRun);

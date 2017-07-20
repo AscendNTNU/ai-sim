@@ -5,7 +5,6 @@
 #include <vector>
 #include "lib/jo_gif.cpp"
 
-#include <iostream>
 #include <stdint.h>
 typedef float       r32;
 typedef uint64_t    u64;
@@ -35,7 +34,7 @@ typedef int8_t      s08;
 
 #define Assert SDL_assert
 #define Printf SDL_Log
-
+static int fps_lock = 15;
 struct Color
 {
     r32 r, g, b, a;
@@ -382,7 +381,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     persist bool flag_plank = false;
     persist bool flag_DrawDroneGoto     = false;
     persist bool flag_DrawDrone         = true;
-    persist bool flag_DrawVisibleRegion = false;
+    persist bool flag_DrawVisibleRegion = true;
     persist bool flag_DrawTargets       = true;
     persist bool flag_DrawObstacles     = true;
     persist bool flag_Paused            = false;
@@ -776,6 +775,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     // REWIND HISTORY
     if (ImGui::CollapsingHeader("Seek##header"))
     {
+        ImGui::SliderInt("FPS##bar", &fps_lock, 1, 90);
         ImGui::Checkbox("Paused", &flag_Paused);
         ImGui::SliderInt("Seek##bar", &seek_cursor, 0, HISTORY_LENGTH-1);
         ImGui::InputInt("Seek frame", &seek_cursor);
@@ -989,7 +989,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     } // END RECORDING GIFS
 
     // RESET AND SET SEED
-    persist int custom_seed = 0;
+    persist int custom_seed = 123;
     if (ImGui::Button("Reset"))
     {
         if (custom_seed > 0)
@@ -1259,7 +1259,7 @@ int main(int argc, char *argv[])
     mode.stencil_bits = 8;
     mode.multisamples = 4;
     mode.swap_interval = 0;
-    mode.fps_lock = 20;
+    mode.fps_lock = fps_lock;
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, mode.gl_major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, mode.gl_minor);
@@ -1343,6 +1343,7 @@ int main(int argc, char *argv[])
         SDL_GL_SwapWindow(mode.window);
 
         delta_time = time_since(last_frame_t);
+        mode.fps_lock = fps_lock;
         if (mode.fps_lock > 0)
         {
             r32 target_time = 1.0f / (r32)mode.fps_lock;

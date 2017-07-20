@@ -32,6 +32,7 @@ public:
 	void addToTimer(float time);
 	
 	//methods
+	bool outOfField();
 	action_t chooseAction(Robot target);
 	bool isMoving();
 	void update(int index, point_t position,float q, float elapsed_time);

@@ -30,6 +30,6 @@ public:
 	//actions
 	void wait(float time);
 	float getDistanceToPoint(point_t point);
-	// float getTravelTimeToPoint(point_t point);
+	float getTimeToPoint(point_t point);
 	point_t getInterceptPoint(Robot* robot);
 };

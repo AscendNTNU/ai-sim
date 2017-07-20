@@ -40,6 +40,10 @@ float Drone::getDistanceToPoint(point_t point){
 	return sqrt(pow(x_Distance,2) + pow(y_Distance,2));
 }
 
+float Drone::getTimeToPoint(point_t point){
+	float distance = this->getDistanceToPoint(point);
+	return distance/this->speed;
+}
 
 point_t Drone::getInterceptPoint(Robot* robot) {
 	

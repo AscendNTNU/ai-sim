@@ -32,7 +32,7 @@ point_t Plank::getPoint(int i){
 }
 bool Plank::willExitGreen(){
 
-    if(this->endpoint_1.y > 20){
+    if(this->endpoint_1.y > 20 || this->endpoint_2.y  > 20){
         std::cout << "Plank will cross green using temporary solution" << std::endl;
         return true;
     }
@@ -70,24 +70,24 @@ void Plank::updatePlank(point_t position, float angle, float time_After_Turn_Sta
 	
     this->angle = angle;
 	if(time_After_Turn_Start < 2){
-		this->angle = (MATH_PI/2) * (2-time_After_Turn_Start);
-		this->endpoint_1.x = position.x;
-		this->endpoint_1.y = position.y;
+        this->endpoint_2.x = position.x;
+		this->endpoint_2.y = position.y;
+        this->endpoint_1.x = position.x + (18)*ROBOT_SPEED*cos(angle);
+        this->endpoint_1.y = position.y + (18)*ROBOT_SPEED*sin(angle);
 	}
 	else {
 		this->endpoint_1.x = position.x + (20 - time_After_Turn_Start)*ROBOT_SPEED*cos(angle);
 		this->endpoint_1.y = position.y + (20 - time_After_Turn_Start)*ROBOT_SPEED*sin(angle);
+        this->endpoint_2.x = this->endpoint_1.x - (18)*ROBOT_SPEED*cos(this->angle); // Subtracting 2.5 because of turn time (no translation)
+        this->endpoint_2.y = this->endpoint_1.y - (18)*ROBOT_SPEED*sin(this->angle);
 	}
-	this->endpoint_2.x = this->endpoint_1.x - (20-2)*ROBOT_SPEED*cos(this->angle); // Subtracting 2.5 because of turn time (no translation)
-	this->endpoint_2.y = this->endpoint_1.y - (20-2)*ROBOT_SPEED*sin(this->angle);
 	
 
     float dx = this->endpoint_2.x - this->endpoint_1.x;
     float dy = this->endpoint_2.y - this->endpoint_1.y;
     
-    this->length = sqrt(dx*dx + dy*dy);
-
-    this->reward = calculateReward(num_Iterations);
+    this->length = sqrt(dx*dx + dy*dy);       
+    this->reward = calculateReward(num_Iterations);//std::max(this->endpoint_1.y, this->endpoint_2.y);
 }
 
 bool Plank::pointIsOutsideOfPlank(point_t point){

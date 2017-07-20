@@ -42,6 +42,16 @@ Plank* Robot::getCurrentPlank(){
 	return this->current_Plank;
 }
 
+bool Robot::outOfField(){
+	if (this->position.x > 20.5 || this->position.x < -0.5){
+		return true;
+	}
+	if (this->position.y > 20.5 || this->position.y < -0.5){
+		return true;
+	}
+	return false;
+}
+
 bool Robot::isMoving(){
 	if (this->old_Position.x == this->position.x && 
 	    this->old_Position.y == this->position.y) {
@@ -56,8 +66,12 @@ void Robot::update(int index, point_t new_Position, float new_Orientation, float
 	this->old_Orientation = this->orientation;
 	this->index = index;
 	this->position = new_Position;
-	this->orientation = fmod(new_Orientation, 2*MATH_PI);
 	this->time_After_Turn_Start = fmod(elapsed_time, 20);
+	this->orientation = fmod(new_Orientation, 2*MATH_PI);
+	if(time_After_Turn_Start < 2){
+		this->orientation = this->orientation - (MATH_PI/2) * 1/(2-time_After_Turn_Start);
+	}
+
 	this->current_Plank->updatePlank(this->position, this->orientation, this->time_After_Turn_Start, 10);
 
 }

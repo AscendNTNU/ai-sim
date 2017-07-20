@@ -16,16 +16,13 @@ bool simSimLoop(AI* ai){
 	SimSim* simSim = new SimSim();
 	observation_t observation;
 	while(1){
+		sleep(0.01);
 		//get observations
 		observation = simSim->updateObservation();
-		if (!timer_Started) {
-			timer_Started = world->startTimer();
-		}
-		//Send to AI
-		ai->update(observation);
 		//Return AI command
 		target_index = -1;
-		while(target_index == -1){
+		while(target_index == -1 or target->getPosition().x < 0.1){
+			ai->update(observation);
 			target = ai->chooseTarget(observation.num_Targets);
 			target_index = target->getIndex();
 		}

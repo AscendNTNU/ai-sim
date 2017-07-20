@@ -72,12 +72,13 @@ bool SimSim::sendCommand(action_t action){
 
 	while (!this->isActionDone()) {
 		// std::cout << "Travel not done yet" << std::endl;
+		continue;
 	}
 
 	//Wait for correct time to act
 	observation = this->updateObservation();
 	float action_Start = observation.elapsed_time;
-	while(observation.elapsed_time-action_Start <= action.when_To_Act){
+	while(observation.elapsed_time <= action.when_To_Act){
 		if(observed_state.target_x[action.target] > 20 || observed_state.target_x[action.target] < 0 ||
 			observed_state.target_y[action.target] > 20 || observed_state.target_y[action.target] < 0) {
 			std::cout << "Target removed before we could do action. Choose target again." << std::endl;

@@ -5,6 +5,7 @@
 #include <vector>
 #include "lib/jo_gif.cpp"
 
+#include <iostream>
 #include <stdint.h>
 typedef float       r32;
 typedef uint64_t    u64;

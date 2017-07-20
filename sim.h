@@ -74,6 +74,7 @@ struct sim_Observed_State
     float drone_y;
     float drone_z;
     bool  drone_cmd_done;
+    int num_Targets;
 
     bool  target_in_view[Num_Targets];
     bool  target_reversing[Num_Targets];
@@ -1296,6 +1297,7 @@ sim_Observed_State sim_observe_state(sim_State state)
     result.drone_y = state.drone.y;
     result.drone_z = state.drone.z;
     result.drone_cmd_done = state.drone.cmd_done;
+    result.num_Targets = Num_Targets;
     sim_Robot *targets = state.robots;
     sim_Robot *obstacles = state.robots + Num_Targets;
     float visible_radius = compute_drone_view_radius(state.drone.z);

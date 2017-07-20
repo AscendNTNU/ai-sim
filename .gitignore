@@ -1,4 +1,6 @@
 a.out
+Solution-V1.0/run
+Solution-V1.0/*.o
 build/*
 build/*.lib
 build/*.dll

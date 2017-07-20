@@ -18,15 +18,19 @@ bool simSimLoop(AI* ai){
 	while(1){
 		sleep(0.01);
 		//get observations
-		observation = simSim->updateObservation();
+
 		//Return AI command
 		target_index = -1;
-		while(target_index == -1 or target->getPosition().x < 0.1){
+		while(target_index == -1){
+			observation = simSim->updateObservation();
 			ai->update(observation);
 			target = ai->chooseTarget(observation.num_Targets);
 			target_index = target->getIndex();
 		}
 		action_t action = ai->chooseAction(target);
+		if(action.where_To_Act.x < 0.1){
+			continue;
+		}
 		//Send AI command to simulator
 		bool verify = simSim->sendCommand(action); //TODO
 	}

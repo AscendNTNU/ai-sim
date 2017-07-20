@@ -793,8 +793,8 @@ sim_State sim_init(unsigned int seed)
         if (INTERNAL->xor128_w == 0) INTERNAL->xor128_w++;
     }
 
-    DRONE->x = 0.0f;
-    DRONE->y = 0.0f;
+    DRONE->x = 10.0f;
+    DRONE->y = 10.0f;
     DRONE->z = Sim_Average_Flying_Heigth; // TODO: Dynamics for z when landing
     DRONE->xr = 10.0f;
     DRONE->yr = 10.0f;
@@ -993,7 +993,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
                 float dx = DRONE->xr - DRONE->x;
                 float dy = DRONE->yr - DRONE->y;
                 float len = sqrtf(dx*dx + dy*dy);
-                if (len < Sim_Drone_Target_Proximity)
+                if (len < Sim_Drone_Target_Proximity and ROBOTS[DRONE->cmd.i].state !=  Robot_Reverse)
                 {
                     if (!DRONE->landing)
                     {

@@ -37,10 +37,10 @@
 #define Num_Obstacles (0)  // Number of robots with pole
 #define Num_Targets   (10) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
-#define Num_max_text_length (256) // Maximum number of bytes for each target text
+#define Num_max_text_length (128) // Maximum number of bytes for each target text
 
 
-#define pixels_each_meter (4) //for heatmap
+#define pixels_each_meter (1) //for heatmap
 
 enum sim_CommandType
 {

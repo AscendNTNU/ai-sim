@@ -26,6 +26,7 @@ Robot* AI::chooseTarget(int num_Robots){
 		}
 
         if(robot->outOfField()){
+            std::cout << "out of field" << std::endl;
             continue;
         }
 

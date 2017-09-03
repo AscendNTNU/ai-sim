@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  ascend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ./run_gui.sh
+    environment:
+      DISPLAY:
+    devices:
+      - /dev/dri
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - .:/srv/ai-sim/:rw
+    working_dir: /srv/ai-sim

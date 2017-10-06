@@ -5,7 +5,7 @@ AI::AI(){
 }
 
 Robot* AI::chooseTarget(int num_Robots){
-    float max_reward = -20000;
+    float max_reward = -200000;
     float reward = 0;
 	bool robotChosen = false;
     Robot* target = NULL;
@@ -126,7 +126,7 @@ action_t AI::getBestActionAtPosition(Robot* target, point_t position, float time
     Plank* plank_In_Front = new Plank(position, fmod(target->getOrientation() + MATH_PI, 2*MATH_PI), 
                                     time_After_Turn_Start, num_Iterations);
     if(time_After_Turn_Start < 2 or time_After_Turn_Start > 19){
-        action.reward = -20000;
+        action.reward = -200000;
         return action;
     }
 

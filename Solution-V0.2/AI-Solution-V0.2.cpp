@@ -212,11 +212,11 @@ float findRobotValue(float x_robot, float y_robot, float theta, float timeToTurn
     Plank plank = createPlank(x_robot, y_robot, theta, timeToTurn);
 //<<<<<<< Updated upstream
     float reward = getPlankValue(gridValue, plank, theta, 100);
-	// if(plank.crossesRed) reward = -2000000;
+	// if(plank.crossesRed) reward = -200000;
 	// if(plank.goingOutGreen) reward = 10000000;
 //=======
 //    float reward = getPlankValue(gridValue, plank, theta, 5);
-//	if(plank.crossesRed) reward = -2000000;
+//	if(plank.crossesRed) reward = -200000;
 //	if(plank.goingOutGreen) reward = 10000000;
 //>>>>>>> Stashed changes
     return reward;

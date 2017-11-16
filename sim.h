@@ -806,7 +806,7 @@ sim_State sim_init(unsigned int seed)
     DRONE->cmd.i = 0;
     DRONE->landing = false;
     DRONE->on_ground = false;
-    DRONE->cmd_done = false;
+    DRONE->cmd_done = true;
     DRONE->land_timer = 0.0f;
 
     for (unsigned int i = 0; i < Num_Targets; i++)

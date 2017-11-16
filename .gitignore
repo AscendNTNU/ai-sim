@@ -6,3 +6,4 @@ build/*.lib
 build/*.dll
 !build/*.sh
 !build/*.bat
+*.ini

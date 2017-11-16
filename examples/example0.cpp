@@ -1,5 +1,5 @@
 #define SIM_IMPLEMENTATION
-#include "sim.h"
+#include "../sim.h"
 #include <stdio.h>
 
 int main()

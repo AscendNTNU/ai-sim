@@ -11,8 +11,8 @@
 
 #define SIM_CLIENT_CODE
 #define SIM_IMPLEMENTATION
-#include "sim.h"
-#include "gui.h"
+#include "../sim.h"
+#include "../gui.h"
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>

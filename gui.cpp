@@ -32,7 +32,7 @@ typedef int8_t      s08;
 #include "lib/imgui/imgui_impl_sdl.cpp"
 
 // Allocate thirty minutes worth of real time history
-#define History_Max_Length ((int)(6.0f * 60.0f / Sim_Timestep))
+#define History_Max_Length ((int)(10.0f * 60.0f / Sim_Timestep))
 
 #define Assert SDL_assert
 #define Printf SDL_Log
@@ -416,51 +416,56 @@ void draw_observed_robot(r32 x,  r32 y, r32 q , r32 l)
     draw_line(x, y, x + l*cos(q), y + l*sin(q));
 }
 
-void draw_drone(float radius,float x,float y){
+void draw_drone(float radius,float x,float y,bool flag_fancy_drone){
     glBegin(GL_LINES);
-    float propel_radius = radius /3.0;
-    draw_circle(x,y,radius);
+    float propel_radius = radius/3.0;
+    if(! flag_fancy_drone){
+         draw_circle(x,y,radius);
+         glEnd();
+    }else{
+        // //propel 1
+        float propel_1_x = x + sin(PI/4.0)*radius;
+        float propel_1_y = y + cos(PI/4.0)*radius;
+        draw_line(propel_1_x-propel_radius,propel_1_y,propel_1_x+propel_radius,propel_1_y);
+         draw_line(propel_1_x,propel_1_y-propel_radius,propel_1_x,propel_1_y+propel_radius);
+        draw_circle(propel_1_x,propel_1_y,propel_radius);
+    
+        //propel 2
+        float propel_2_x = x - sin(PI/4.0)*radius;
+        float propel_2_y = y - cos(PI/4.0)*radius;
+        draw_line(propel_2_x-propel_radius,propel_2_y,propel_2_x+propel_radius,propel_2_y);
+        draw_line(propel_2_x,propel_2_y-propel_radius,propel_2_x,propel_2_y+propel_radius);
+        draw_circle(propel_2_x,propel_2_y,propel_radius);
 
 
-    //propel 1
-    float propel_1_x = x + sin(PI/4.0)*radius;
-    float propel_1_y = y + cos(PI/4.0)*radius;
-    draw_line(propel_1_x-propel_radius,propel_1_y,propel_1_x+propel_radius,propel_1_y);
-    draw_line(propel_1_x,propel_1_y-propel_radius,propel_1_x,propel_1_y+propel_radius);
-    draw_circle(propel_1_x,propel_1_y,propel_radius);
+        //propel 3
+        float propel_3_x = x + sin(PI/4.0)*radius;
+        float propel_3_y = y - cos(PI/4.0)*radius;
+        draw_line(propel_3_x-propel_radius,propel_3_y,propel_3_x+propel_radius,propel_3_y);
+        draw_line(propel_3_x,propel_3_y-propel_radius,propel_3_x,propel_3_y+propel_radius);
+       draw_circle(propel_3_x,propel_3_y,propel_radius);
 
-    //propel 2
-    float propel_2_x = x - sin(PI/4.0)*radius;
-    float propel_2_y = y - cos(PI/4.0)*radius;
-    draw_line(propel_2_x-propel_radius,propel_2_y,propel_2_x+propel_radius,propel_2_y);
-    draw_line(propel_2_x,propel_2_y-propel_radius,propel_2_x,propel_2_y+propel_radius);
-    draw_circle(propel_2_x,propel_2_y,propel_radius);
+        // //propel 4
+        float propel_4_x = x - sin(PI/4.0)*radius;
+        float propel_4_y = y + cos(PI/4.0)*radius;
+        draw_line(propel_4_x-propel_radius,propel_4_y,propel_4_x+propel_radius,propel_4_y);
+        draw_line(propel_4_x,propel_4_y-propel_radius,propel_4_x,propel_4_y+propel_radius);
+        draw_circle(propel_4_x,propel_4_y,propel_radius);
 
-
-    //propel 3
-    float propel_3_x = x + sin(PI/4.0)*radius;
-    float propel_3_y = y - cos(PI/4.0)*radius;
-    draw_line(propel_3_x-propel_radius,propel_3_y,propel_3_x+propel_radius,propel_3_y);
-    draw_line(propel_3_x,propel_3_y-propel_radius,propel_3_x,propel_3_y+propel_radius);
-    draw_circle(propel_3_x,propel_3_y,propel_radius);
-
-    //propel 4
-    float propel_4_x = x - sin(PI/4.0)*radius;
-    float propel_4_y = y + cos(PI/4.0)*radius;
-    draw_line(propel_4_x-propel_radius,propel_4_y,propel_4_x+propel_radius,propel_4_y);
-    draw_line(propel_4_x,propel_4_y-propel_radius,propel_4_x,propel_4_y+propel_radius);
-    draw_circle(propel_4_x,propel_4_y,propel_radius);
-
-    glEnd();
-    glBegin(GL_TRIANGLES);
-    //draw body
-    fill_square(x-radius/4,y-radius*0.7,x+radius/4,y+radius*0.7);
+        glEnd();
+        glBegin(GL_TRIANGLES);
+        //draw body
+         fill_square(x-radius/4,y-radius*0.7,x+radius/4,y+radius*0.7);
 
 
-    fill_square(x-radius/3,y+radius*0.8,x+radius/3,y+radius*0.6);
-    fill_square(x-radius/3,y-radius*0.8,x+radius/3,y-radius*0.6);
+         fill_square(x-radius/3,y+radius*0.8,x+radius/3,y+radius*0.6);
+        fill_square(x-radius/3,y-radius*0.8,x+radius/3,y-radius*0.6);
 
-    glEnd();
+        glEnd();
+    }
+    
+
+    
 }
 
 void draw_planks(sim_Robot robot)
@@ -611,7 +616,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 {
     persist bool flag_grid     = false;
     persist bool flag_plank = false;
-    persist bool flag_DrawDroneGoto     = false;
+    persist bool flag_DrawDroneGoto     = true;
     persist bool flag_draw_observation     = false;
     persist bool flag_DrawDrone         = true;
     persist bool flag_DrawVisibleRegion = true;
@@ -620,12 +625,13 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     persist bool flag_Paused            = false;
     persist bool flag_Recording         = false;
     persist bool flag_SetupRecord       = false;
-    persist bool flag_probability_distribution = true;
+    persist bool flag_probability_distribution = false;
     persist bool flag_custom_drone_text = false;
     persist bool flag_custom_target_text = false;
-    persist bool flag_view_target_text = false;
+    persist bool flag_view_target_text = true;
     persist bool flag_view_drone_text = true;
     persist bool flag_send_perfect_data = true;
+    persist bool flag_fancy_drone = false;
     persist int record_from = 0;
     persist int record_to = 0;
     persist int record_frame_skip = 1;
@@ -666,7 +672,8 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     #define RGBA(C) C.r, C.g, C.b, C.a
 
     persist float send_timer = 0.0f;
-    persist float send_interval = 0.25f;// In simulation time units
+
+    persist float send_interval = 0.2f;// In simulation time units
 
 
     persist float position_offset_target = 0.15;
@@ -703,6 +710,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 
     noise.angle_offset_down_camera = angle_offset_down_camera;
     noise.freq_angle_offset_down_camera = freq_angle_offset_down_camera;
+
 
     NDC_SCALE_X = (mode.height / (r32)mode.width) / 12.0f;
     NDC_SCALE_Y = 1.0f / 12.0f;
@@ -1063,22 +1071,22 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         //draw shadow of drone
         Color color_Shadow = { 0.00f, 0.00f, 0.00f, 0.05 + 0.5*pow((1.0  - drone.z / 3.0),2.0) };
         color4f(color_Shadow);
-        draw_drone(Sim_Drone_Radius + drone.z/5.0,drone.x, drone.y);
+        draw_drone(Sim_Drone_Radius + drone.z/5.0,drone.x, drone.y,flag_fancy_drone);
 
 
         if(flag_draw_observation){
           //draw drone
           color4f(color_transp_Drone);
-          draw_drone(Sim_Drone_Radius,drone.x,drone.y);
+          draw_drone(Sim_Drone_Radius,drone.x,drone.y,flag_fancy_drone);
           //draw drone
           //color4f(color_transp_Drone);
           color4f(white);
-          draw_drone(Sim_Drone_Radius,observed.drone_x,observed.drone_y);
+          draw_drone(Sim_Drone_Radius,observed.drone_x,observed.drone_y,flag_fancy_drone);
 
         }else{
           //draw drone
           color4f(color_Drone);
-          draw_drone(Sim_Drone_Radius,drone.x,drone.y);
+          draw_drone(Sim_Drone_Radius,drone.x,drone.y,flag_fancy_drone);
 
         }
 
@@ -1117,11 +1125,12 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         ImGui::Checkbox("Custom target text", &flag_custom_target_text);
         ImGui::Checkbox("Grid", &flag_grid);
         ImGui::Checkbox("Plank", &flag_plank);
-        ImGui::Checkbox("Noisy observation", &flag_draw_observation);
+        ImGui::Checkbox("View noisy observation", &flag_draw_observation);
         ImGui::Checkbox("Drone goto", &flag_DrawDroneGoto);
-        ImGui::Checkbox("Drone", &flag_DrawDrone);
-        ImGui::Checkbox("Visible region", &flag_DrawVisibleRegion);
-        ImGui::Checkbox("Targets", &flag_DrawTargets);
+        ImGui::Checkbox("Draw drone", &flag_DrawDrone);
+        ImGui::Checkbox("Fancy drone", &flag_fancy_drone);
+        ImGui::Checkbox("Visible down area", &flag_DrawVisibleRegion);
+        ImGui::Checkbox("Ground robots", &flag_DrawTargets);
         ImGui::Checkbox("Obstacles", &flag_DrawObstacles);
 
 
@@ -1189,13 +1198,13 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 
       ImGui::TextWrapped("Targets: Average noise offset (meters) " );
       ImGui::SliderFloat("Noise", &position_offset_target,  0.0f, 5.0f);
-      ImGui::SliderFloat("Frequency ", &freq_position_offset_target,0.0f, 5.0f);
+      ImGui::SliderFloat("Frequency", &freq_position_offset_target,0.0f, 5.0f);
       ImGui::TextWrapped(" ");
 
       ImGui::TextWrapped("Targets: Average noise offset pushed ");
       ImGui::TextWrapped("         into horizon (meters)");
       ImGui::SliderFloat("Noise ", &position_offset_target_horizon,0.0f, 5.0f);
-      ImGui::SliderFloat("Frequency  ", &freq_noise_horizon,0.0f, 5.0f);
+      ImGui::SliderFloat("Frequency ", &freq_noise_horizon,0.0f, 5.0f);
       ImGui::TextWrapped(" ");
 
       ImGui::TextWrapped("Targets: Percent of time observed");
@@ -1204,7 +1213,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 
       ImGui::TextWrapped("Targets: Direction noise (degrees)");
       ImGui::SliderFloat("Noise  ", &angle_offset_target,0.0f, 360.0f);
-      ImGui::SliderFloat("Frequency   ", &freq_angle_offset_target,0.0f, 5.0f);
+      ImGui::SliderFloat("Frequency  ", &freq_angle_offset_target,0.0f, 5.0f);
       ImGui::TextWrapped(" ");
 
       ImGui::TextWrapped("Targets: Direction noise when spotted by");
@@ -1215,7 +1224,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 
       ImGui::TextWrapped("Drone: Average offset (meters)");
       ImGui::SliderFloat("Noise    ", &position_offset_drone,0.0f, 5.0f);
-      ImGui::SliderFloat("Frequency   ", &freq_position_offset_drone,0.0f, 5.0f);
+      ImGui::SliderFloat("Frequency    ", &freq_position_offset_drone,0.0f, 5.0f);
 
 
 
@@ -1274,7 +1283,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
-                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
+                    ImGui::Text("%f", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Land:
                 {
@@ -1282,7 +1291,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
                     ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
-                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
+                    ImGui::Text("%f", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_LandOnTopOf:
                 {
@@ -1290,7 +1299,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
-                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
+                    ImGui::Text("%f", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Track:
                 {
@@ -1298,7 +1307,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
                     ImGui::Text("%d", cmd_i.i); ImGui::NextColumn();
-                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
+                    ImGui::Text("%f", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Search:
                 {
@@ -1306,7 +1315,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
                     ImGui::Text("%.2f", cmd_i.x); ImGui::NextColumn();
                     ImGui::Text("%.2f", cmd_i.y); ImGui::NextColumn();
                     ImGui::Text("-"); ImGui::NextColumn();
-                    ImGui::Text("%d", cmd_i.reward); ImGui::NextColumn();
+                    ImGui::Text("%f", cmd_i.reward); ImGui::NextColumn();
                 } break;
                 case sim_CommandType_Debug:
                 {

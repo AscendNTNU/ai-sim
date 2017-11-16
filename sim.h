@@ -35,12 +35,13 @@
 #ifndef SIM_HEADER_INCLUDE
 #define SIM_HEADER_INCLUDE
 #define Num_Obstacles (0)  // Number of robots with pole
-#define Num_Targets   (3) // Number of robots without pole
+#define Num_Targets   (10) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
-#define Num_max_text_length (256) // Maximum number of bytes for each target text
+#define Num_max_text_length (128) // Maximum number of bytes for each target text
 
 
-#define pixels_each_meter (6) //for heatmap
+
+#define pixels_each_meter (1) //for heatmap
 
 enum sim_CommandType
 {
@@ -63,7 +64,7 @@ struct sim_Command
     float heatmap[pixels_each_meter*pixels_each_meter*20*20];
     char text[Num_max_text_length*Num_Targets+Num_max_text_length];
 
-    int reward;
+    float reward;
 
 };
 
@@ -74,6 +75,7 @@ struct sim_Observed_State
     float drone_y;
     float drone_z;
     bool  drone_cmd_done;
+    int num_Targets;
 
     bool  target_in_view[Num_Targets];
     bool  target_reversing[Num_Targets];
@@ -683,6 +685,10 @@ robot_fsm(sim_Robot *robot,robot_State state,
             {
                 TransitionTo(TopTouch);
             }
+            else if (event.is_bumper)
+            {
+                TransitionTo(TargetCollision);
+            }
             else if (event.elapsed_time - internal->begin_reverse > Reverse_Length)
             {
                 TransitionTo(TargetRun);
@@ -788,8 +794,8 @@ sim_State sim_init(unsigned int seed)
         if (INTERNAL->xor128_w == 0) INTERNAL->xor128_w++;
     }
 
-    DRONE->x = 0.0f;
-    DRONE->y = 0.0f;
+    DRONE->x = 10.0f;
+    DRONE->y = 10.0f;
     DRONE->z = Sim_Average_Flying_Heigth; // TODO: Dynamics for z when landing
     DRONE->xr = 10.0f;
     DRONE->yr = 10.0f;
@@ -988,7 +994,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
                 float dx = DRONE->xr - DRONE->x;
                 float dy = DRONE->yr - DRONE->y;
                 float len = sqrtf(dx*dx + dy*dy);
-                if (len < Sim_Drone_Target_Proximity)
+                if (len < Sim_Drone_Target_Proximity and ROBOTS[DRONE->cmd.i].state !=  Robot_Reverse)
                 {
                     if (!DRONE->landing)
                     {
@@ -1300,6 +1306,7 @@ sim_Observed_State sim_observe_state(sim_State state)
     result.drone_y = state.drone.y;
     result.drone_z = state.drone.z;
     result.drone_cmd_done = state.drone.cmd_done;
+    result.num_Targets = Num_Targets;
     sim_Robot *targets = state.robots;
     sim_Robot *obstacles = state.robots + Num_Targets;
     float visible_radius = 2*compute_drone_view_radius(state.drone.z);

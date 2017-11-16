@@ -1,7 +1,7 @@
 #define SIM_IMPLEMENTATION
 #define SIM_CLIENT_CODE
-#include "sim.h"
-#include "gui.h"
+#include "../sim.h"
+#include "../gui.h"
 #include <stdio.h>
 
 enum ai_State

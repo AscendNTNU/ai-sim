@@ -212,7 +212,6 @@ int udp_send(void *data, uint32_t size, udp_addr dst)
 
     int bytes_sent = sendto(udp_socket, data, size, 0,
         (struct sockaddr*)&address, sizeof(struct sockaddr_in));
-
     return bytes_sent;
 }
 
@@ -322,7 +321,7 @@ int udp_send(void *data, uint32_t size, udp_addr dst)
         // Socket not initialized
         UDP_ASSERT(false);
     }
-
+    
     sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = htonl(

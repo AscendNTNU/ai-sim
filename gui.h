@@ -42,10 +42,10 @@ void sim_init_msgs(bool blocking)
 }
 
 #ifdef SIM_CLIENT_CODE
-bool sim_recv_state(sim_State *result)
+bool sim_recv_state(sim_Observed_State *result)
 {
     sim_State buffer = {};
-    return udp_read_all((char*)result, (char*)&buffer, sizeof(sim_State), 0);
+    return udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Observed_State), 0);
 }
 
 void sim_send_cmd(sim_Command *cmd)
@@ -60,10 +60,10 @@ bool sim_recv_cmd(sim_Command *result)
     return udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Command), 0);
 }
 
-void sim_send_state(sim_State *state)
+void sim_send_state(sim_Observed_State *state)
 {
     udp_addr dst = { 127, 0, 0, 1, SEND_PORT };
-    udp_send((char*)state, sizeof(sim_State), dst);
+    udp_send((char*)state, sizeof(sim_Observed_State), dst);
 }
 #endif
 

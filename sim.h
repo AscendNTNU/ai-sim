@@ -35,12 +35,12 @@
 #ifndef SIM_HEADER_INCLUDE
 #define SIM_HEADER_INCLUDE
 #define Num_Obstacles (0)  // Number of robots with pole
-#define Num_Targets   (10) // Number of robots without pole
+#define Num_Targets   (3) // Number of robots without pole
 #define Num_Robots    (Num_Obstacles + Num_Targets)
 #define Num_max_text_length (256) // Maximum number of bytes for each target text
 
 
-#define pixels_each_meter (4) //for heatmap
+#define pixels_each_meter (6) //for heatmap
 
 enum sim_CommandType
 {
@@ -118,7 +118,7 @@ void               sim_write_snapshot(char*, sim_Observed_State);
 //                        Tweakable simulation parameters
 // ***********************************************************************
 
-#define Sim_Timestep (1.0f / 5.0f)       // Simulation timestep
+#define Sim_Timestep (1.0f / 10.0f)       // Simulation timestep
 
 // Note:
 // Increasing Sim_Timestep will decrease the accuracy of the simulation,
@@ -149,7 +149,7 @@ void               sim_write_snapshot(char*, sim_Observed_State);
 #define Sim_Take_Off_Time (2.0f)           //How long time it should take to take off
 
 
-#define Sim_Average_Flying_Heigth (1.5f)   //The height the drone is flying at when not on ground
+#define Sim_Average_Flying_Heigth (3.0f)   //The height the drone is flying at when not on ground
 
 #define Sim_LandInFrontOf_Time (2.0f)     // How many seconds it should take
                                           // to complete a LandInFrontOf command
@@ -167,7 +167,7 @@ void               sim_write_snapshot(char*, sim_Observed_State);
 
 #define Sim_Robot_Height (0.2f)         // The height of the ground robot
 
-#define Sim_View_Angle (1.15)          //View angle to camera in radians
+#define Sim_View_Angle (0.6)          //View angle to camera in radians
 
 
 
@@ -273,7 +273,7 @@ struct sim_Robot
     float y;
     sim_World_Angle q;
     sim_World_Angle plank_angle;
-    
+
     // Physical parameters
     float L;  // distance between wheels (m)
     float vl; // left-wheel speed (m/s)
@@ -634,7 +634,7 @@ robot_fsm(sim_Robot *robot,robot_State state,
                      Reverse_Interval)
             {
                 robot->plank_angle = robot->plank_angle - 1*PI;
-		
+
                 internal->last_reverse = event.elapsed_time;
                 internal->time_since_last_reverse =  event.elapsed_time - internal->last_reverse;
                 internal->time_to_next_reverse =  Reverse_Interval - internal->time_since_last_reverse;
@@ -800,7 +800,7 @@ sim_State sim_init(unsigned int seed)
     DRONE->cmd.i = 0;
     DRONE->landing = false;
     DRONE->on_ground = false;
-    DRONE->cmd_done = true;
+    DRONE->cmd_done = false;
     DRONE->land_timer = 0.0f;
 
     for (unsigned int i = 0; i < Num_Targets; i++)
@@ -820,7 +820,7 @@ sim_State sim_init(unsigned int seed)
         robot.L = Sim_Robot_Wheel_Distance;
 
         // Spawn each ground robot in a circle
-        
+
         float t = TWO_PI * i / (float)(Num_Targets);
         //float t = TWO_PI * (_xor128() % 11) / (float)(10);
         robot.x = 10.0f + Sim_Target_Init_Radius * cosf(t);
@@ -1047,6 +1047,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
 
         case sim_CommandType_Search:
         {
+
             if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
             {
                 DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
@@ -1057,13 +1058,16 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
                 float dx = DRONE->xr - DRONE->x;
                 float dy = DRONE->yr - DRONE->y;
                 float len = sqrtf(dx*dx + dy*dy);
+
                 if (len < Sim_Drone_Goto_Proximity)
                 {
+		                printf ("%s", "OKEI\n");
                     DRONE->cmd.type = sim_CommandType_NoCommand;
                     DRONE->cmd_done = true;
                 }
                 else
                 {
+                    printf ("%s", "NOT\n");
                     float v = DRONE->v_max / len;
                     float vx = v * dx;
                     float vy = v * dy;
@@ -1298,7 +1302,7 @@ sim_Observed_State sim_observe_state(sim_State state)
     result.drone_cmd_done = state.drone.cmd_done;
     sim_Robot *targets = state.robots;
     sim_Robot *obstacles = state.robots + Num_Targets;
-    float visible_radius = compute_drone_view_radius(state.drone.z);
+    float visible_radius = 2*compute_drone_view_radius(state.drone.z);
     for (unsigned int i = 0; i < Num_Targets; i++)
     {
         float dx = state.drone.x - targets[i].x;
@@ -1312,6 +1316,41 @@ sim_Observed_State sim_observe_state(sim_State state)
         result.target_x[i] = targets[i].x;
         result.target_y[i] = targets[i].y;
         result.target_q[i] = targets[i].q;
+        result.target_reversing[i] = (targets[i].state == Robot_Reverse);
+
+    }
+    for (unsigned int i = 0; i < Num_Obstacles; i++)
+    {
+        result.obstacle_x[i] = obstacles[i].x;
+        result.obstacle_y[i] = obstacles[i].y;
+        result.obstacle_q[i] = obstacles[i].q;
+    }
+
+    return result;
+}
+
+sim_Observed_State sim_observe_everything(sim_State state)
+{
+    sim_Observed_State result = {};
+    result.elapsed_time = state.elapsed_time;
+    result.drone_x = state.drone.x;
+    result.drone_y = state.drone.y;
+    result.drone_z = state.drone.z;
+    result.drone_cmd_done = state.drone.cmd_done;
+    sim_Robot *targets = state.robots;
+    sim_Robot *obstacles = state.robots + Num_Targets;
+    float visible_radius = compute_drone_view_radius(state.drone.z);
+    for (unsigned int i = 0; i < Num_Targets; i++)
+    {
+        float dx = state.drone.x - targets[i].x;
+        float dy = state.drone.y - targets[i].y;
+        result.target_in_view[i] = true;
+        result.target_removed[i] = targets[i].removed;
+        result.target_reward[i] = targets[i].reward;
+        result.target_x[i] = targets[i].x;
+        result.target_y[i] = targets[i].y;
+        result.target_q[i] = targets[i].q;
+        result.target_reversing[i] = (targets[i].state == Robot_Reverse);
 
     }
     for (unsigned int i = 0; i < Num_Obstacles; i++)

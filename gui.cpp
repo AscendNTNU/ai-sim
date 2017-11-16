@@ -1,9 +1,11 @@
 #define SIM_IMPLEMENTATION
 #include "sim.h"
 #include "gui.h"
-#include <algorithm> 
+#include <algorithm>
 #include <vector>
 #include "lib/jo_gif.cpp"
+#include <time.h>
+#include <stdlib.h>
 
 #include <stdint.h>
 typedef float       r32;
@@ -34,6 +36,7 @@ typedef int8_t      s08;
 
 #define Assert SDL_assert
 #define Printf SDL_Log
+static int fps_lock = 15;
 
 struct Color
 {
@@ -64,6 +67,25 @@ struct VideoMode
     // too fast, it will sleep the remaining time. Leave swap_interval
     // at 0 when using this.
     int fps_lock;
+};
+
+struct Noise_Object{
+  float position_offset_target;
+  float freq_position_offset_target;
+
+  float position_offset_target_horizon;
+  float freq_noise_horizon;
+
+  float percent_target_in_view;
+
+  float angle_offset_target;
+  float freq_angle_offset_target;
+
+  float angle_offset_down_camera;
+  float freq_angle_offset_down_camera;
+
+  float position_offset_drone;
+  float freq_position_offset_drone;
 };
 
 const char *gl_error_message(GLenum error)
@@ -104,15 +126,201 @@ global r32 NDC_SCALE_Y;
 
 global sim_State STATE;
 global sim_State HISTORY_STATE[History_Max_Length];
+global sim_Observed_State HISTORY_OBSERVED_STATE[History_Max_Length];
 global sim_Command HISTORY_CMD[History_Max_Length];
 global int HISTORY_LENGTH;
 
-void add_history(sim_Command cmd, sim_State state)
+sim_Observed_State generate_noise(sim_State state, Noise_Object noise )
+{
+    double offset_x;
+    double offset_y;
+    double offset_z;
+    double offset_angle;
+    double freq;
+    sim_Observed_State result = {};
+    result.elapsed_time = state.elapsed_time;
+    //generate noise for drone
+
+    //generate x offset
+
+    freq = (float)rand()/(float)(RAND_MAX/noise.freq_position_offset_drone);
+    if(freq > 1.0){
+      offset_x = (float)rand()/(float)(RAND_MAX/noise.position_offset_drone)-noise.position_offset_drone/2.0;
+    }else{
+      offset_x = 0.0;
+    }
+    //generate y offset
+    freq = (float)rand()/(float)(RAND_MAX/noise.freq_position_offset_drone);
+    if(freq > 1.0){
+      offset_y = (float)rand()/(float)(RAND_MAX/noise.position_offset_drone)-noise.position_offset_drone/2.0;
+    }else{
+      offset_y = 0.0;
+    }
+
+    //generate z offset
+    freq = (float)rand()/(float)(RAND_MAX/noise.freq_position_offset_drone);
+    if(freq > 1.0){
+      offset_z = (float)rand()/(float)(RAND_MAX/noise.position_offset_drone)-noise.position_offset_drone/2.0;
+    }else{
+      offset_z = 0.0;
+    }
+
+    //add noise
+    result.drone_x = state.drone.x + offset_x;
+    result.drone_y = state.drone.y + offset_y;
+    result.drone_z = state.drone.z + offset_z;
+
+    result.drone_cmd_done = state.drone.cmd_done;
+
+    sim_Robot *targets = state.robots;
+    sim_Robot *obstacles = state.robots + Num_Targets;
+    float visible_radius_down_camera = compute_drone_view_radius(state.drone.z);
+
+
+    for (unsigned int i = 0; i < Num_Targets; i++)
+    {
+        float dx = state.drone.x - targets[i].x;
+        float dy = state.drone.y - targets[i].y;
+
+        float distance = vector_length(dx,dy);
+        float unit_x = dx/distance;
+        float unit_y = dy/distance;
+        float sin_angle =  distance / vector_length(distance,state.drone.z);
+        float cos_angle =  state.drone.z / vector_length(distance,state.drone.z);
+        freq = (float)rand()/(float)(RAND_MAX/1.0);
+        if (freq*sin_angle >= noise.percent_target_in_view ){
+            result.target_in_view[i] = false;
+        }else{
+            result.target_in_view[i] = true;
+        }
+        result.target_removed[i] = targets[i].removed;
+        result.target_reward[i] = targets[i].reward;
+
+        freq = (float)rand()/(float)(RAND_MAX/noise.freq_position_offset_target);
+        if(freq > 1.0){
+
+          offset_x = (float)rand()/(float)(RAND_MAX/noise.position_offset_target)-noise.position_offset_target/2.0;
+        }else{
+          offset_x = 0.0;
+        }
+        //generate y offset
+        freq = (float)rand()/(float)(RAND_MAX/noise.freq_position_offset_target);
+        if(freq > 1.0){
+
+          offset_y = (float)rand()/(float)(RAND_MAX/noise.position_offset_target)-noise.position_offset_target/2.0;
+        }else{
+          offset_y = 0.0;
+        }
+
+        freq = (float)rand()/(float)(RAND_MAX/noise.freq_noise_horizon);
+        float horizon_x = 0;
+        float horizon_y = 0;
+        if(freq > 1.0){
+          float t = (float)rand()/(float)(RAND_MAX/noise.position_offset_target_horizon) - noise.position_offset_target_horizon/2.0;
+          horizon_x = t*(1.0-cos_angle)*unit_x;
+          horizon_y = t*(1.0-cos_angle)*unit_y;
+        }
+
+
+        result.target_x[i] = targets[i].x + offset_x+horizon_x;
+        result.target_y[i] = targets[i].y + offset_y+horizon_y;
+
+
+        if(distance < visible_radius_down_camera){
+          freq = (float)rand()/(float)(RAND_MAX/noise.freq_angle_offset_down_camera);
+          if(freq > 1.0){
+            offset_angle = (float)rand()/(float)(RAND_MAX/(noise.angle_offset_down_camera*0.0174533))-(noise.angle_offset_down_camera*0.0174533)/2.0;
+          }else{
+            offset_angle = 0.0;
+          }
+        }else{
+          freq = (float)rand()/(float)(RAND_MAX/noise.freq_angle_offset_target);
+          if(freq > 1.0){
+            offset_angle = (float)rand()/(float)(RAND_MAX/(noise.angle_offset_target*0.0174533))-(noise.angle_offset_target*0.0174533)/2.0;
+          }else{
+            offset_angle = 0.0;
+          }
+
+        }
+        result.target_q[i] = targets[i].q + offset_angle;
+        result.target_reversing[i] = (targets[i].state == Robot_Reverse);
+
+    }
+    for (unsigned int i = 0; i < Num_Obstacles; i++)
+    {
+        float dx = state.drone.x - obstacles[i].x;
+        float dy = state.drone.y - obstacles[i].y;
+
+        float distance = vector_length(dx,dy);
+        float unit_x = dx/distance;
+        float unit_y = dy/distance;
+        float sin_angle =  distance / vector_length(distance,state.drone.z);
+        float cos_angle =  state.drone.z / vector_length(distance,state.drone.z);
+        freq = (float)rand()/(float)(RAND_MAX/1.0);
+
+
+        freq = (float)rand()/(float)(RAND_MAX/noise.freq_position_offset_target);
+        if(freq > 1.0){
+
+          offset_x = (float)rand()/(float)(RAND_MAX/noise.position_offset_target)-noise.position_offset_target/2.0;
+        }else{
+          offset_x = 0.0;
+        }
+        //generate y offset
+        freq = (float)rand()/(float)(RAND_MAX/noise.freq_position_offset_target);
+        if(freq > 1.0){
+
+          offset_y = (float)rand()/(float)(RAND_MAX/noise.position_offset_target)-noise.position_offset_target/2.0;
+        }else{
+          offset_y = 0.0;
+        }
+
+        freq = (float)rand()/(float)(RAND_MAX/noise.freq_noise_horizon);
+        float horizon_x = 0;
+        float horizon_y = 0;
+        if(freq > 1.0){
+          float t = (float)rand()/(float)(RAND_MAX/noise.position_offset_target_horizon) - noise.position_offset_target_horizon/2.0;
+          horizon_x = t*(1.0-cos_angle)*unit_x;
+          horizon_y = t*(1.0-cos_angle)*unit_y;
+        }
+
+
+        result.obstacle_x[i] = obstacles[i].x + offset_x+horizon_x;
+        result.obstacle_y[i] = obstacles[i].y + offset_y+horizon_y;
+
+
+        if(distance < visible_radius_down_camera){
+          freq = (float)rand()/(float)(RAND_MAX/noise.freq_angle_offset_down_camera);
+          if(freq > 1.0){
+            offset_angle = (float)rand()/(float)(RAND_MAX/(noise.angle_offset_down_camera*0.0174533))-(noise.angle_offset_down_camera*0.0174533)/2.0;
+          }else{
+            offset_angle = 0.0;
+          }
+        }else{
+          freq = (float)rand()/(float)(RAND_MAX/noise.freq_angle_offset_target);
+          if(freq > 1.0){
+            offset_angle = (float)rand()/(float)(RAND_MAX/(noise.angle_offset_target*0.0174533))-(noise.angle_offset_target*0.0174533)/2.0;
+          }else{
+            offset_angle = 0.0;
+          }
+
+        }
+
+        result.obstacle_q[i] = obstacles[i].q + offset_angle;
+    }
+
+    return result;
+}
+
+
+
+void add_history(sim_Command cmd, sim_State state, sim_Observed_State observed_state)
 {
     if (HISTORY_LENGTH < History_Max_Length)
     {
         HISTORY_CMD[HISTORY_LENGTH] = cmd;
         HISTORY_STATE[HISTORY_LENGTH] = state;
+        HISTORY_OBSERVED_STATE[HISTORY_LENGTH] = observed_state;
         HISTORY_LENGTH++;
     }
 }
@@ -123,7 +331,6 @@ void world_to_ndc(r32 x_world, r32 y_world,
     *x_ndc = (x_world - 10.0f) * NDC_SCALE_X;
     *y_ndc = (y_world - 10.0f) * NDC_SCALE_Y;
 }
-
 void vertex2f(r32 x, r32 y)
 {
     r32 x_ndc, y_ndc;
@@ -154,6 +361,7 @@ void fill_square(r32 x1, r32 y1, r32 x2, r32 y2)
     glVertex2f(x1n, y2n);
     glVertex2f(x1n, y1n);
 }
+
 void draw_painted_square(r32 x1, r32 y1, r32 x2, r32 y2)
 {
     r32 x1n, y1n, x2n, y2n;
@@ -163,6 +371,7 @@ void draw_painted_square(r32 x1, r32 y1, r32 x2, r32 y2)
     glVertex2f(x2n, y1n);
     glVertex2f(x2n, y2n);
 }
+
 void fill_circle(r32 x, r32 y, r32 r)
 {
     int n = int(2* r *10.0);
@@ -197,6 +406,12 @@ void draw_robot(sim_Robot robot)
     r32 y = robot.y;
     r32 l = robot.L;
     r32 q = robot.q;
+    draw_circle(x, y, 0.5f*l);
+    draw_line(x, y, x + l*cos(q), y + l*sin(q));
+}
+
+void draw_observed_robot(r32 x,  r32 y, r32 q , r32 l)
+{
     draw_circle(x, y, 0.5f*l);
     draw_line(x, y, x + l*cos(q), y + l*sin(q));
 }
@@ -260,11 +475,23 @@ void draw_planks(sim_Robot robot)
     float plank_behind =  std::max((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
     float plank_ahead = std::min(internal.time_to_next_reverse * Robot_Speed,(Reverse_Interval- Reverse_Length) * Robot_Speed);
 
-    
+
     draw_line(x, y, x + plank_ahead*cos(plank_angle), y + plank_ahead*sin(plank_angle));
     draw_line(x, y, x + plank_behind*cos(plank_angle-PI), y + plank_behind*sin(plank_angle-PI));
-    
 }
+
+void draw_observed_plank(r32 x,r32 y,  r32 q, r32 l,r32 plank_angle,robot_Internal internal)
+{
+
+    float plank_behind =  std::max((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
+    float plank_ahead = std::min(internal.time_to_next_reverse * Robot_Speed,(Reverse_Interval- Reverse_Length) * Robot_Speed);
+
+
+    draw_line(x, y, x + plank_ahead*cos(plank_angle), y + plank_ahead*sin(plank_angle));
+    draw_line(x, y, x + plank_behind*cos(plank_angle-PI), y + plank_behind*sin(plank_angle-PI));
+
+}
+
 struct FileData
 {
     int length;
@@ -286,6 +513,9 @@ bool write_history(char *filename)
     fclose(f);
     return true;
 }
+
+
+
 
 bool read_history(char *filename)
 {
@@ -320,6 +550,7 @@ float heat_blue_color(float x){
         return 0.0;
     }
 }
+
 float heat_green_color(float x){
 
     if(x<0.0){
@@ -344,6 +575,7 @@ float heat_red_color(float x){
         return 1.0;
     }
 }
+
 float transform_heat_color(float x){
     return 0.1205*log(4000.0*x+1.0);
 }
@@ -380,18 +612,20 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     persist bool flag_grid     = false;
     persist bool flag_plank = false;
     persist bool flag_DrawDroneGoto     = false;
+    persist bool flag_draw_observation     = false;
     persist bool flag_DrawDrone         = true;
-    persist bool flag_DrawVisibleRegion = false;
+    persist bool flag_DrawVisibleRegion = true;
     persist bool flag_DrawTargets       = true;
     persist bool flag_DrawObstacles     = true;
     persist bool flag_Paused            = false;
     persist bool flag_Recording         = false;
     persist bool flag_SetupRecord       = false;
-    persist bool flag_probability_distribution = false;
+    persist bool flag_probability_distribution = true;
     persist bool flag_custom_drone_text = false;
     persist bool flag_custom_target_text = false;
     persist bool flag_view_target_text = false;
-    persist bool flag_view_drone_text = false;
+    persist bool flag_view_drone_text = true;
+    persist bool flag_send_perfect_data = true;
     persist int record_from = 0;
     persist int record_to = 0;
     persist int record_frame_skip = 1;
@@ -418,10 +652,57 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     persist Color color_DroneGoto      = { 0.87f, 0.93f, 0.84f, 0.50f };
     persist Color color_Planks         = { 0.85f, 0.83f, 0.37f, 0.50f };
 
+
+    persist Color color_transp_SelectedTarget = { 0.85f, 0.34f, 0.32f, 0.25f };
+    persist Color color_transp_Targets        = { 0.85f, 0.83f, 0.37f, 0.25f };
+    persist Color color_transp_Targets_prob   = { 0.00f, 0.00f, 0.00f, 0.25f };
+    persist Color color_transp_Obstacles      = { 0.43f, 0.76f, 0.79f, 0.25f };
+    persist Color color_transp_Drone          = { 0.05f, 0.05f, 0.05f, 0.25f };
+    persist Color color_transp_Planks         = { 0.85f, 0.83f, 0.37f, 0.12f };
+
+    persist Color white = { 1.0f, 1.0f, 1.0f, 1.0f };
+    persist Color yellow = { 1.0f, 1.0f, 0.0f, 1.0f };
+
     #define RGBA(C) C.r, C.g, C.b, C.a
 
     persist float send_timer = 0.0f;
-    persist float send_interval = 1.0f; // In simulation time units
+    persist float send_interval = 0.25f;// In simulation time units
+
+
+    persist float position_offset_target = 0.15;
+    persist float freq_position_offset_target = 1.0;
+
+    persist float position_offset_target_horizon =0.9;
+    persist float freq_noise_horizon = 1.9;
+
+    persist float percent_target_in_view = 0.9;
+
+    persist float angle_offset_target = 180.0;
+    persist float freq_angle_offset_target = 1.5;
+
+    persist float position_offset_drone = 0.2;
+    persist float freq_position_offset_drone = 1.5;
+
+    persist float freq_angle_offset_down_camera = 1.5;
+    persist float angle_offset_down_camera = 20.0;
+
+    Noise_Object noise;
+    noise.position_offset_target = position_offset_target;
+    noise.freq_position_offset_target = freq_position_offset_target;
+
+    noise.position_offset_target_horizon = position_offset_target_horizon;
+    noise.freq_noise_horizon = freq_noise_horizon;
+
+    noise.percent_target_in_view = percent_target_in_view;
+
+    noise.angle_offset_target = angle_offset_target;
+    noise.freq_angle_offset_target = freq_angle_offset_target;
+
+    noise.position_offset_drone = position_offset_drone;
+    noise.freq_position_offset_drone = freq_position_offset_drone;
+
+    noise.angle_offset_down_camera = angle_offset_down_camera;
+    noise.freq_angle_offset_down_camera = freq_angle_offset_down_camera;
 
     NDC_SCALE_X = (mode.height / (r32)mode.width) / 12.0f;
     NDC_SCALE_Y = 1.0f / 12.0f;
@@ -491,10 +772,10 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
                 for(int v = 0; v <100*Num_Targets; v++){
                      cmd.text[v] = HISTORY_CMD[HISTORY_LENGTH-1].text[v];
                 }
-                
+
 
                 cmd.reward = -1.0;
-                
+
             }
           /** if(cmd.type = sim_CommandType_NoCommand){
                cmd.x = -1.0;
@@ -530,20 +811,29 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
             //  cmd.text[bit] = ;
             //}
             STATE = sim_tick(STATE, cmd);
-            add_history(cmd, STATE);
+            //add some noise to simulate perception
+
+            sim_Observed_State observed_state = generate_noise(STATE,noise);
+            sim_Observed_State perfect_data =  sim_observe_state(STATE);
+            add_history(cmd, STATE, observed_state);
             seek_cursor = HISTORY_LENGTH-1;
 
             send_timer -= Sim_Timestep;
             if (send_timer <= 0.0f)
             {
-                sim_send_state(&STATE);
+                if(flag_send_perfect_data){
+                  sim_send_state(&perfect_data);
+                }else{
+                  sim_send_state(&observed_state);
+                }
+
                 send_timer += send_interval;
             }
         }
     }
 
     sim_State draw_state = HISTORY_STATE[seek_cursor];
-
+    sim_Observed_State observed = HISTORY_OBSERVED_STATE[seek_cursor];
     sim_Command cmd_state = HISTORY_CMD[seek_cursor];
 
     sim_Drone drone = draw_state.drone;
@@ -581,16 +871,16 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     }
     // draw heat map
         if (flag_probability_distribution)
-        {   
+        {
             int iterations = pixels_each_meter * 20;
             double unit = 1.0 / float(pixels_each_meter);
             for(int yi = 0; yi < iterations; yi++){
-                
-                    
+
+
                     for (int xi = 0; xi < iterations; xi++)
                     {
-                        
-                        
+
+
                         float value =  cmd_state.heatmap[yi*iterations + xi];
 
                         value = transform_heat_color(value);
@@ -605,8 +895,8 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
                         fill_square(x ,y, x+unit, y+unit);
                     }
             }
-            
-            
+
+
         }
     // draw visible region
     if (flag_DrawVisibleRegion)
@@ -639,29 +929,40 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         color4f(color_GreenLine);
         draw_line(0.0f, 20.0f, 20.0f, 20.0f);
 
+
         // draw targets
         if (flag_DrawTargets)
         {
             if(flag_probability_distribution){
                 color4f(color_Targets_prob);
+                if(flag_draw_observation){
+                  color4f(color_transp_Targets_prob);
+                }
             }else{
                 color4f(color_Targets);
+                if(flag_draw_observation){
+                  color4f(color_transp_Targets);
+                }
             }
-
             for (int i = 0; i < Num_Targets; i++)
                 draw_robot(targets[i]);
             if (selected_target >= 0)
             {
                 color4f(color_SelectedTarget);
+                if(flag_draw_observation){
+                  color4f(color_transp_SelectedTarget);
+                }
                 draw_robot(targets[selected_target]);
             }
         }
         // draw Planks
         if (flag_plank)
-        { 
+        {
             color4f(color_Planks);
+            if(flag_draw_observation){
+              color4f(color_transp_Planks);
+            }
             for (int i = 0; i < Num_Targets; i++){
-                
                 draw_planks(targets[i]);
             }
         }
@@ -669,9 +970,60 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         if (flag_DrawObstacles)
         {
             color4f(color_Obstacles);
+            if(flag_draw_observation){
+              color4f(color_transp_Obstacles);
+            }
             for (int i = 0; i < Num_Obstacles; i++)
                 draw_robot(obstacles[i]);
         }
+
+        // draw observed things
+        if(flag_draw_observation){
+          //draw observed targets
+          if (flag_DrawTargets)
+          {
+              /**
+              if(flag_probability_distribution){
+                  color4f(color_Targets_prob);
+              }else{
+                  color4f(color_Targets);
+              }**/
+              color4f(white);
+              for (int i = 0; i < Num_Targets; i++){
+
+                if(observed.target_in_view[i]){
+                  draw_observed_robot(observed.target_x[i],observed.target_y[i],observed.target_q[i],targets[0].L);
+                }
+
+              }
+              if (selected_target >= 0)
+              {
+                  //color4f(color_SelectedTarget);
+                  color4f(white);
+                  draw_observed_robot(observed.target_x[selected_target],observed.target_y[selected_target],observed.target_q[selected_target],targets[0].L);
+              }
+          }
+          // draw observed Planks
+          if (flag_plank)
+          {
+              //color4f(color_Planks);
+              color4f(white);
+              for (int i = 0; i < Num_Targets; i++){
+                if(observed.target_in_view[i]){
+                  draw_observed_plank(observed.target_x[i],observed.target_y[i],  observed.target_q[i], targets[0].L,observed.target_q[i], targets[i].internal);
+                  }
+              }
+          }
+          // draw observed obstacles
+          if (flag_DrawObstacles)
+          {
+              //color4f(color_Obstacles);
+              color4f(color_Obstacles);
+              for (int i = 0; i < Num_Obstacles; i++)
+                  draw_observed_robot(observed.obstacle_x[i],observed.obstacle_y[i],observed.obstacle_q[i],targets[0].L);
+          }
+        }
+
 
 
 
@@ -713,9 +1065,22 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         color4f(color_Shadow);
         draw_drone(Sim_Drone_Radius + drone.z/5.0,drone.x, drone.y);
 
-        //draw drone
-        color4f(color_Drone);
-        draw_drone(Sim_Drone_Radius,drone.x,drone.y);
+
+        if(flag_draw_observation){
+          //draw drone
+          color4f(color_transp_Drone);
+          draw_drone(Sim_Drone_Radius,drone.x,drone.y);
+          //draw drone
+          //color4f(color_transp_Drone);
+          color4f(white);
+          draw_drone(Sim_Drone_Radius,observed.drone_x,observed.drone_y);
+
+        }else{
+          //draw drone
+          color4f(color_Drone);
+          draw_drone(Sim_Drone_Radius,drone.x,drone.y);
+
+        }
 
 
     }
@@ -744,7 +1109,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 
     // DRAW FLAGS
     if (ImGui::CollapsingHeader("Rendering"))
-    {   
+    {
         ImGui::Checkbox("Probability distribution", &flag_probability_distribution);
         ImGui::Checkbox("View target text", &flag_view_target_text);
         ImGui::Checkbox("View drone text", &flag_view_drone_text);
@@ -752,11 +1117,14 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         ImGui::Checkbox("Custom target text", &flag_custom_target_text);
         ImGui::Checkbox("Grid", &flag_grid);
         ImGui::Checkbox("Plank", &flag_plank);
+        ImGui::Checkbox("Noisy observation", &flag_draw_observation);
         ImGui::Checkbox("Drone goto", &flag_DrawDroneGoto);
         ImGui::Checkbox("Drone", &flag_DrawDrone);
         ImGui::Checkbox("Visible region", &flag_DrawVisibleRegion);
         ImGui::Checkbox("Targets", &flag_DrawTargets);
         ImGui::Checkbox("Obstacles", &flag_DrawObstacles);
+
+
     } // END DRAW FLAGS
 
     // COLORS
@@ -775,6 +1143,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     // REWIND HISTORY
     if (ImGui::CollapsingHeader("Seek##header"))
     {
+        ImGui::SliderInt("FPS##bar", &fps_lock, 1, 90);
         ImGui::Checkbox("Paused", &flag_Paused);
         ImGui::SliderInt("Seek##bar", &seek_cursor, 0, HISTORY_LENGTH-1);
         ImGui::InputInt("Seek frame", &seek_cursor);
@@ -812,9 +1181,52 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         selected_target = -1;
     } // END ROBOTS
 
+
+
+    // noise generator
+    if (ImGui::CollapsingHeader("Noise generator"))
+    {
+
+      ImGui::TextWrapped("Targets: Average noise offset (meters) " );
+      ImGui::SliderFloat("Noise", &position_offset_target,  0.0f, 5.0f);
+      ImGui::SliderFloat("Frequency ", &freq_position_offset_target,0.0f, 5.0f);
+      ImGui::TextWrapped(" ");
+
+      ImGui::TextWrapped("Targets: Average noise offset pushed ");
+      ImGui::TextWrapped("         into horizon (meters)");
+      ImGui::SliderFloat("Noise ", &position_offset_target_horizon,0.0f, 5.0f);
+      ImGui::SliderFloat("Frequency  ", &freq_noise_horizon,0.0f, 5.0f);
+      ImGui::TextWrapped(" ");
+
+      ImGui::TextWrapped("Targets: Percent of time observed");
+      ImGui::SliderFloat("Percent", &percent_target_in_view,0.0f, 1.0f);
+      ImGui::TextWrapped(" ");
+
+      ImGui::TextWrapped("Targets: Direction noise (degrees)");
+      ImGui::SliderFloat("Noise  ", &angle_offset_target,0.0f, 360.0f);
+      ImGui::SliderFloat("Frequency   ", &freq_angle_offset_target,0.0f, 5.0f);
+      ImGui::TextWrapped(" ");
+
+      ImGui::TextWrapped("Targets: Direction noise when spotted by");
+      ImGui::TextWrapped("         down pointing camera (degrees)");
+      ImGui::SliderFloat("Noise   ", &angle_offset_down_camera,0.0f, 360.0f);
+      ImGui::SliderFloat("Frequency   ", &freq_angle_offset_down_camera,0.0f, 5.0f);
+      ImGui::TextWrapped(" ");
+
+      ImGui::TextWrapped("Drone: Average offset (meters)");
+      ImGui::SliderFloat("Noise    ", &position_offset_drone,0.0f, 5.0f);
+      ImGui::SliderFloat("Frequency   ", &freq_position_offset_drone,0.0f, 5.0f);
+
+
+
+
+        ImGui::Separator();
+    } // END noise
+
     // COMMUNICATION
     if (ImGui::CollapsingHeader("Communication"))
     {
+        ImGui::Checkbox("Send perfect observations", &flag_send_perfect_data);
         ImGui::TextWrapped("The rate at which the state is "
                            "sent can be changed using this slider. "
                            "The slider value represents the time "
@@ -998,7 +1410,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         HISTORY_LENGTH = 0;
         sim_Command cmd;
         cmd.type = sim_CommandType_NoCommand;
-        add_history(cmd, STATE);
+        add_history(cmd, STATE, generate_noise(STATE,noise));
     }
     ImGui::SameLine();
     ImGui::InputInt("Seed", &custom_seed);
@@ -1225,10 +1637,10 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         }else{
             char more_info[1024];
             if(cmd_i.type == sim_CommandType_NoCommand){
-                snprintf(more_info, sizeof more_info, "%s", "NoCommand");
+                snprintf(more_info, sizeof more_info, "%s%.1f%s", "Alt:",drone.z," NoCommand!");
 
             }else{
-                snprintf(more_info, sizeof more_info, "%s%s%.1f%s%.1f%s%d", cmd_text," at x:",cmd_i.x," y:",cmd_i.y," i:",cmd_i.i);
+                snprintf(more_info, sizeof more_info, "%s%.1f%s%s%s%.1f%s%.1f%s%d", "Alt:",drone.z," ",cmd_text," at x:",cmd_i.x," y:",cmd_i.y," i:",cmd_i.i);
             }
             DrawString(999,drone.x, drone.y,mode.height,mode.width, more_info);
         }
@@ -1242,6 +1654,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 
 int main(int argc, char *argv[])
 {
+    srand(time(NULL));
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         Printf("Failed to initialize SDL: %s\n", SDL_GetError());
@@ -1258,7 +1671,7 @@ int main(int argc, char *argv[])
     mode.stencil_bits = 8;
     mode.multisamples = 4;
     mode.swap_interval = 0;
-    mode.fps_lock = 20;
+    mode.fps_lock = fps_lock;
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, mode.gl_major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, mode.gl_minor);
@@ -1342,6 +1755,7 @@ int main(int argc, char *argv[])
         SDL_GL_SwapWindow(mode.window);
 
         delta_time = time_since(last_frame_t);
+        mode.fps_lock = fps_lock;
         if (mode.fps_lock > 0)
         {
             r32 target_time = 1.0f / (r32)mode.fps_lock;

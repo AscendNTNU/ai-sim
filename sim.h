@@ -1067,13 +1067,11 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
 
                 if (len < Sim_Drone_Goto_Proximity)
                 {
-		                printf ("%s", "OKEI\n");
                     DRONE->cmd.type = sim_CommandType_NoCommand;
                     DRONE->cmd_done = true;
                 }
                 else
                 {
-                    printf ("%s", "NOT\n");
                     float v = DRONE->v_max / len;
                     float vx = v * dx;
                     float vy = v * dy;
@@ -1112,25 +1110,18 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
                     DRONE->y += vy * Sim_Timestep;
                 }
 
-
                 if (DRONE->z <= 0.0f)
                 {
 
                     DRONE->landing = false;
                     DRONE->cmd_done = true;
                     DRONE->cmd.type = sim_CommandType_NoCommand;
-
                 }
                 if (DRONE->landing)
                 {
                     DRONE->z -= (Sim_Average_Flying_Heigth/Sim_Landing_Time)*Sim_Timestep;
-
                 }
             }
-
-
-
-
 
         } break;
     }

@@ -1067,13 +1067,13 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
 
                 if (len < Sim_Drone_Goto_Proximity)
                 {
-		                printf ("%s", "OKEI\n");
+		                // printf ("%s", "OKEI\n");
                     DRONE->cmd.type = sim_CommandType_NoCommand;
                     DRONE->cmd_done = true;
                 }
                 else
                 {
-                    printf ("%s", "NOT\n");
+                    // printf ("%s", "NOT\n");
                     float v = DRONE->v_max / len;
                     float vx = v * dx;
                     float vy = v * dy;

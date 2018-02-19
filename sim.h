@@ -511,8 +511,8 @@ ReverseStart(robot_Event event,
              robot_Internal *internal,
              robot_Action *action)
 {
-    action->left_wheel = -Robot_Speed / 2.0f;
-    action->right_wheel = Robot_Speed / 2.0f;
+    action->left_wheel = Robot_Speed / 2.0f;
+    action->right_wheel = -Robot_Speed / 2.0f;
     action->red_led = 1;
     internal->begin_reverse = event.elapsed_time;
 }

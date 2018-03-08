@@ -404,14 +404,15 @@ void draw_robot(sim_Robot robot)
 {
     r32 x = robot.x;
     r32 y = robot.y;
-    r32 l = robot.L;
+    r32 l = 2*Sim_Robot_Radius;
     r32 q = robot.q;
     draw_circle(x, y, 0.5f*l);
     draw_line(x, y, x + l*cos(q), y + l*sin(q));
 }
 
-void draw_observed_robot(r32 x,  r32 y, r32 q , r32 l)
+void draw_observed_robot(r32 x,  r32 y, r32 q)
 {
+    r32 l = 2*Sim_Robot_Radius;
     draw_circle(x, y, 0.5f*l);
     draw_line(x, y, x + l*cos(q), y + l*sin(q));
 }
@@ -424,6 +425,7 @@ void draw_drone(float radius,float x,float y,bool flag_fancy_drone){
          glEnd();
     }else{
         // //propel 1
+        radius = radius*2; // radius is the size of the undercarriage, radius*2 this will give a more realistic size of actual drone
         float propel_1_x = x + sin(PI/4.0)*radius;
         float propel_1_y = y + cos(PI/4.0)*radius;
         draw_line(propel_1_x-propel_radius,propel_1_y,propel_1_x+propel_radius,propel_1_y);
@@ -472,7 +474,6 @@ void draw_planks(sim_Robot robot)
 {
     r32 x = robot.x;
     r32 y = robot.y;
-    r32 l = robot.L;
     r32 q = robot.q;
     r32 plank_angle = robot.plank_angle;
     robot_Internal internal = robot.internal;
@@ -485,7 +486,7 @@ void draw_planks(sim_Robot robot)
     draw_line(x, y, x + plank_behind*cos(plank_angle-PI), y + plank_behind*sin(plank_angle-PI));
 }
 
-void draw_observed_plank(r32 x,r32 y,  r32 q, r32 l,r32 plank_angle,robot_Internal internal)
+void draw_observed_plank(r32 x,r32 y,  r32 q ,r32 plank_angle,robot_Internal internal)
 {
 
     float plank_behind =  std::max((internal.time_since_last_reverse- Reverse_Length) * Robot_Speed,0.0f);
@@ -1000,7 +1001,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
               for (int i = 0; i < Num_Targets; i++){
 
                 if(observed.target_in_view[i]){
-                  draw_observed_robot(observed.target_x[i],observed.target_y[i],observed.target_q[i],targets[0].L);
+                  draw_observed_robot(observed.target_x[i],observed.target_y[i],observed.target_q[i]);
                 }
 
               }
@@ -1008,7 +1009,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
               {
                   //color4f(color_SelectedTarget);
                   color4f(white);
-                  draw_observed_robot(observed.target_x[selected_target],observed.target_y[selected_target],observed.target_q[selected_target],targets[0].L);
+                  draw_observed_robot(observed.target_x[selected_target],observed.target_y[selected_target],observed.target_q[selected_target]);
               }
           }
           // draw observed Planks
@@ -1018,7 +1019,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
               color4f(white);
               for (int i = 0; i < Num_Targets; i++){
                 if(observed.target_in_view[i]){
-                  draw_observed_plank(observed.target_x[i],observed.target_y[i],  observed.target_q[i], targets[0].L,observed.target_q[i], targets[i].internal);
+                  draw_observed_plank(observed.target_x[i],observed.target_y[i],  observed.target_q[i], observed.target_q[i], targets[i].internal);
                   }
               }
           }
@@ -1028,7 +1029,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
               //color4f(color_Obstacles);
               color4f(color_Obstacles);
               for (int i = 0; i < Num_Obstacles; i++)
-                  draw_observed_robot(observed.obstacle_x[i],observed.obstacle_y[i],observed.obstacle_q[i],targets[0].L);
+                  draw_observed_robot(observed.obstacle_x[i],observed.obstacle_y[i],observed.obstacle_q[i]);
           }
         }
 

@@ -141,7 +141,7 @@ void               sim_write_snapshot(char*, sim_Observed_State);
                                           // near a point in the world before
                                           // it is considered to have reached
                                           // it.
-#define Sim_Drone_Radius (0.9f)           // How large the drone is
+#define Sim_Drone_Radius (0.2f)           // How large the drone is
 
 #define Sim_LandOnTopOf_Time (2.0f)       // How many seconds it should take
                                           // to complete a LandOnTopOf command
@@ -161,7 +161,9 @@ void               sim_write_snapshot(char*, sim_Observed_State);
                                           // drive behind an edge, before it
                                           // is removed.
 
-#define Sim_Robot_Wheel_Distance (0.5f)   // Meters between iRobot wheels
+#define Sim_Robot_Wheel_Distance (0.5f)   // Meters between iRobot wheels (correct value is 25cm but 0.5m calculates right turn time and so on)
+
+#define Sim_Robot_Radius (0.17)            // Radius of iRobot roomba (ground robot)
 
 #define Sim_Target_Init_Radius (1.0f)     // Initial target spawn radius
 
@@ -1178,10 +1180,10 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             {
                 float x1 = ROBOTS[i].x;
                 float y1 = ROBOTS[i].y;
-                float r1 = ROBOTS[i].L * 0.5f;
+                float r1 = Sim_Robot_Radius;
                 float x2 = ROBOTS[n].x;
                 float y2 = ROBOTS[n].y;
-                float r2 = ROBOTS[n].L * 0.5f;
+                float r2 = Sim_Robot_Radius;
                 float dx = x1 - x2;
                 float dy = y1 - y2;
                 float L = vector_length(dx, dy);
@@ -1212,7 +1214,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
        if (DRONE->on_ground){
             float x1 = ROBOTS[i].x;
             float y1 = ROBOTS[i].y;
-            float r1 = ROBOTS[i].L * 0.5f;
+            float r1 = Sim_Robot_Radius;
             float x2 = DRONE->x;
             float y2 = DRONE->y;
             float r2 = Sim_Drone_Radius;

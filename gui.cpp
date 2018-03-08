@@ -1679,7 +1679,7 @@ int main(int argc, char *argv[])
     mode.double_buffer = 1;
     mode.depth_bits = 24;
     mode.stencil_bits = 8;
-    mode.multisamples = 4;
+    mode.multisamples = 0; // Values over 0 will make Ubuntu 17+ fail
     mode.swap_interval = 0;
     mode.fps_lock = fps_lock;
 

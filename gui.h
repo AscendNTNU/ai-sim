@@ -35,6 +35,8 @@
 
 #define UDP_IMPLEMENTATION
 #include "udp.h"
+#include <iostream>
+
 
 void sim_init_msgs(bool blocking)
 {
@@ -44,7 +46,7 @@ void sim_init_msgs(bool blocking)
 #ifdef SIM_CLIENT_CODE
 bool sim_recv_state(sim_Observed_State *result)
 {
-    sim_State buffer = {};
+    sim_Observed_State buffer = {};
     return udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Observed_State), 0);
 }
 
@@ -61,18 +63,18 @@ void sim_send_estimated_state(sim_Observed_State *state)
 }
 
 #else
-#include <iostream>
 bool sim_recv_cmd(sim_Command *result)
 {
     sim_Command buffer = {};
-    return udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Command), 0);
+    bool success = udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Command), 0);
+
+    return success;
 }
 
 bool sim_recv_estimated_state(sim_Observed_State *result){
 	sim_Observed_State buffer = {};
-	bool worked = udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Observed_State), 0);
-	std::cout << worked << std::endl;
-	return worked;
+	bool success = udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Observed_State), 0);
+	return success;
 }
 
 void sim_send_state(sim_Observed_State *state)

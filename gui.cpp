@@ -807,10 +807,9 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
             if(sim_recv_estimated_state(&estimate)){
                 std::cout << "Received data at " << seek_cursor << std::endl;
             }
-            // else{
-            //     std::cout << HISTORY_ESTIMATED_STATE[seek_cursor].target_x[9] << std::endl;
-            //     std::cout << estimate.target_x[9] << std::endl;
-            // }
+            else{
+                estimate = HISTORY_ESTIMATED_STATE[seek_cursor];
+            }
 
           /** if(cmd.type = sim_CommandType_NoCommand){
                cmd.x = -1.0;
@@ -994,7 +993,6 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 
         // draw Estimated Robot Positions
         if(flag_estimated_state){
-
             color4f(color_Estimated_Robots);
             for(int i = 0; i < Num_Targets; i++){
                 draw_sim_observed_state_robot(estimated_state, i);

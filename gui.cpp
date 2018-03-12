@@ -128,7 +128,9 @@ global sim_State STATE;
 global sim_State HISTORY_STATE[History_Max_Length];
 global sim_Observed_State HISTORY_OBSERVED_STATE[History_Max_Length];
 global sim_Command HISTORY_CMD[History_Max_Length];
+global sim_Observed_State HISTORY_ESTIMATED_STATE[History_Max_Length];
 global int HISTORY_LENGTH;
+
 
 sim_Observed_State generate_noise(sim_State state, Noise_Object noise )
 {
@@ -314,13 +316,14 @@ sim_Observed_State generate_noise(sim_State state, Noise_Object noise )
 
 
 
-void add_history(sim_Command cmd, sim_State state, sim_Observed_State observed_state)
+void add_history(sim_Command cmd, sim_State state, sim_Observed_State observed_state, sim_Observed_State estimated_state)
 {
     if (HISTORY_LENGTH < History_Max_Length)
     {
         HISTORY_CMD[HISTORY_LENGTH] = cmd;
         HISTORY_STATE[HISTORY_LENGTH] = state;
         HISTORY_OBSERVED_STATE[HISTORY_LENGTH] = observed_state;
+        HISTORY_ESTIMATED_STATE[HISTORY_LENGTH] = estimated_state;
         HISTORY_LENGTH++;
     }
 }
@@ -406,6 +409,16 @@ void draw_robot(sim_Robot robot)
     r32 y = robot.y;
     r32 l = 2*Sim_Robot_Radius;
     r32 q = robot.q;
+    draw_circle(x, y, 0.5f*l);
+    draw_line(x, y, x + l*cos(q), y + l*sin(q));
+}
+
+void draw_sim_observed_state_robot(sim_Observed_State state, int i)
+{
+    r32 x = state.target_x[i];
+    r32 y = state.target_y[i];
+    r32 l = 2*Sim_Robot_Radius;
+    r32 q = state.target_q[i];
     draw_circle(x, y, 0.5f*l);
     draw_line(x, y, x + l*cos(q), y + l*sin(q));
 }
@@ -627,6 +640,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     persist bool flag_Recording         = false;
     persist bool flag_SetupRecord       = false;
     persist bool flag_probability_distribution = false;
+    persist bool flag_estimated_state   = true;
     persist bool flag_custom_drone_text = false;
     persist bool flag_custom_target_text = false;
     persist bool flag_view_target_text = true;
@@ -646,19 +660,19 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     persist int seek_cursor = 0;
     persist int selected_target = -1;
 
-    persist Color color_Clear          = { 0.00f, 0.00f, 0.00f, 1.00f };
-    persist Color color_Tiles          = { 0.20f, 0.35f, 0.46f, 0.66f };
-    persist Color color_Grid           = { 0.00f, 0.00f, 0.00f, 1.00f };
-    persist Color color_VisibleRegion  = { 1.0f, 1.0f, 1.0f, 0.10f };
-    persist Color color_GreenLine      = { 0.10f, 1.00f, 0.20f, 1.00f };
-    persist Color color_SelectedTarget = { 0.85f, 0.34f, 0.32f, 1.00f };
-    persist Color color_Targets        = { 0.85f, 0.83f, 0.37f, 1.00f };
-    persist Color color_Targets_prob   = { 0.00f, 0.00f, 0.00f, 1.00f };
-    persist Color color_Obstacles      = { 0.43f, 0.76f, 0.79f, 1.00f };
-    persist Color color_Drone          = { 0.05f, 0.05f, 0.05f, 1.0f };
-    persist Color color_DroneGoto      = { 0.87f, 0.93f, 0.84f, 0.50f };
-    persist Color color_Planks         = { 0.85f, 0.83f, 0.37f, 0.50f };
-
+    persist Color color_Clear            = { 0.00f, 0.00f, 0.00f, 1.00f };
+    persist Color color_Tiles            = { 0.20f, 0.35f, 0.46f, 0.66f };
+    persist Color color_Grid             = { 0.00f, 0.00f, 0.00f, 1.00f };
+    persist Color color_VisibleRegion    = { 1.0f, 1.0f, 1.0f, 0.10f };
+    persist Color color_GreenLine        = { 0.10f, 1.00f, 0.20f, 1.00f };
+    persist Color color_SelectedTarget   = { 0.85f, 0.34f, 0.32f, 1.00f };
+    persist Color color_Targets          = { 0.85f, 0.83f, 0.37f, 1.00f };
+    persist Color color_Targets_prob     = { 0.00f, 0.00f, 0.00f, 1.00f };
+    persist Color color_Obstacles        = { 0.43f, 0.76f, 0.79f, 1.00f };
+    persist Color color_Drone            = { 0.05f, 0.05f, 0.05f, 1.0f };
+    persist Color color_DroneGoto        = { 0.87f, 0.93f, 0.84f, 0.50f };
+    persist Color color_Planks           = { 0.85f, 0.83f, 0.37f, 0.50f };
+    persist Color color_Estimated_Robots = { 1.0f, 0.0f, 0.0f, 0.9f};
 
     persist Color color_transp_SelectedTarget = { 0.85f, 0.34f, 0.32f, 0.25f };
     persist Color color_transp_Targets        = { 0.85f, 0.83f, 0.37f, 0.25f };
@@ -785,7 +799,19 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
 
                 cmd.reward = -1.0;
 
+
+
             }
+
+            sim_Observed_State estimate;
+            if(sim_recv_estimated_state(&estimate)){
+                std::cout << "Received data at " << seek_cursor << std::endl;
+            }
+            // else{
+            //     std::cout << HISTORY_ESTIMATED_STATE[seek_cursor].target_x[9] << std::endl;
+            //     std::cout << estimate.target_x[9] << std::endl;
+            // }
+
           /** if(cmd.type = sim_CommandType_NoCommand){
                cmd.x = -1.0;
                cmd.y = -1.0;
@@ -820,11 +846,12 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
             //  cmd.text[bit] = ;
             //}
             STATE = sim_tick(STATE, cmd);
-            //add some noise to simulate perception
 
+            //add some noise to simulate perception
             sim_Observed_State observed_state = generate_noise(STATE,noise);
             sim_Observed_State perfect_data =  sim_observe_state(STATE);
-            add_history(cmd, STATE, observed_state);
+
+            add_history(cmd, STATE, observed_state, estimate);
             seek_cursor = HISTORY_LENGTH-1;
 
             send_timer -= Sim_Timestep;
@@ -844,9 +871,9 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     sim_State draw_state = HISTORY_STATE[seek_cursor];
     sim_Observed_State observed = HISTORY_OBSERVED_STATE[seek_cursor];
     sim_Command cmd_state = HISTORY_CMD[seek_cursor];
+    sim_Observed_State estimated_state = HISTORY_ESTIMATED_STATE[seek_cursor];
 
     sim_Drone drone = draw_state.drone;
-    //sim_Command cmd_state = HISTORY_CMD[seek_cursor];
     sim_Robot *robots = draw_state.robots;
     sim_Robot *targets = draw_state.robots;
     sim_Robot *obstacles = draw_state.robots + Num_Targets;
@@ -964,6 +991,16 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
                 draw_robot(targets[selected_target]);
             }
         }
+
+        // draw Estimated Robot Positions
+        if(flag_estimated_state){
+
+            color4f(color_Estimated_Robots);
+            for(int i = 0; i < Num_Targets; i++){
+                draw_sim_observed_state_robot(estimated_state, i);
+            }
+        }
+
         // draw Planks
         if (flag_plank)
         {
@@ -1120,6 +1157,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
     if (ImGui::CollapsingHeader("Rendering"))
     {
         ImGui::Checkbox("Probability distribution", &flag_probability_distribution);
+        ImGui::Checkbox("Show fuser estimates", &flag_estimated_state);
         ImGui::Checkbox("View target text", &flag_view_target_text);
         ImGui::Checkbox("View drone text", &flag_view_drone_text);
         ImGui::Checkbox("Custom drone text", &flag_custom_drone_text);
@@ -1420,7 +1458,7 @@ void gui_tick(VideoMode mode, r32 gui_time, r32 gui_dt,int k)
         HISTORY_LENGTH = 0;
         sim_Command cmd;
         cmd.type = sim_CommandType_NoCommand;
-        add_history(cmd, STATE, generate_noise(STATE,noise));
+        add_history(cmd, STATE, generate_noise(STATE,noise), estimated_state);
     }
     ImGui::SameLine();
     ImGui::InputInt("Seed", &custom_seed);

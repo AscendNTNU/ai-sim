@@ -53,11 +53,26 @@ void sim_send_cmd(sim_Command *cmd)
     udp_addr dst = { 127, 0, 0, 1, SEND_PORT };
     udp_send((char*)cmd, sizeof(sim_Command), dst);
 }
+
+void sim_send_estimated_state(sim_Observed_State *state)
+{
+    udp_addr dst = { 127, 0, 0, 1, SEND_PORT };
+    udp_send((char*)state, sizeof(sim_Observed_State), dst);
+}
+
 #else
+#include <iostream>
 bool sim_recv_cmd(sim_Command *result)
 {
     sim_Command buffer = {};
     return udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Command), 0);
+}
+
+bool sim_recv_estimated_state(sim_Observed_State *result){
+	sim_Observed_State buffer = {};
+	bool worked = udp_read_all((char*)result, (char*)&buffer, sizeof(sim_Observed_State), 0);
+	std::cout << worked << std::endl;
+	return worked;
 }
 
 void sim_send_state(sim_Observed_State *state)

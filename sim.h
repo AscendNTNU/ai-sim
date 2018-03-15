@@ -687,10 +687,6 @@ robot_fsm(sim_Robot *robot,robot_State state,
             {
                 TransitionTo(TopTouch);
             }
-            else if (event.is_bumper)
-            {
-                TransitionTo(TargetCollision);
-            }
             else if (event.elapsed_time - internal->begin_reverse > Reverse_Length)
             {
                 TransitionTo(TargetRun);
@@ -700,7 +696,7 @@ robot_fsm(sim_Robot *robot,robot_State state,
         case Robot_TargetCollision:
         {
             action->was_bumped = 1;
-            internal->reverse_count ++;
+            internal->reverse_count++;
             robot->plank_angle = robot->plank_angle - PI;
             TransitionTo(Reverse);
         } break;

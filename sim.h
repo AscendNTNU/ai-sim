@@ -49,8 +49,8 @@ enum sim_CommandType
     sim_CommandType_LandOnTopOf,     // trigger one 45 deg turn of robot (i)
     sim_CommandType_LandInFrontOf,   // trigger one 180 deg turn of robot (i)
     sim_CommandType_Track,           // follow robot (i) at a constant height
-    sim_CommandType_Search,          // ascend to 3 meters and go to (x, y)
-
+    sim_CommandType_Search,          // ascend to AverageFlyingHeight and go to (x, y)
+    sim_CommandType_TakeOff,         // ascend to AverageFlyingHeight meters.
     sim_CommandType_Land,
     sim_CommandType_Debug
 };
@@ -151,7 +151,7 @@ void               sim_write_snapshot(char*, sim_Observed_State);
 #define Sim_Take_Off_Time (2.0f)           //How long time it should take to take off
 
 
-#define Sim_Average_Flying_Heigth (3.0f)   //The height the drone is flying at when not on ground
+#define Sim_Average_Flying_Height (3.0f)   //The height the drone is flying at when not on ground
 
 #define Sim_LandInFrontOf_Time (2.0f)     // How many seconds it should take
                                           // to complete a LandInFrontOf command
@@ -328,6 +328,7 @@ struct sim_State
 #include <assert.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 
 #ifdef SIM_IMPLEMENTATION
 #ifndef PI
@@ -794,7 +795,7 @@ sim_State sim_init(unsigned int seed)
 
     DRONE->x = 10.0f;
     DRONE->y = 10.0f;
-    DRONE->z = Sim_Average_Flying_Heigth; // TODO: Dynamics for z when landing
+    DRONE->z = Sim_Average_Flying_Height; // TODO: Dynamics for z when landing
     DRONE->xr = 10.0f;
     DRONE->yr = 10.0f;
     DRONE->v_max = 1.0f;
@@ -927,10 +928,10 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
 
         case sim_CommandType_LandOnTopOf:
         {
-            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
+            if(DRONE->z < Sim_Average_Flying_Height && ! DRONE->landing )
 
             {
-                DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
+                DRONE->z += (Sim_Average_Flying_Height/Sim_Take_Off_Time)*Sim_Timestep;
             }
             else
             {
@@ -981,9 +982,9 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
 
         case sim_CommandType_LandInFrontOf:
         {
-            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
+            if(DRONE->z < Sim_Average_Flying_Height && ! DRONE->landing )
             {
-                DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
+                DRONE->z += (Sim_Average_Flying_Height/Sim_Take_Off_Time)*Sim_Timestep;
             }
             else
             {
@@ -1030,9 +1031,9 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
 
         case sim_CommandType_Track:
         {
-            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
+            if(DRONE->z < Sim_Average_Flying_Height && ! DRONE->landing )
             {
-                DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
+                DRONE->z += (Sim_Average_Flying_Height/Sim_Take_Off_Time)*Sim_Timestep;
             }
             else{
                 DRONE->xr = TARGETS[DRONE->cmd.i].x;
@@ -1052,9 +1053,9 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
         case sim_CommandType_Search:
         {
 
-            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing )
+            if(DRONE->z < Sim_Average_Flying_Height && ! DRONE->landing )
             {
-                DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
+                DRONE->z += (Sim_Average_Flying_Height/Sim_Take_Off_Time)*Sim_Timestep;
             }
             else{
                 DRONE->xr = DRONE->cmd.x;
@@ -1079,6 +1080,23 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             }
 
         } break;
+
+        case sim_CommandType_TakeOff:
+        {
+            printf("Taking off");
+            if(DRONE->z < Sim_Average_Flying_Height)
+            {
+                // std::cout << "increasing z" << std::endl; 
+                DRONE->z += (Sim_Average_Flying_Height/Sim_Take_Off_Time)*Sim_Timestep;
+            }
+            else{
+                // std::cout << "above flying height" << std::endl; 
+                DRONE->cmd.type = sim_CommandType_NoCommand;
+                DRONE->cmd_done = true;
+            }
+
+        } break;
+
         case sim_CommandType_Land:
         {
             DRONE->xr = DRONE->cmd.x;
@@ -1087,8 +1105,8 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
             float dy = DRONE->yr - DRONE->y;
             float len = sqrtf(dx*dx + dy*dy);
 
-            if(DRONE->z < Sim_Average_Flying_Heigth && ! DRONE->landing && len >  Sim_Drone_Target_Proximity){
-                    DRONE->z += (Sim_Average_Flying_Heigth/Sim_Take_Off_Time)*Sim_Timestep;
+            if(DRONE->z < Sim_Average_Flying_Height && ! DRONE->landing && len >  Sim_Drone_Target_Proximity){
+                    DRONE->z += (Sim_Average_Flying_Height/Sim_Take_Off_Time)*Sim_Timestep;
             }
             else
             {
@@ -1117,7 +1135,7 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
                 }
                 if (DRONE->landing)
                 {
-                    DRONE->z -= (Sim_Average_Flying_Heigth/Sim_Landing_Time)*Sim_Timestep;
+                    DRONE->z -= (Sim_Average_Flying_Height/Sim_Landing_Time)*Sim_Timestep;
                 }
             }
 

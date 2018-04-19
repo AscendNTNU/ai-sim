@@ -1083,7 +1083,6 @@ sim_State sim_tick(sim_State state, sim_Command new_cmd)
 
         case sim_CommandType_TakeOff:
         {
-            printf("Taking off");
             if(DRONE->z < Sim_Average_Flying_Height)
             {
                 // std::cout << "increasing z" << std::endl; 
